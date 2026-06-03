@@ -1,0 +1,45 @@
+﻿@model List<ProductImageList>
+<div class="col-md-6">
+    <div class="product-gallery product-gallery-vertical">
+        <div class="row">
+            @{
+                string mainImageSet = "";
+                var mainImage = Model.Where(xx=>xx.Type==1).FirstOrDefault();
+                mainImageSet = mainImage != null ? mainImage.Path : "";
+            }
+            <figure class="product-main-image">
+
+                <img id="product-zoom" src="@AppConfig.CDNServices.ContentUploads@mainImageSet" data-zoom-image="@AppConfig.CDNServices.ContentUploads@mainImageSet" alt="product image">
+
+                <a href="#" id="btn-product-gallery" class="btn-product-gallery owl-carousel">
+                    <i class="icon-arrows"></i>
+                </a>
+                @if (Model.Where(cz => cz.Type == 0).ToList().Count > 4)
+                {
+                    <div class="swiper-button-next"><i class="fa fa-angle-right"></i></div>
+                    <div class="swiper-button-prev"><i class="fa fa-angle-left"></i></div>
+                }
+            </figure><!-- End .product-main-image -->
+            @if (Model.Where(cz => cz.Type == 0).ToList().Count > 0)
+            {
+                <div id="product-zoom-gallery" class="product-image-gallery swiper-container" style="height:460px !important">
+
+                    <div class="swiper-wrapper">
+                        @foreach (var item in Model.Where(xxx => xxx.Type != 1))
+                        {
+                            <div class="swiper-slide" style="height:auto !important;margin-bottom:5px !important">
+                                <a href="#" class="product-gallery-item active" data-image="@AppConfig.CDNServices.ContentUploads@item.Path" data-zoom-image="@AppConfig.CDNServices.ContentUploads@item.Path">
+                                    <img src="@AppConfig.CDNServices.ContentUploads@item.Path">
+                                </a>
+                            </div>
+                        }
+
+                    </div>
+
+
+                </div>
+            }
+            <!-- End .product-image-gallery -->
+        </div><!-- End .row -->
+    </div><!-- End .product-gallery -->
+</div><!-- End .col-md-6 -->

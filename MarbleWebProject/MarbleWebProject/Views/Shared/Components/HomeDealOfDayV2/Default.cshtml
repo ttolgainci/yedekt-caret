@@ -1,0 +1,45 @@
+@model MarbleWebProject.Models.CampaignActiveModel?
+@{
+    var title = Model?.Name ?? Html.Translate("#Deal of the Day#").ToString();
+    var desc = Model?.Description ?? Html.Translate("#Featured Product#").ToString();
+    var imageUrl = Model != null && !string.IsNullOrWhiteSpace(Model.ImageUrl)
+        ? MediaUrlHelper.Build(Model.ImageUrl)
+        : Url.Content("~/assets/images/demos/demo-2/deal/product-1.jpg");
+}
+<div class="bg-light deal-container pt-5 pb-3 mb-5">
+    <div class="container">
+        <div class="row">
+            <div class="col-lg-9">
+                <div class="deal">
+                    <div class="deal-content">
+                        <h4>@Html.Translate("#Limited Quantities#")</h4>
+                        <h2>@Html.Translate("#Deal of the Day#")</h2>
+                        <h3 class="product-title"><a href="/">@title</a></h3>
+                        <p class="text-muted">@desc</p>
+                        @if (Model != null && Model.DiscountValue > 0)
+                        {
+                            <div class="product-price">
+                                <span class="new-price">@Model.DiscountValue @(Model.DiscountType == 1 ? "%" : "")</span>
+                            </div>
+                        }
+                        <a href="/" class="btn btn-primary">
+                            <span>@Html.Translate("#Shop Now#")</span><i class="icon-long-arrow-right"></i>
+                        </a>
+                    </div>
+                    <div class="deal-image">
+                        <a href="/"><img src="@imageUrl" alt="@title"></a>
+                    </div>
+                </div>
+            </div>
+            <div class="col-lg-3">
+                <div class="banner banner-overlay banner-overlay-light text-center d-none d-lg-block">
+                    <a href="/"><img src="~/assets/images/demos/demo-2/banners/banner-5.jpg" alt="Banner"></a>
+                    <div class="banner-content banner-content-top banner-content-center">
+                        <h4 class="banner-subtitle">@Html.Translate("#The Best Choice#")</h4>
+                        <a href="/" class="btn btn-outline-gray banner-link">@Html.Translate("#Shop Now#")<i class="icon-long-arrow-right"></i></a>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>

@@ -1,61 +1,54 @@
-﻿using MarbleWebProject.Helper;
+using MarbleWebProject.Helper;
 using MarbleWebProject.Models;
-using MarbleWebProject.Services;
+using MarbleWebProject.Services.Api;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.Caching.Memory;
 
-namespace MarbleWebProject.ViewComponents
+namespace MarbleWebProject.ViewComponents;
+
+[ViewComponent]
+public class MasterMobileMenuViewComponent : ViewComponent
 {
+    private readonly IMemoryCache _cache;
+    private readonly IStoreCatalogApi _catalog;
+    private readonly IStoreAuthService _auth;
 
-    [ViewComponent]
-    public class MasterMobileMenuViewComponent : ViewComponent
+    public MasterMobileMenuViewComponent(IMemoryCache cache, IStoreCatalogApi catalog, IStoreAuthService auth)
     {
-        private readonly IMemoryCache _cache;
+        _cache = cache;
+        _catalog = catalog;
+        _auth = auth;
+    }
 
-        public MasterMobileMenuViewComponent(IMemoryCache cache)
+    public async Task<IViewComponentResult> InvokeAsync(MobileMenuModel models, CancellationToken cancellationToken = default)
+    {
+        var allModel = new MobileMenuModel();
+        var cacheHelper = new CacheHelper(_cache);
+        var key = "CategoryMobileListHeader" + AppConfig.CMSService.CustomName + AppConfig.CMSService.MarketCode + AppConfig.CMSService.LanguageCode;
+        List<CategoryListModel> returnData;
+
+        if (!cacheHelper.IfCache(key))
         {
-            _cache = cache;
-        }
-        public async Task<IViewComponentResult> InvokeAsync(MobileMenuModel models)
-        {
-            MobileMenuModel allModel = new MobileMenuModel();
+            var session = await _auth.GetSessionAsync(cancellationToken);
+            var routeResponse = await _catalog.GetCategoriesAsync(
+                new CategoryRequest { languageCode = session.LanguageCode }, cancellationToken);
 
-
-            BaseResponse<List<CategoryListModel>> routeResponse = new BaseResponse<List<CategoryListModel>>();
-            var returnData = new List<CategoryListModel>();
-            TokenResponse loginResponse = new TokenResponse();
-            CategoryRequest request = new CategoryRequest();
-            CacheHelper cacheHelper = new CacheHelper(_cache);
-            string Key = "CategoryMobileListHeader" + AppConfig.CMSService.CustomName + AppConfig.CMSService.MarketCode + AppConfig.CMSService.LanguageCode;
-            string returnHtml = "";
-
-            if (!cacheHelper.IfCache(Key))
+            if (!routeResponse.Status)
             {
-                using (var cms = new CmsClient())
-                {
-                    loginResponse = cms.getSession();
-                    var contentRequest = new CategoryRequest { languageCode = loginResponse.LanguageCode };
-                    routeResponse = cms.GetCagetory(contentRequest, loginResponse.Token);
-                }
-                if (routeResponse.Status)
-                {
-                    returnData = routeResponse.Data;
-                    cacheHelper.SetCache(Key, returnData);
-                }
-                else
-                {
-                    cacheHelper.SetCache(Key, returnData);
-                    return Content(string.Empty);
-                }
-                
+                cacheHelper.SetCache(key, new List<CategoryListModel>());
+                return Content(string.Empty);
             }
-            returnData = cacheHelper.GetCache(Key) as List<CategoryListModel>;
 
-            allModel.Menu = returnData;
-            allModel.HeaderLink = new List<HeaderLink>();
-
-
-            return View(allModel);
+            returnData = routeResponse.Data;
+            cacheHelper.SetCache(key, returnData);
         }
+        else
+        {
+            returnData = cacheHelper.GetCache(key) as List<CategoryListModel> ?? new List<CategoryListModel>();
+        }
+
+        allModel.Menu = returnData;
+        allModel.HeaderLink = new List<HeaderLink>();
+        return View(allModel);
     }
 }

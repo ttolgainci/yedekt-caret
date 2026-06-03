@@ -1,0 +1,13 @@
+@model CategoryListModel
+<li>
+    <a href="/@Model.Url.TrimStart('/')" class="@(Model.SubCat.Count > 0 ? "sf-with-ul" : null)">@Model.Name</a>
+    @if (Model.SubCat.Count > 0)
+    {
+        <ul>
+            @foreach (var subCategory in Model.SubCat)
+            {
+                <partial name="_CategoryPartial" model="subCategory" />
+            }
+        </ul>
+    }
+</li>

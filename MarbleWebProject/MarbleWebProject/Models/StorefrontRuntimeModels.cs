@@ -1,0 +1,35 @@
+using System.Text.Json.Serialization;
+
+namespace MarbleWebProject.Models;
+
+public sealed class StorefrontRuntimeConfig
+{
+    public string LayoutVersion { get; set; } = "v1";
+
+    /// <summary>Key = ViewComponentName (DB), Value = IsActive</summary>
+    public Dictionary<string, bool> Header { get; set; } = new(StringComparer.OrdinalIgnoreCase);
+
+    /// <summary>Key = ViewComponentName (DB), Value = IsActive</summary>
+    public Dictionary<string, bool> Footer { get; set; } = new(StringComparer.OrdinalIgnoreCase);
+
+    public StorefrontPageLayoutModel Home { get; set; } = new();
+}
+
+public sealed class StorefrontPublishedLayoutModel
+{
+    public string LayoutVersion { get; set; } = "v1";
+    public List<StorefrontPublishedWidgetModel> Header { get; set; } = new();
+    public List<StorefrontPublishedWidgetModel> Footer { get; set; } = new();
+    public StorefrontPageLayoutModel Home { get; set; } = new();
+}
+
+public sealed class StorefrontPublishedWidgetModel
+{
+    public string WidgetCode { get; set; } = "";
+    public string ViewComponentName { get; set; } = "";
+
+    [JsonPropertyName("isActive")]
+    public bool IsActive { get; set; }
+
+    public int SortOrder { get; set; }
+}

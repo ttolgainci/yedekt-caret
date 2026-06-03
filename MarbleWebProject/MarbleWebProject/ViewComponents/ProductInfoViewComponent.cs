@@ -7,9 +7,9 @@ namespace MarbleWebProject.ViewComponents
     [ViewComponent]
     public class ProductInfoViewComponent : ViewComponent
     {
-        public Task<IViewComponentResult> InvokeAsync(ProductInfoViewModel model)
+        public async Task<IViewComponentResult> InvokeAsync(ProductInfo model)
         {
-            return Task.FromResult<IViewComponentResult>(View(model));
+            return View(model);
         }
     }
 }

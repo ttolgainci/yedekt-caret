@@ -5,7 +5,6 @@
         //public string Url { get; set; }
         public string Language { get; set; }
         public int ID { get; set; }
-        public string? UserID { get; set; }
     }
     public class ProductBreadcrumbRequest
     {

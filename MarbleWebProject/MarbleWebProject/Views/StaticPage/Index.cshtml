@@ -1,0 +1,36 @@
+﻿@using MarbleWebProject.Helper
+@{
+    Layout = "~/Views/Shared/_Layout.cshtml";
+}
+@model AllInfoResponse
+
+<div class="page-header text-center" style="background-image: url('assets/images/page-header-bg.jpg')">
+    <div class="container">
+        <h1 class="page-title">@Model.Name</h1>
+    </div><!-- End .container -->
+</div><!-- End .page-header -->
+<nav aria-label="breadcrumb" class="breadcrumb-nav">
+    <div class="container">
+        <ol class="breadcrumb">
+            <li class="breadcrumb-item"><a href="/">@Html.Translate("#Home#")</a></li>
+            <li class="breadcrumb-item active" aria-current="page">@Model.Name</li>
+        </ol>
+    </div><!-- End .container -->
+</nav><!-- End .breadcrumb-nav -->
+
+<div class="page-content pb-3">
+    <div class="container">
+        <div class="row">
+            <div class="col-lg-10 offset-lg-1">
+                <div class="about-text text-center mt-3">
+                    @Html.Raw(Model.Description)              
+                    @if (!string.IsNullOrEmpty(Model.Image))
+                    {
+                        <img src="@AppConfig.CDNServices.ContentUploads@Model.Image" alt="image" class="mx-auto mb-6">
+                    }
+                </div><!-- End .about-text -->
+            </div><!-- End .col-lg-10 offset-1 -->
+        </div><!-- End .row -->    
+    </div><!-- End .container -->
+    <div class="mb-2"></div><!-- End .mb-2 -->
+</div><!-- End .page-content -->

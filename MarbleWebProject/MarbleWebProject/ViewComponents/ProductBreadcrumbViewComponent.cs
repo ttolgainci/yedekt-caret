@@ -1,40 +1,39 @@
-﻿using MarbleWebProject.Helper;
 using MarbleWebProject.Models;
-using MarbleWebProject.Services;
+using MarbleWebProject.Services.Api;
 using Microsoft.AspNetCore.Mvc;
 
-namespace MarbleWebProject.ViewComponents
+namespace MarbleWebProject.ViewComponents;
+
+[ViewComponent]
+public class ProductBreadcrumbViewComponent : ViewComponent
 {
+    private readonly IStoreCatalogApi _catalog;
+    private readonly IStoreAuthService _auth;
 
-    [ViewComponent]
-    public class ProductBreadcrumbViewComponent : ViewComponent
+    public ProductBreadcrumbViewComponent(IStoreCatalogApi catalog, IStoreAuthService auth)
     {
-        public Task<IViewComponentResult> InvokeAsync(string name)
-        {
-            var route = Request.Path.Value ?? string.Empty;
-            var routeList = route.Split("/", StringSplitOptions.RemoveEmptyEntries);
-            if (routeList.Length < 2)
-            {
-                return Task.FromResult<IViewComponentResult>(Content(string.Empty));
-            }
+        _catalog = catalog;
+        _auth = auth;
+    }
 
-            var categoryUrl = routeList[^2];
-            BaseResponse<List<CategoryBreadcrumbModel>> routeResponse = new BaseResponse<List<CategoryBreadcrumbModel>>();
-            var returnData = new ProductBreadcrumbModel();
-            TokenResponse loginResponse = new TokenResponse();
-            using (var cms = new CmsClient())
-            {
-                loginResponse = cms.getSession();
-                var contentRequest = new ProductBreadcrumbRequest { LanguageCode = loginResponse.LanguageCode, CategoryUrl = categoryUrl };
-                routeResponse = cms.GetProductBreadcrumbAsync(contentRequest, loginResponse.Token);
-            }
-            if (routeResponse.Status)
-            {
-                returnData.CagetoryList = routeResponse.Data;
-                returnData.Name = name;
-                return Task.FromResult<IViewComponentResult>(View(returnData));
-            }
-            return Task.FromResult<IViewComponentResult>(Content(string.Empty));
-        }
+    public async Task<IViewComponentResult> InvokeAsync(string name, CancellationToken cancellationToken = default)
+    {
+        var route = Request.Path.Value;
+        var routeList = route?.Split('/') ?? Array.Empty<string>();
+        if (routeList.Length < 2)
+            return Content(string.Empty);
+
+        var categoryUrl = routeList[^2];
+        var session = await _auth.GetSessionAsync(cancellationToken);
+        var routeResponse = await _catalog.GetProductBreadcrumbPathAsync(new ProductBreadcrumbRequest
+        {
+            LanguageCode = session.LanguageCode,
+            CategoryUrl = categoryUrl
+        }, cancellationToken);
+
+        if (!routeResponse.Status)
+            return Content(string.Empty);
+
+        return View(new ProductBreadcrumbModel { CagetoryList = routeResponse.Data, Name = name });
     }
 }

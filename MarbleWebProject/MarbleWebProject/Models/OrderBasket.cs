@@ -11,7 +11,6 @@ namespace MarbleWebProject.Models
         public DateTime UpdatedAt { get; set; } = DateTime.Now;
         public string UpdatedBy { get; set; } = String.Empty;
         public int ProductID { get; set; }
-        public int? ProductVariantID { get; set; }
         public string UserID { get; set; }
         public string LanguageCode { get; set; }
         public string Name { get; set; }

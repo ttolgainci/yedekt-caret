@@ -1,0 +1,7 @@
+@{
+    Layout = "~/Views/Shared/_Layout.cshtml";
+    ViewData["Title"] = "Ana Sayfa";
+}
+
+@* CMS vitrin düzeni (api/storefront/layout/home) *@
+@await Component.InvokeAsync("HomePageLayout")

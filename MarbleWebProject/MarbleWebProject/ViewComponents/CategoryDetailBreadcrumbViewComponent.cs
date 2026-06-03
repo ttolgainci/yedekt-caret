@@ -1,34 +1,33 @@
-﻿using MarbleWebProject.Helper;
 using MarbleWebProject.Models;
-using MarbleWebProject.Services;
+using MarbleWebProject.Services.Api;
 using Microsoft.AspNetCore.Mvc;
-using Microsoft.AspNetCore.Routing;
 
-namespace MarbleWebProject.ViewComponents
+namespace MarbleWebProject.ViewComponents;
+
+[ViewComponent]
+public class CategoryDetailBreadcrumbViewComponent : ViewComponent
 {
+    private readonly IStoreCatalogApi _catalog;
+    private readonly IStoreAuthService _auth;
 
-	[ViewComponent]
-	public class CategoryDetailBreadcrumbViewComponent : ViewComponent
-	{
+    public CategoryDetailBreadcrumbViewComponent(IStoreCatalogApi catalog, IStoreAuthService auth)
+    {
+        _catalog = catalog;
+        _auth = auth;
+    }
 
-		public async Task<IViewComponentResult> InvokeAsync(int categoryID)
-		{
-			BaseResponse<List< CategoryBreadcrumbModel >> routeResponse = new BaseResponse<List<CategoryBreadcrumbModel>>();
-			var returnData = new List<CategoryBreadcrumbModel>();
-			TokenResponse loginResponse = new TokenResponse();
-			CategoryRequest request = new CategoryRequest();
-			using (var cms = new CmsClient())
-			{
-				loginResponse = cms.getSession();
-				var contentRequest = new CategoryBreadcrumbRequest { LanguageCode = loginResponse.LanguageCode, CategoryID= categoryID };
-				routeResponse = cms.GetCategoryBreadcrumbAsync(contentRequest, loginResponse.Token);
-			}
-			if (routeResponse.Status)
-			{
-				returnData = routeResponse.Data;
-				return View(returnData);
-			}
-			return Content(string.Empty);
-		}
-	}
+    public async Task<IViewComponentResult> InvokeAsync(int categoryID, CancellationToken cancellationToken = default)
+    {
+        var session = await _auth.GetSessionAsync(cancellationToken);
+        var routeResponse = await _catalog.GetCategoryBreadcrumbAsync(new CategoryBreadcrumbRequest
+        {
+            LanguageCode = session.LanguageCode,
+            CategoryID = categoryID
+        }, cancellationToken);
+
+        if (routeResponse.Status)
+            return View(routeResponse.Data);
+
+        return Content(string.Empty);
+    }
 }

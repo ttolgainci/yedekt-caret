@@ -1,0 +1,112 @@
+﻿@using MarbleWebProject.Helper
+@model List<ProductList>
+<h2 class="title text-center mb-4">@Html.Translate("#You May Also Like#")</h2><!-- End .title text-center -->
+<div class="owl-carousel owl-simple carousel-equal-height carousel-with-shadow" data-toggle="owl"
+     data-owl-options='{
+                            "nav": false,
+                            "dots": true,
+                            "margin": 20,
+                            "loop": false,
+                            "responsive": {
+                                "0": {
+                                    "items":1
+                                },
+                                "480": {
+                                    "items":2
+                                },
+                                "768": {
+                                    "items":3
+                                },
+                                "992": {
+                                    "items":4
+                                },
+                                "1200": {
+                                    "items":4,
+                                    "nav": true,
+                                    "dots": false
+                                }
+                            }
+                        }'>
+    @foreach(var item in Model)
+    {
+        <div class="product product-7 text-center">
+            <figure class="product-media">
+                <span class="product-label" style="background-color:@item.StockStatusColor">@item.StockStatus</span>
+                <a href="/@item.Url">
+                    <img src="@AppConfig.CDNServices.ContentUploads@item.MainImage"  class="product-image">
+                </a>
+
+                <div class="product-action-vertical">
+                    <a href="#" class="btn-product-icon btn-wishlist btn-expandable"><span>add to wishlist</span></a>
+                   @*  <a href="popup/quickView.html" class="btn-product-icon btn-quickview" title="Quick view"><span>Quick view</span></a>
+                    <a href="#" class="btn-product-icon btn-compare" title="Compare"><span>Compare</span></a> *@
+                </div><!-- End .product-action-vertical -->
+
+                <div class="product-action">
+                    <a href="#" class="btn-product btn-cart"><span>add to cart</span></a>
+                </div><!-- End .product-action -->
+            </figure><!-- End .product-media -->
+
+            <div class="product-body">
+                <div class="product-cat">
+                  @*   <a href="#">Women</a> *@
+                </div><!-- End .product-cat -->
+                <h3 class="product-title"><a href="/@item.Url">@item.ProductName</a></h3><!-- End .product-title -->
+                <div class="product-price">
+                   @item.Price @item.CurrencyName
+                </div><!-- End .product-price -->
+               
+            </div><!-- End .product-body -->
+        </div>
+
+        <!-- End .product -->
+    }
+
+    
+</div><!-- End .owl-carousel -->
+@section Scripts
+{
+    <script type="text/javascript">
+        $(document).ready(function () {
+            // var mySwiper = new Swiper('#product-zoom-gallery', {
+            //     direction: 'vertical',
+            //     effect: 'slide',
+            //     slidesPerView: 4,
+            //     // loop: true,
+            //     // autoplay: {
+            //     //     delay: 2000,
+            //     //     reverseDirection: true,
+            //     //     disableOnInteraction: false,
+            //     // },
+            // })
+            var owlProductGalleryxxx = $('.cvcsaaassd');
+            owlProductGalleryxxx.owlCarousel({
+                "nav": false,
+                "dots": true,
+                "margin": 20,
+                "loop": false,
+                "responsive": {
+                    "0": {
+                        "items": 1
+                    },
+                    "480": {
+                        "items": 2
+                    },
+                    "768": {
+                        "items": 3
+                    },
+                    "992": {
+                        "items": 4
+                    },
+                    "1200": {
+                        "items": 4,
+                        "nav": true,
+                        "dots": false
+                    }
+                }
+            });
+
+        });
+    </script>
+
+}

@@ -1,0 +1,82 @@
+﻿@using MarbleWebProject.Helper
+@{
+    Layout = "~/Views/Shared/_Layout.cshtml";
+}
+@model AllInfoResponse
+
+<div class="page-header text-center" style="background-image: url('assets/images/page-header-bg.jpg')">
+    <div class="container">
+        <h1 class="page-title">@Model.Name</h1>
+    </div><!-- End .container -->
+</div><!-- End .page-header -->
+<nav aria-label="breadcrumb" class="breadcrumb-nav">
+    <div class="container">
+        <ol class="breadcrumb">
+            <li class="breadcrumb-item"><a href="/">@Html.Translate("#Home#")</a></li>
+            <li class="breadcrumb-item active" aria-current="page">@Model.Name</li>
+        </ol>
+    </div><!-- End .container -->
+</nav><!-- End .breadcrumb-nav -->
+
+<div class="page-content pb-3">
+    <div class="container">
+        <div class="row">
+            <div class="col-lg-10 offset-lg-1">
+                <div class="about-text text-center mt-3">
+                    @Html.Raw(Model.Description)
+                    @if (!string.IsNullOrEmpty(Model.Image))
+                    {
+                        <img src="@AppConfig.CDNServices.ContentUploads@Model.Image" alt="image" class="mx-auto mb-6">
+                    }
+                </div><!-- End .about-text -->
+            </div><!-- End .col-lg-10 offset-1 -->
+
+
+
+        </div><!-- End .row -->
+        @{
+            int mainIndex = 1;
+        }
+        @foreach (var item in Model.FaqDescriptions)
+        {
+            int detailIndex = 1;
+
+            <h2 class="title text-center mb-3">@item.Name</h2>
+            <div class="accordion accordion-rounded" id="accordion-@mainIndex">
+                @foreach (var itemDetail in item.Details)
+                {
+                    string expanded = "false";
+                    string expandedClass = "";
+                    if (mainIndex==1)
+                    {
+                        if (detailIndex == 1)
+                        {
+                            expanded = "true";
+                            expandedClass = "show";
+                        }
+                    }
+                    <div class="card card-box card-sm bg-light">
+                        <div class="card-header" id="heading-@detailIndex-@mainIndex">
+                            <h2 class="card-title">
+                                <a role="button" data-toggle="collapse" href="#collapse-@detailIndex-@mainIndex" aria-expanded="@expanded" aria-controls="collapse-@detailIndex-@mainIndex">
+                                    @itemDetail.Name
+                                </a>
+                            </h2>
+                        </div><!-- End .card-header -->
+                        <div id="collapse-@detailIndex-@mainIndex" class="collapse @expandedClass" aria-labelledby="heading-@detailIndex-@mainIndex" data-parent="#accordion-@mainIndex">
+                            <div class="card-body">
+                                @Html.Raw(itemDetail.Description)
+                            </div><!-- End .card-body -->
+                        </div><!-- End .collapse -->
+                    </div>
+                    detailIndex++;
+                    <!-- End .card -->
+                }
+            </div>
+
+            <!-- End .accordion -->
+            mainIndex++;
+        }
+    </div><!-- End .container -->
+    <div class="mb-2"></div><!-- End .mb-2 -->
+</div><!-- End .page-content -->

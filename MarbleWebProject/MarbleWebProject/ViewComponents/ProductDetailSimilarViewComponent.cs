@@ -1,32 +1,34 @@
-﻿using MarbleWebProject.Helper;
 using MarbleWebProject.Models;
-using MarbleWebProject.Services;
+using MarbleWebProject.Services.Api;
 using Microsoft.AspNetCore.Mvc;
 
-namespace MarbleWebProject.ViewComponents
-{
+namespace MarbleWebProject.ViewComponents;
 
-    [ViewComponent]
-    public class ProductDetailSimilarViewComponent : ViewComponent
+[ViewComponent]
+public class ProductDetailSimilarViewComponent : ViewComponent
+{
+    private readonly IStoreCatalogApi _catalog;
+    private readonly IStoreAuthService _auth;
+
+    public ProductDetailSimilarViewComponent(IStoreCatalogApi catalog, IStoreAuthService auth)
     {
-        public Task<IViewComponentResult> InvokeAsync(ProductSimilarModel data)
+        _catalog = catalog;
+        _auth = auth;
+    }
+
+    public async Task<IViewComponentResult> InvokeAsync(ProductSimilarModel data, CancellationToken cancellationToken = default)
+    {
+        var session = await _auth.GetSessionAsync(cancellationToken);
+        var routeResponse = await _catalog.GetProductDetailSimilarAsync(new ProductsByCageoryRequest
         {
-            BaseResponse<List< ProductList >> routeResponse = new BaseResponse<List<ProductList>>();
-            var returnData = new List<ProductList>();
-            TokenResponse loginResponse = new TokenResponse();
-            using (var cms = new CmsClient())
-            {
-                loginResponse = cms.getSession();
-                var contentRequest = new ProductsByCageoryRequest { LanguageCode = loginResponse.LanguageCode,ID= data.ProductID,CategoryID=data.CategoryID /*Url = routeList[1]*/ };
-                routeResponse = cms.GetProductDetailSimilar(contentRequest, loginResponse.Token);
-            }
-            if (routeResponse.Status)
-            {
-                returnData = routeResponse.Data;
-                
-                return Task.FromResult<IViewComponentResult>(View(returnData));
-            }
-            return Task.FromResult<IViewComponentResult>(Content(string.Empty));
-        }
+            LanguageCode = session.LanguageCode,
+            ID = data.ProductID,
+            CategoryID = data.CategoryID
+        }, cancellationToken);
+
+        if (routeResponse.Status)
+            return View(routeResponse.Data);
+
+        return Content(string.Empty);
     }
 }

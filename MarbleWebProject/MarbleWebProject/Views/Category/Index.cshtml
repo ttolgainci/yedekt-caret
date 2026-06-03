@@ -1,0 +1,68 @@
+﻿@using MarbleWebProject.Helper
+@{
+
+    Layout = "~/Views/Shared/_Layout.cshtml";
+}
+@model ProductsByCageoryResponse
+
+@if (Model != null)
+{
+
+    <div class="page-header text-center" style="background-image: url('assets/images/page-header-bg.jpg')">
+        <div class="container">
+            <div class="text-center">
+                <h2 class="title">@Model.CategoryName</h2><!-- End .title -->
+                <p>@Html.Raw(@Model.ShortDescription)</p>
+                <div class="heading-right" style="float:right !important">
+                    <a href="#cat-desc-bottom" class="title-link scroll-bottom-text link-underline">@Html.Translate("#Learn more#") <i class="icon-long-arrow-right"></i></a>
+                </div>
+            </div>
+           
+        </div><!-- End .container -->
+    </div>
+
+    <!-- End .page-header -->
+    @await Component.InvokeAsync("CategoryDetailBreadcrumb", Model.CategoryID)
+ 
+
+    <!-- End .breadcrumb-nav -->
+    @if (Model.ProductList.Count > 0)
+    {
+        <div class="page-content">
+            <div class="categories-page">
+                <div class="container" id="productContainer">
+                   
+                        @Html.Partial("_CategoryProductListPartial", Model)
+
+
+
+
+                  
+                </div><!-- End .container -->
+            </div><!-- End .categories-page -->
+
+            <div class="sidebar-filter-overlay"></div><!-- End .sidebar-filter-overlay -->
+
+        </div>
+    }
+
+    <div class="container" id="cat-desc-bottom" style="margin-top:30px !important">
+        <div class="row">
+            <div class="col-lg-12">
+                <div class="text-center">
+                    @Html.Raw(@Model.Description)
+                </div><!-- End .about-text -->
+            </div>
+        </div>
+   </div>
+}
+@section Scripts
+{
+    <script>
+        function functionRediretPackResult(d) {
+
+            $("#City_PopularHotelsPackageV2").submit();
+
+        }
+    </script>
+}

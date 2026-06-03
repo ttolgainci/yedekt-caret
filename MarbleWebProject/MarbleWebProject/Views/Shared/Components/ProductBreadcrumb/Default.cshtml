@@ -1,0 +1,18 @@
+﻿@using MarbleWebProject.Helper
+@model ProductBreadcrumbModel
+
+<nav aria-label="breadcrumb" class="breadcrumb-nav border-0 mb-0">
+    <div class="container d-flex align-items-center">
+        <ol class="breadcrumb">
+            <li class="breadcrumb-item"><a href="/">@Html.Translate("#Home#")</a></li>        
+            @if (Model.CagetoryList.Count > 0)
+            {
+                foreach (var item in Model.CagetoryList)
+                {
+                    <li class="breadcrumb-item"><a href="@item.Url">@item.Name</a></li>
+                }
+                <li class="breadcrumb-item active" aria-current="page">@Model.Name</li>
+            }
+        </ol>
+    </div><!-- End .container -->
+</nav>

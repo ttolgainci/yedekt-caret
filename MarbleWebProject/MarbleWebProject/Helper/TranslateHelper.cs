@@ -1,70 +1,45 @@
-﻿using MarbleWebProject.Models;
+using MarbleWebProject.Models;
 using MarbleWebProject.Services;
+using MarbleWebProject.Services.Api;
 using Microsoft.AspNetCore.Mvc.Rendering;
+using Microsoft.Extensions.DependencyInjection;
 
-namespace MarbleWebProject.Helper
+namespace MarbleWebProject.Helper;
+
+public static class TranslateHelper
 {
-    public static class TranslateHelper
+    public static async Task<string> TranslateAsync(IHtmlHelper htmlHelper, string key, CancellationToken cancellationToken = default)
     {
-        public static string Translate(this IHtmlHelper htmlHelper, string key)
+        var translateAllList = FilterParametersHelper.TranslateFullList;
+        if (translateAllList.Count > 0)
         {
-            TranslateRequest requestTranslate = new TranslateRequest();
-            BaseResponse<TranslateResponse> translateResponse = new BaseResponse<TranslateResponse>();
-            var returnData = new TranslateResponse();
-            TokenResponse loginResponse = new TokenResponse();
-            //CacheHelper cacheHelper = new CacheHelper(memoryCache);
-            var localizedString = "";
-            var translateAllList = FilterParametersHelper.TranslateFullList;
-            if (translateAllList.Count > 0)
-            {
-                var hasTranslate = translateAllList.Where(c => c.Key.Equals(key, StringComparison.OrdinalIgnoreCase) && c.AgencyGroupID == AppConfig.CMSService.MarketCode.GetValueOrDefault() && c.RetLang == AppConfig.CMSService.LanguageCode).FirstOrDefault();
-                if (hasTranslate != null)
-                {
-                    return hasTranslate.Translation;
-                }
-                else
-                {
-                    using (var cms = new CmsClient())
-                    {
-                        loginResponse = cms.getSession();
-                        requestTranslate.Text = key;
-                        requestTranslate.Language = AppConfig.CMSService.LanguageCode;
-                        translateResponse = cms.GetTranslate(requestTranslate, loginResponse.Token);
-                    }
-
-                    if (translateResponse.Status)
-                    {
-                        returnData = translateResponse.Data;
-                        //cacheHelper.SetCache(Key, localizedString);
-                        localizedString = returnData.Text;
-                        FilterParametersHelper.TranslateFullList = returnData.GetFullList;
-                    }
-                    return localizedString;
-                }
-
-            }
-            else
-            {
-                using (var cms = new CmsClient())
-                {
-                    loginResponse = cms.getSession();
-                    requestTranslate.Text = key;
-                    
-                    requestTranslate.Language = AppConfig.CMSService.LanguageCode;
-                    translateResponse = cms.GetTranslate(requestTranslate, loginResponse.Token);
-                }
-
-                if (translateResponse.Status)
-                {
-                    returnData = translateResponse.Data;
-                    //cacheHelper.SetCache(Key, localizedString);
-                    localizedString = returnData.Text;
-                    FilterParametersHelper.TranslateFullList = returnData.GetFullList;
-                }
-                return localizedString;
-            }
-
-
+            var hasTranslate = translateAllList.FirstOrDefault(c =>
+                c.Key.Equals(key, StringComparison.OrdinalIgnoreCase)
+                && c.AgencyGroupID == AppConfig.CMSService.MarketCode.GetValueOrDefault()
+                && c.RetLang == AppConfig.CMSService.LanguageCode);
+            if (hasTranslate != null)
+                return hasTranslate.Translation;
         }
+
+        var services = htmlHelper.ViewContext.HttpContext.RequestServices;
+        var auth = services.GetRequiredService<IStoreAuthService>();
+        var content = services.GetRequiredService<IStoreContentApi>();
+        var session = await auth.GetSessionAsync(cancellationToken);
+        var translateResponse = await content.GetTranslateAsync(new TranslateRequest
+        {
+            Text = key,
+            Language = session.LanguageCode
+        }, cancellationToken);
+
+        if (!translateResponse.Status)
+            return key;
+
+        FilterParametersHelper.TranslateFullList = translateResponse.Data.GetFullList;
+        return translateResponse.Data.Text;
+    }
+
+    public static string Translate(this IHtmlHelper htmlHelper, string key)
+    {
+        return TranslateAsync(htmlHelper, key).GetAwaiter().GetResult();
     }
 }

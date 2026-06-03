@@ -1,0 +1,120 @@
+﻿@using MarbleWebProject.Helper
+@model ProductInfo
+@{
+    string btnText = Html.Translate("#Add to cart#");
+    int? basketQuantity = 0;
+    string shippingText = "";
+
+    @if (Model.HasBasket)
+    {
+        basketQuantity = Model.BasketQuantity;
+        btnText = Html.Translate("#in the basket#");
+    }
+    @if (Model.ShippingPrice==null)
+    {
+        shippingText = Html.Translate("#Free Shipping#");
+    }
+    else
+    {
+        shippingText = @Model.ShippingPrice.ToString() + " " + Model.CurrencyName;
+    }
+    string dimensionsText = $"{(Model.Length != null ? $"{Html.Translate("#Length#")} {Math.Round(Model.Length.GetValueOrDefault())} {Model.LengthClassUnit} x " : "")}" +
+                         $"{(Model.Width != null ? $"{Html.Translate("#Width#")} {Math.Round(Model.Width.GetValueOrDefault())} {Model.LengthClassUnit} x " : "")}" +
+                         $"{(Model.Height != null ? $"{Html.Translate("#Height#")} {Math.Round(Model.Height.GetValueOrDefault())} {Model.LengthClassUnit}" : "")}".TrimEnd('x', ' ');
+
+}
+
+<div class="col-md-6">
+    <div class="product-details  product-detail-code_@Model.ProductID">
+        <h1 class="product-title">@Model.ProductName</h1><!-- End .product-title -->
+
+      @*   <div class="ratings-container">
+            <div class="ratings">
+                <div class="ratings-val" style="width: 80%;"></div><!-- End .ratings-val -->
+            </div><!-- End .ratings -->
+               <a class="ratings-text" href="#product-review-link" id="review-link">( 2 Reviews )</a> 
+        </div> *@<!-- End .rating-container -->
+
+        <div class="product-price">
+            @{
+                string setPrice = Model.Price.ToString();
+                string currency = Model.CurrencyName;
+            }
+            @setPrice @currency <br />
+           
+          
+        </div>
+
+        @foreach (var item in Model.ProductDiscounts)
+        {
+            <label for="size">@item.Quantity  @Html.Translate("#of them#")  @item.price @Model.CurrencyName</label>
+
+            <br />
+        }<!-- End .product-price -->
+        @if (!string.IsNullOrEmpty(Model.Description))
+        {
+            <div class="product-content">
+                @Html.Raw(Model.Description)
+            </div>
+        }
+
+         <div class="details-filter-row details-row-size">
+            <label style="width:25%!important">@Html.Translate("#Stock Status#") : </label>
+            <div class="product-nav product-nav-thumbs">
+                @Model.StockStatus
+            </div>
+        </div><!-- End .details-filter-row -->
+
+        <div class="details-filter-row details-row-size">
+            <label style="width:25%!important">@Html.Translate("#Stock Quantity#") : </label>
+            <div class="product-nav product-nav-thumbs">
+                @Model.Quantity
+            </div>
+        </div><!-- End .details-filter-row -->
+      <!-- End .details-filter-row -->
+        <div class="details-filter-row details-row-size">
+            <label style="width:25%!important">@Html.Translate("#Shipping#") :  </label>
+            <div class="product-nav product-nav-thumbs">
+                <i class="icon-truck"></i>  @shippingText
+            </div>
+        </div><!-- End .details-filter-row -->
+        @if (!string.IsNullOrEmpty(dimensionsText))
+        {
+            <div class="details-filter-row details-row-size">
+                <label style="width:25%!important">@Html.Translate("#Dimensions#") :  </label>
+                <div class="product-nav product-nav-thumbs">
+                    @dimensionsText
+                </div>
+            </div>
+        }
+        <div class="product-details-action">
+            <div class="details-action-col">
+                <div class="product-details-quantity">
+                    <input type="number" class="form-control product-detail-Quantity" value="@basketQuantity" min="@Model.MinimumQuantity" max="@Model.Quantity" step="1" data-decimals="0" required>
+                </div><!-- End .product-details-quantity -->             
+                <a href="#" onclick="setProductToBasket(this)" data-pid="@Model.ProductID" data-purl="@Model.Url" class="btn-product btn-cart"><span>@btnText</span></a>
+                <div class="details-action-wrapper">
+                    <a href="#" data-pid="@Model.ProductID" onclick="setProductToSepete(this)" class="btn-product btn-wishlist" title="Wishlist"><span>@Html.Translate("#Add to Wishlist#")</span></a>
+                    @*  <a href="#" class="btn-product btn-compare" title="Compare"><span>Add to Compare</span></a> *@
+                </div>
+            </div><!-- End .details-action-col -->
+            <!-- End .details-action-wrapper -->
+        </div><!-- End .product-details-action -->
+
+        <div class="product-details-footer">
+            <div class="product-cat">
+                <span>Category:</span>
+                <a href="#">Women</a>,
+                <a href="#">Dresses</a>,
+                <a href="#">Yellow</a>
+            </div><!-- End .product-cat -->
+            @* <div class="social-icons social-icons-sm">
+            <span class="social-label">Share:</span>
+            <a href="#" class="social-icon" title="Facebook" target="_blank"><i class="icon-facebook-f"></i></a>
+            <a href="#" class="social-icon" title="Twitter" target="_blank"><i class="icon-twitter"></i></a>
+            <a href="#" class="social-icon" title="Instagram" target="_blank"><i class="icon-instagram"></i></a>
+            <a href="#" class="social-icon" title="Pinterest" target="_blank"><i class="icon-pinterest"></i></a>
+            </div> *@
+        </div><!-- End .product-details-footer -->
+    </div><!-- End .product-details -->
+</div>

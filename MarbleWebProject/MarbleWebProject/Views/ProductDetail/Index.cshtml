@@ -1,0 +1,81 @@
+﻿@{
+
+    Layout = "~/Views/Shared/_Layout.cshtml";
+}
+@model ProductDetailResponse
+@if (Model.ProductDetails != null)
+{
+
+    @await Component.InvokeAsync("ProductBreadcrumb", Model.ProductDetails.ProductName)
+    <!-- End .breadcrumb-nav -->
+
+    <div class="page-content">
+        <div class="container">
+            <div class="product-details-top mb-2">
+                <div class="row">
+                    @await Component.InvokeAsync("ProductDetailImage", Model.ProductImages)
+
+                    @await Component.InvokeAsync("ProductInfo", Model.ProductDetails)
+
+                </div><!-- End .row -->
+            </div><!-- End .product-details-top -->
+            @await Component.InvokeAsync("ProductAttributeDetail", Model.ProductAttributes)
+
+
+            @await Component.InvokeAsync("ProductDetailSimilar", Model.ProductSimilarData)
+        </div><!-- End .container -->
+    </div>
+}
+@section Scripts
+{
+    <script type="text/javascript">
+        $(document).ready(function () {
+            // var mySwiper = new Swiper('#product-zoom-gallery', {
+            //     direction: 'vertical',
+            //     effect: 'slide',
+            //     slidesPerView: 4,
+            //     // loop: true,
+            //     // autoplay: {
+            //     //     delay: 2000,
+            //     //     reverseDirection: true,
+            //     //     disableOnInteraction: false,
+            //     // },
+            // })
+            var sliderThumbs = new Swiper('.swiper-container', { // ищем слайдер превью по селектору
+                direction: 'vertical',
+                slidesPerView: 4,
+                spaceBetween: 30,
+                loop: true,
+                breakpoints: {
+                    320: {
+                        slidesPerView: 1,
+                        spaceBetweenSlides: 25
+                    },
+                    600: {
+                        slidesPerView: 2,
+                        spaceBetweenSlides: 25
+                    },
+                    991: {
+                        slidesPerView: 3,
+                        spaceBetweenSlides: 25
+                    },
+                    1240: {
+                        slidesPerView: 3,
+                        spaceBetweenSlides: 25
+                    },
+                    1600: {
+                        slidesPerView: 4,
+                        spaceBetweenSlides: 25
+                    }
+                },
+                navigation: {
+                    nextEl: '.swiper-button-next',
+                    prevEl: '.swiper-button-prev',
+                },
+
+            });
+
+        });
+    </script>
+    <script src="~/PageJs/ProductDetail.js"></script>
+}

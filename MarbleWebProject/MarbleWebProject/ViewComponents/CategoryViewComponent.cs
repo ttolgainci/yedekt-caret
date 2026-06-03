@@ -1,50 +1,46 @@
-﻿using MarbleWebProject.Helper;
+using MarbleWebProject.Helper;
 using MarbleWebProject.Models;
-using MarbleWebProject.Services;
+using MarbleWebProject.Services.Api;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.Caching.Memory;
 
-namespace MarbleWebProject.ViewComponents
+namespace MarbleWebProject.ViewComponents;
+
+[ViewComponent]
+public class CategoryViewComponent : ViewComponent
 {
+    private readonly IMemoryCache _cache;
+    private readonly IStoreCatalogApi _catalog;
+    private readonly IStoreAuthService _auth;
 
-    [ViewComponent]
-    public class CategoryViewComponent : ViewComponent
+    public CategoryViewComponent(IMemoryCache cache, IStoreCatalogApi catalog, IStoreAuthService auth)
     {
-        private readonly IMemoryCache _cache;
+        _cache = cache;
+        _catalog = catalog;
+        _auth = auth;
+    }
 
-        public CategoryViewComponent(IMemoryCache cache)
-        {
-            _cache = cache;
-        }
-        public async Task<IViewComponentResult> InvokeAsync(List<CategoryListModel> models)
-        {
-            BaseResponse<List<CategoryListModel>> routeResponse = new BaseResponse<List<CategoryListModel>>();
-            var returnData=new List<CategoryListModel>();
-            TokenResponse loginResponse = new TokenResponse();
-            CategoryRequest request = new CategoryRequest();
-            CacheHelper cacheHelper = new CacheHelper(_cache);
-            string Key = "CategoryListHeader" + AppConfig.CMSService.CustomName + AppConfig.CMSService.MarketCode + AppConfig.CMSService.LanguageCode;
-            string returnHtml = "";
+    public async Task<IViewComponentResult> InvokeAsync(List<CategoryListModel> models, CancellationToken cancellationToken = default)
+    {
+        var cacheHelper = new CacheHelper(_cache);
+        var key = "CategoryListHeader" + AppConfig.CMSService.CustomName + AppConfig.CMSService.MarketCode + AppConfig.CMSService.LanguageCode;
 
-            if (!cacheHelper.IfCache(Key))
+        if (!cacheHelper.IfCache(key))
+        {
+            var session = await _auth.GetSessionAsync(cancellationToken);
+            var routeResponse = await _catalog.GetCategoriesAsync(
+                new CategoryRequest { languageCode = session.LanguageCode }, cancellationToken);
+
+            if (routeResponse.Status)
             {
-                using (var cms = new CmsClient())
-                {
-                    loginResponse = cms.getSession();
-                    var contentRequest = new CategoryRequest {  languageCode = loginResponse.LanguageCode };
-                    routeResponse = cms.GetCagetory(contentRequest,loginResponse.Token);
-                }
-                if (routeResponse.Status)
-                {
-                    returnData = routeResponse.Data;
-                    cacheHelper.SetCache(Key, returnData);
-                    return View(returnData);
-                }
-                cacheHelper.SetCache(Key, returnData);
-                return Content(string.Empty);
+                cacheHelper.SetCache(key, routeResponse.Data);
+                return View(routeResponse.Data);
             }
-            returnData = cacheHelper.GetCache(Key) as List<CategoryListModel>;
-            return View(returnData);
+            cacheHelper.SetCache(key, new List<CategoryListModel>());
+            return Content(string.Empty);
         }
+
+        var returnData = cacheHelper.GetCache(key) as List<CategoryListModel>;
+        return View(returnData ?? new List<CategoryListModel>());
     }
 }

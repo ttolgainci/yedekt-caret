@@ -1,0 +1,114 @@
+@using MarbleWebProject.Helper
+@model MarbleWebProject.Models.HeaderNavigationModel
+@{
+    var header = AppConfig.Storefront.Header;
+}
+<header class="header header-2 header-intro-clearance">
+    <div class="header-top">
+        <div class="container">
+            <div class="header-left">
+                <p>@Html.Translate("#Special collection already available.#")</p>
+            </div>
+            <div class="header-right">
+                <ul class="top-menu">
+                    <li>
+                        <a href="#">@Html.Translate("#Links#")</a>
+                        <ul>
+                            @if (StorefrontFlagHelper.IsActive(header, "HeaderLanguageV1"))
+                            {
+                                <li>@await Component.InvokeAsync("HeaderLanguageV1")</li>
+                            }
+                            else @if (StorefrontFlagHelper.IsActive(header, "HeaderLanguageV2"))
+                            {
+                                <li>@await Component.InvokeAsync("HeaderLanguageV2")</li>
+                            }
+                            @if (StorefrontFlagHelper.IsActive(header, "HeaderSignInV1"))
+                            {
+                                <li>@await Component.InvokeAsync("HeaderSignInV1")</li>
+                            }
+                            else @if (StorefrontFlagHelper.IsActive(header, "HeaderSignInV2"))
+                            {
+                                <li>@await Component.InvokeAsync("HeaderSignInV2")</li>
+                            }
+                        </ul>
+                    </li>
+                </ul>
+            </div>
+        </div>
+    </div>
+
+    <div class="header-middle">
+        <div class="container">
+            <div class="header-left">
+                <button class="mobile-menu-toggler" type="button">
+                    <span class="sr-only">Toggle mobile menu</span>
+                    <i class="icon-bars"></i>
+                </button>
+                <a href="/" class="logo">
+                    <img src="~/assets/images/demos/demo-2/logo.png" alt="Logo" width="105" height="25">
+                </a>
+            </div>
+
+            @if (StorefrontFlagHelper.IsActive(header, "HeaderSearchV1"))
+            {
+                <div class="header-center">
+                    @await Component.InvokeAsync("HeaderSearchV1")
+                </div>
+            }
+            else @if (StorefrontFlagHelper.IsActive(header, "HeaderSearchV2"))
+            {
+                <div class="header-center">
+                    @await Component.InvokeAsync("HeaderSearchV2")
+                </div>
+            }
+
+            <div class="header-right">
+                @if (StorefrontFlagHelper.IsActive(header, "HeaderAccountDashboardV1"))
+                {
+                    @await Component.InvokeAsync("HeaderAccountDashboardV1")
+                }
+                else @if (StorefrontFlagHelper.IsActive(header, "HeaderAccountDashboardV2"))
+                {
+                    @await Component.InvokeAsync("HeaderAccountDashboardV2")
+                }
+                @if (StorefrontFlagHelper.IsActive(header, "HeaderWishlistV1"))
+                {
+                    @await Component.InvokeAsync("HeaderWishlistV1")
+                }
+                else @if (StorefrontFlagHelper.IsActive(header, "HeaderWishlistV2"))
+                {
+                    @await Component.InvokeAsync("HeaderWishlistV2")
+                }
+                @if (StorefrontFlagHelper.IsActive(header, "HeaderBasketV1"))
+                {
+                    @await Component.InvokeAsync("HeaderBasketV1")
+                }
+                else @if (StorefrontFlagHelper.IsActive(header, "HeaderBasketV2"))
+                {
+                    @await Component.InvokeAsync("HeaderBasketV2")
+                }
+            </div>
+        </div>
+    </div>
+
+    <div class="header-bottom sticky-header">
+        <div class="container">
+            @if (StorefrontFlagHelper.IsActive(header, "HeaderMainCategoryNavV1"))
+            {
+                @await Component.InvokeAsync("HeaderMainCategoryNavV1", Model)
+            }
+            else @if (StorefrontFlagHelper.IsActive(header, "HeaderMainCategoryNavV2"))
+            {
+                @await Component.InvokeAsync("HeaderMainCategoryNavV2", Model)
+            }
+            @if (Model.ShowBrowseCategories && StorefrontFlagHelper.IsActive(header, "HeaderCategoryNavV1"))
+            {
+                @await Component.InvokeAsync("HeaderCategoryNavV1", Model)
+            }
+            else @if (Model.ShowBrowseCategories && StorefrontFlagHelper.IsActive(header, "HeaderCategoryNavV2"))
+            {
+                @await Component.InvokeAsync("HeaderCategoryNavV2", Model)
+            }
+        </div>
+    </div>
+</header>

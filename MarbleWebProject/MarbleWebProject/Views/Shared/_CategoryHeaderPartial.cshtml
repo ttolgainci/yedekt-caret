@@ -1,0 +1,122 @@
+@model CategoryListModel
+@{
+    var categoryUrl = "/" + (Model.Url ?? "").TrimStart('/');
+    var children = (Model.SubCat ?? new List<CategoryListModel>())
+        .Where(c => c.Status)
+        .OrderBy(c => c.Order ?? c.Name)
+        .ThenBy(c => c.Name)
+        .ToList();
+    var hasChildren = children.Count > 0;
+    var withImages = children.Where(c => !string.IsNullOrWhiteSpace(c.Picture)).ToList();
+    var withNested = children.Where(c => (c.SubCat?.Count ?? 0) > 0).ToList();
+    var textOnly = children.Where(c => string.IsNullOrWhiteSpace(c.Picture)).ToList();
+}
+
+<li class="@(hasChildren ? "megamenu-container" : null)">
+    <a href="@categoryUrl" class="@(hasChildren ? "sf-with-ul" : null)">@Model.Name</a>
+    @if (hasChildren)
+    {
+        @if (withImages.Count > 0)
+        {
+            <div class="megamenu demo">
+                <div class="menu-col">
+                    <div class="menu-title">@Model.Name</div>
+                    <div class="demo-list">
+                        @foreach (var sub in withImages)
+                        {
+                            var subUrl = "/" + (sub.Url ?? "").TrimStart('/');
+                            var imageUrl = MediaUrlHelper.Build(sub.Picture);
+                            <div class="demo-item">
+                                <a href="@subUrl">
+                                    <span class="category-menu-media">
+                                        <img src="@imageUrl" alt="@sub.Name" loading="lazy" />
+                                    </span>
+                                    <span class="demo-title">@sub.Name</span>
+                                </a>
+                            </div>
+                        }
+                    </div>
+
+                    @if (textOnly.Count > 0)
+                    {
+                        <ul class="mt-2">
+                            @foreach (var sub in textOnly.Where(s => (s.SubCat?.Count ?? 0) == 0))
+                            {
+                                var subUrl = "/" + (sub.Url ?? "").TrimStart('/');
+                                <li><a href="@subUrl">@sub.Name</a></li>
+                            }
+                        </ul>
+                    }
+
+                    @if (withNested.Count > 0)
+                    {
+                        <div class="row mt-3">
+                            @foreach (var sub in withNested)
+                            {
+                                var subChildren = (sub.SubCat ?? new List<CategoryListModel>())
+                                    .Where(c => c.Status)
+                                    .OrderBy(c => c.Order ?? c.Name)
+                                    .ThenBy(c => c.Name)
+                                    .ToList();
+                                if (subChildren.Count == 0)
+                                {
+                                    continue;
+                                }
+                                var subUrl = "/" + (sub.Url ?? "").TrimStart('/');
+                                <div class="col-md-6 col-lg-4">
+                                    <div class="menu-title">
+                                        <a href="@subUrl">@sub.Name</a>
+                                    </div>
+                                    <ul>
+                                        @foreach (var grand in subChildren)
+                                        {
+                                            var grandUrl = "/" + (grand.Url ?? "").TrimStart('/');
+                                            <li><a href="@grandUrl">@grand.Name</a></li>
+                                        }
+                                    </ul>
+                                </div>
+                            }
+                        </div>
+                    }
+                </div>
+            </div>
+        }
+        else
+        {
+            <div class="megamenu megamenu-md">
+                <div class="row no-gutters">
+                    <div class="col-md-12">
+                        <div class="menu-col">
+                            <div class="row">
+                                @foreach (var sub in children)
+                                {
+                                    var subChildren = (sub.SubCat ?? new List<CategoryListModel>())
+                                        .Where(c => c.Status)
+                                        .OrderBy(c => c.Order ?? c.Name)
+                                        .ThenBy(c => c.Name)
+                                        .ToList();
+                                    var subUrl = "/" + (sub.Url ?? "").TrimStart('/');
+                                    <div class="col-md-6 col-lg-4">
+                                        <div class="menu-title">
+                                            <a href="@subUrl">@sub.Name</a>
+                                        </div>
+                                        @if (subChildren.Count > 0)
+                                        {
+                                            <ul>
+                                                @foreach (var grand in subChildren)
+                                                {
+                                                    var grandUrl = "/" + (grand.Url ?? "").TrimStart('/');
+                                                    <li><a href="@grandUrl">@grand.Name</a></li>
+                                                }
+                                            </ul>
+                                        }
+                                    </div>
+                                }
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        }
+    }
+</li>

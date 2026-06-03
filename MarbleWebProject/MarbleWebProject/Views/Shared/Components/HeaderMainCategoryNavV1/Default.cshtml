@@ -1,0 +1,11 @@
+@model MarbleWebProject.Models.HeaderNavigationModel
+<div class="header">
+    <nav class="main-nav">
+        <ul class="menu sf-arrows">
+            @foreach (var category in Model.MainNavCategories)
+            {
+                <partial name="_CategoryHeaderPartial" model="category" />
+            }
+        </ul>
+    </nav>
+</div>

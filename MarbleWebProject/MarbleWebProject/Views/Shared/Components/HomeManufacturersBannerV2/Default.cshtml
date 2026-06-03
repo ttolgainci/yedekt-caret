@@ -1,0 +1,27 @@
+@model List<AllBannerResponse>
+@{
+    var brands = Model?.Where(x => !string.IsNullOrWhiteSpace(x.Image)).ToList() ?? new List<AllBannerResponse>();
+}
+@if (brands.Count > 0)
+{
+    <div class="brands-border owl-carousel owl-simple" data-toggle="owl"
+         data-owl-options='{"nav": false, "dots": false, "margin": 0, "loop": false, "responsive": {"0":{"items":2},"420":{"items":3},"600":{"items":4},"900":{"items":5},"1024":{"items":6},"1360":{"items":7}}}'>
+        @foreach (var item in brands)
+        {
+            <a href="@(string.IsNullOrWhiteSpace(item.Url) ? "#" : "/" + item.Url.TrimStart('/'))" class="brand">
+                <img src="@MediaUrlHelper.Build(item.Image)" alt="@item.Name">
+            </a>
+        }
+    </div>
+}
+else
+{
+    <div class="brands-border owl-carousel owl-simple" data-toggle="owl"
+         data-owl-options='{"nav": false, "dots": false, "margin": 0, "loop": false, "responsive": {"0":{"items":2},"420":{"items":3},"600":{"items":4},"900":{"items":5},"1024":{"items":6},"1360":{"items":7}}}'>
+        @for (var i = 1; i <= 7; i++)
+        {
+            <a href="#" class="brand"><img src="~/assets/images/brands/@(i).png" alt="Brand"></a>
+        }
+    </div>
+}
+<div class="mb-3 mb-lg-5"></div>

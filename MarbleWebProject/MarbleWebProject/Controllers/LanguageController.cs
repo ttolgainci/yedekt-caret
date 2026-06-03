@@ -18,10 +18,6 @@ namespace MarbleWebProject.Controllers
                 if (!string.IsNullOrEmpty(getTokenSession))
                 {
                     var rtn = JsonSerializer.Deserialize<TokenResponse>(getTokenSession);
-                    if (rtn == null)
-                    {
-                        return Json(new { redirectToUrl = Url.Action("Index", "Home") });
-                    }
 
                     response.Token = rtn.Token;
                     response.Market = rtn.Market;

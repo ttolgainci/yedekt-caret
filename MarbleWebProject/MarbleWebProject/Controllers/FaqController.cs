@@ -1,35 +1,42 @@
-﻿using MarbleWebProject.Helper;
 using MarbleWebProject.Models;
-using MarbleWebProject.Services;
+using MarbleWebProject.Services.Api;
 using Microsoft.AspNetCore.Mvc;
 
-namespace MarbleWebProject.Controllers
-{
-    public class FaqController : Controller
-    {
-        public IActionResult Index(string id)
-        {
-			var route = Request.Path.Value;
-			var routeList = route.Split("/");
-			BaseResponse<AllInfoResponse> routeResponse = new BaseResponse<AllInfoResponse>();
-            var returnData = new AllInfoResponse();
-            TokenResponse loginResponse = new TokenResponse();
-            using (var cms = new CmsClient())
-            {
-                loginResponse = cms.getSession();
-                var contentRequest = new InfoPageRequest { Type = "FAQ", LanguageCode = loginResponse.LanguageCode, Url = routeList[1] };
-                routeResponse = cms.GetInfoByUrl(contentRequest, loginResponse.Token);
-            }
-            if (routeResponse.Status)
-            {
+namespace MarbleWebProject.Controllers;
 
-                returnData = routeResponse.Data;
-                TempData["Title"] = routeResponse.Data.MetaTitle;
-                TempData["Keywords"] = routeResponse.Data.MetaKeyword;
-                TempData["Description"] = routeResponse.Data.MetaDescription;
-                return View(returnData);
-            }
+public class FaqController : Controller
+{
+    private readonly IStoreContentApi _content;
+    private readonly IStoreAuthService _auth;
+
+    public FaqController(IStoreContentApi content, IStoreAuthService auth)
+    {
+        _content = content;
+        _auth = auth;
+    }
+
+    public async Task<IActionResult> Index(string id, CancellationToken cancellationToken = default)
+    {
+        var route = Request.Path.Value;
+        var routeList = route?.Split("/") ?? Array.Empty<string>();
+        if (routeList.Length < 2)
             return NotFound();
-        }
+
+        var session = await _auth.GetSessionAsync(cancellationToken);
+        var contentRequest = new InfoPageRequest
+        {
+            Type = "FAQ",
+            LanguageCode = session.LanguageCode,
+            Url = routeList[1]
+        };
+        var routeResponse = await _content.GetInfoByUrlAsync(contentRequest, cancellationToken);
+
+        if (!routeResponse.Status)
+            return NotFound();
+
+        TempData["Title"] = routeResponse.Data.MetaTitle;
+        TempData["Keywords"] = routeResponse.Data.MetaKeyword;
+        TempData["Description"] = routeResponse.Data.MetaDescription;
+        return View(routeResponse.Data);
     }
 }

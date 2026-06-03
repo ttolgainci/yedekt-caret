@@ -1,49 +1,39 @@
-﻿using MarbleWebProject.Helper;
 using MarbleWebProject.Models;
-using MarbleWebProject.Services;
+using MarbleWebProject.Services.Api;
 using Microsoft.AspNetCore.Mvc;
 
-namespace MarbleWebProject.Controllers
+namespace MarbleWebProject.Controllers;
+
+public class ProductDetailController : Controller
 {
-    public class ProductDetailController : Controller
+    private readonly IStoreCatalogApi _catalog;
+    private readonly IStoreAuthService _auth;
+
+    public ProductDetailController(IStoreCatalogApi catalog, IStoreAuthService auth)
     {
-        public IActionResult Index(int id,int catID)
-        {
-            var route = Request.Path.Value ?? string.Empty;
-            var routeList = route.Split("/", StringSplitOptions.RemoveEmptyEntries);
-            BaseResponse<ProductDetailResponse> routeResponse = new BaseResponse<ProductDetailResponse>();
-            var returnData = new ProductDetailResponse();
-            if (routeList.Length >= 2)
-            {               
-                TokenResponse loginResponse = new TokenResponse();
-                using (var cms = new CmsClient())
-                {
-                    loginResponse = cms.getSession();
-                    var userGuid = HttpContext.Request.Cookies["UserIDForBasket"] ?? "";
-                    var contentRequest = new ProductDetailRequest
-                    {
-                        Language = loginResponse.LanguageCode,
-                        ID = id,
-                        UserID = userGuid
-                    };
-                    routeResponse = cms.GetProductDetail(contentRequest, loginResponse.Token);
-                    if (routeResponse.Status)
-                    {
-                        cms.AttachProductCatalogExtras(routeResponse.Data, id, loginResponse.Token);
-                    }
-                }
-                if (routeResponse.Status)
-                {
-                    routeResponse.Data.ProductSimilarData = new ProductSimilarModel { CategoryID = catID, ProductID = id };
-                    routeResponse.Data.ProductDetails.Url = route;
-                    returnData = routeResponse.Data;
-                    TempData["Title"] = routeResponse.Data.ProductDetails.MetaTitle;
-                    TempData["Keywords"] = routeResponse.Data.ProductDetails.MetaKeyword;
-                    TempData["Description"] = routeResponse.Data.ProductDetails.MetaDescription;
-                    return View(returnData);
-                }
-            }
+        _catalog = catalog;
+        _auth = auth;
+    }
+
+    public async Task<IActionResult> Index(int id, int catID, CancellationToken cancellationToken = default)
+    {
+        var route = Request.Path.Value;
+        var routeList = route?.Split("/") ?? Array.Empty<string>();
+        if (routeList.Length != 3)
             return NotFound();
-        }
+
+        var session = await _auth.GetSessionAsync(cancellationToken);
+        var contentRequest = new ProductDetailRequest { Language = session.LanguageCode, ID = id };
+        var routeResponse = await _catalog.GetProductDetailAsync(contentRequest, cancellationToken);
+
+        if (!routeResponse.Status)
+            return NotFound();
+
+        routeResponse.Data.ProductSimilarData = new ProductSimilarModel { CategoryID = catID, ProductID = id };
+        routeResponse.Data.ProductDetails.Url = route;
+        TempData["Title"] = routeResponse.Data.ProductDetails.MetaTitle;
+        TempData["Keywords"] = routeResponse.Data.ProductDetails.MetaKeyword;
+        TempData["Description"] = routeResponse.Data.ProductDetails.MetaDescription;
+        return View(routeResponse.Data);
     }
 }

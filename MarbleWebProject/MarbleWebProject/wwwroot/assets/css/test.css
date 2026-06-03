@@ -1,0 +1,261 @@
+﻿body {
+}
+
+
+
+
+/*.product-image-gallery {*/
+  /*  transform: rotate(90deg) !important;*/
+    /*width: 70px !important,;*/
+    /*margin-top: 100px;*/
+    /*margin-left:-50px !important;
+}
+
+    .product-image-gallery.owl-drag .owl-item {*/
+       /* transform: rotate(90deg) !important;*/
+        /*width:auto !important;
+    }*/
+
+    /*.product-image-gallery .owl-stage-outer {
+        transform: rotate(90deg) !important;
+    }*/
+/*.owl-carousel .owl-nav {
+    display: flex;
+    justify-content: space-between;
+    position: absolute;
+    width: 100%;
+    top: calc(50% - 33px);
+}
+
+div.owl-carousel .owl-nav .owl-prev,
+div.owl-carousel .owl-nav .owl-next {
+    font-size: 36px;
+    top: unset;
+    bottom: 15px;
+}*/
+/*.product-image-gallery {
+    max-width: 100px;
+    display: block;
+    overflow: hidden;
+    transform: rotate(-90deg);*/ /* Rotate the entire gallery */
+    /*transform-origin: right top;*/ /* Adjust the origin */
+    /*height: 400px;*/ /* Set a fixed height for the container */
+/*}
+
+.product-gallery-item {
+    transform: rotate(90deg);*/ /* Rotate individual items back */
+    /*margin-bottom: 10px;
+    text-align: center;
+}
+
+    .product-gallery-item img {
+        width: 100%;
+        display: block;
+        margin: 0 auto;
+    }*/
+
+.swiper-slide
+{
+    height:auto !important;
+    margin-bottom:5px !important;
+}
+/*.slider__prev,
+.slider__next {
+    cursor: pointer;
+    text-align: center;
+    font-size: 14px;
+    height: 48px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    -webkit-user-select: none;
+    -moz-user-select: none;
+    -ms-user-select: none;
+    user-select: none;
+}
+
+    .slider__prev:focus,
+    .slider__next:focus {
+        outline: none;
+    }*/
+
+.swiper-button-next, .swiper-button-prev {
+
+    color: black !important;
+
+}
+/*#setBasketProductDiv{
+    width:500px !important;
+}*/
+
+.banner-set > .row {
+    align-items: stretch
+}
+
+    .banner-set > .row > [class*=col-] {
+        display: flex;
+        align-items: stretch
+    }
+
+        .banner-set > .row > [class*=col-] > div {
+            width: 100%
+        }
+
+.banner-set-content {
+    display: flex;
+    align-self: stretch;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+    color: #777;
+    font-weight: 400;
+    font-size: 1.6rem;
+    line-height: 1.5;
+    background-color: #fff;
+    padding: 2rem 3rem 1.5rem
+}
+
+    .banner-set-content h4 {
+        text-transform: uppercase;
+        color: #c66;
+        font-weight: 400;
+        font-size: 1.6rem;
+        margin-bottom: 1.6rem;
+        letter-spacing: 0
+    }
+
+    .banner-set-content h2 {
+        font-weight: 600;
+        font-size: 3rem;
+        line-height: 1.1;
+        letter-spacing: -.025em;
+        margin-bottom: 1.5rem
+    }
+
+    .banner-set-content p {
+        max-width: 420px;
+        letter-spacing: -.01em;
+        font-size: 1.6rem;
+        font-weight: 300
+    }
+
+    .banner-set-content.text-center p {
+        margin-left: auto;
+        margin-right: auto
+    }
+
+.product.product-2:hover, .product.product-2:focus {
+    box-shadow: none
+}
+
+.banner-set-products {
+    margin-top: 4rem;
+    max-width: 390px;
+    padding-left: 1rem;
+    padding-right: 1rem
+}
+
+.text-center .banner-set-products {
+    margin-left: auto;
+    margin-right: auto
+}
+
+.banner-set-products .product.product-2 {
+    box-shadow: none;
+    margin-bottom: 0
+}
+
+.banner-set-products .row {
+    justify-content: center
+}
+
+    .banner-set-products .row .products {
+        flex: 0 0 83%;
+        max-width: 83%;
+        display: flex;
+        flex-wrap: wrap
+    }
+
+        .banner-set-products .row .products > div {
+            padding-left: .5rem;
+            padding-right: .5rem
+        }
+
+.banner-set-products .product-body {
+    padding-right: 0;
+    padding-bottom: 0
+}
+
+.banner-set-products .product-price {
+    align-items: center
+}
+
+.banner-set-products .product-title {
+    letter-spacing: -0.01eml
+}
+
+.banner-set-image > a {
+    display: block
+}
+
+.banner-set-image img {
+    max-width: none;
+    width: 100%
+}
+
+.banner-set-image .banner-title {
+    margin-bottom: 2.6rem
+}
+
+    .banner-set-image .banner-title span {
+        font-size: 2.4rem;
+        letter-spacing: -.025em
+    }
+
+.banner-set-image .banner-content {
+    left: 5rem;
+    top: initial;
+    transform: none;
+    bottom: 8rem
+}
+
+.banner-set-image .banner-title span, .banner-set-image .banner-link, .banner-set-image .banner-detail {
+    color: #fff
+}
+
+.banner-set-image .banner-subtitle {
+    font-size: 1.2rem;
+    font-weight: 400;
+    letter-spacing: 0;
+    color: #ebebeb;
+    text-transform: uppercase
+}
+
+.banner-set-image .banner-detail {
+    font-size: 1.4rem;
+    font-weight: 400;
+    letter-spacing: 0;
+    margin-bottom: 2.5rem;
+    line-height: 1.4em
+}
+
+.banner-set-image .banner-price {
+    font-size: 1.4rem;
+    font-weight: 400;
+    letter-spacing: 0;
+    color: #ebebeb;
+    margin-bottom: 3rem
+}
+
+.banner-set-image .btn.banner-link {
+    padding: 1.5rem 4rem;
+    border-radius: 3rem;
+    color: #fff;
+    border: .2rem solid #fff
+}
+
+    .banner-set-image .btn.banner-link:hover, .banner-set-image .btn.banner-link:focus, .banner-set-image .btn.banner-link:active {
+        color: #c66;
+        background-color: #fff;
+        border-color: #fff
+    }

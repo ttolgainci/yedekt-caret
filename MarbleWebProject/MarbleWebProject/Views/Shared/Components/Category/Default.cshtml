@@ -1,0 +1,7 @@
+﻿
+@model List<CategoryListModel>
+
+@foreach (var category in Model.Where(c => c.MasterID == 0))
+{
+    @Html.Partial("_CategoryPartial", category)
+}

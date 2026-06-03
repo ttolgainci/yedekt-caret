@@ -6,7 +6,7 @@ namespace MarbleWebProject.Controllers
     {
         public IActionResult Index()
         {
-            return RedirectToAction("Index", "Cart");
+            return View();
         }
     }
 }

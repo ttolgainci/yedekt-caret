@@ -3,7 +3,6 @@
     public class CartModel
     {
         public int ProductID { get; set; }
-        public int? ProductVariantID { get; set; }
         public string ProductName { get; set; }
         public string MainImage { get; set; }
         public string Url { get; set; }

@@ -1,0 +1,65 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+    <meta charset="UTF-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
+    <title>@(TempData["Title"] ?? ViewData["Title"] ?? "Mağaza")</title>
+    @if (TempData["Keywords"] != null)
+    {
+        <meta name="keywords" content="@TempData["Keywords"]" />
+    }
+    @if (TempData["Description"] != null)
+    {
+        <meta name="description" content="@TempData["Description"]" />
+    }
+    <link rel="apple-touch-icon" sizes="180x180" href="~/assets/images/icons/apple-touch-icon.png">
+    <link rel="icon" type="image/png" sizes="32x32" href="~/assets/images/icons/favicon-32x32.png">
+    <link rel="shortcut icon" href="~/assets/images/icons/favicon.ico">
+    <link rel="stylesheet" href="~/assets/vendor/line-awesome/line-awesome/line-awesome/css/line-awesome.min.css">
+    <link rel="stylesheet" href="~/assets/css/bootstrap.min.css">
+    <link rel="stylesheet" href="~/assets/css/plugins/owl-carousel/owl.carousel.css">
+    <link rel="stylesheet" href="~/assets/css/plugins/magnific-popup/magnific-popup.css">
+    <link rel="stylesheet" href="~/assets/css/plugins/jquery.countdown.css">
+    <link rel="stylesheet" href="~/assets/css/style.css">
+    <link rel="stylesheet" href="~/assets/css/skins/skin-demo-2.css">
+    <link rel="stylesheet" href="~/assets/css/demos/demo-2.css">
+    <link rel="stylesheet" href="~/css/store-custom.css">
+    @await RenderSectionAsync("Styles", required: false)
+</head>
+<body>
+    <div class="page-wrapper">
+        @await Component.InvokeAsync("Header")
+        <main class="main">
+            @RenderBody()
+        </main>
+        @await Component.InvokeAsync("Footer")
+    </div>
+
+    <button id="scroll-top" title="Back to Top"><i class="icon-arrow-up"></i></button>
+    @await Component.InvokeAsync("MasterMobileMenu")
+    @await Component.InvokeAsync("LoginRegister")
+
+    <script src="~/assets/js/jquery.min.js"></script>
+    <script src="~/assets/js/bootstrap.bundle.min.js"></script>
+    <script src="~/assets/js/jquery.hoverIntent.min.js"></script>
+    <script src="~/assets/js/jquery.waypoints.min.js"></script>
+    <script src="~/assets/js/superfish.min.js"></script>
+    <script src="~/assets/js/owl.carousel.min.js"></script>
+    <script src="~/assets/js/jquery.plugin.min.js"></script>
+    <script src="~/assets/js/jquery.magnific-popup.min.js"></script>
+    <script src="~/assets/js/jquery.countdown.min.js"></script>
+    <script src="~/assets/js/bootstrap-input-spinner.js"></script>
+    <script src="~/assets/js/main.js"></script>
+    <script src="~/assets/js/demos/demo-2.js"></script>
+    <script>
+        window.MarbleStore = {
+            mediaBase: '@MediaUrlHelper.GetUploadsBaseUrl()'
+        };
+    </script>
+    <script src="~/PageJs/Master.js"></script>
+    <script src="~/PageJs/CartBasket.js"></script>
+    <script src="~/PageJs/Function.js"></script>
+    @await RenderSectionAsync("Scripts", required: false)
+</body>
+</html>

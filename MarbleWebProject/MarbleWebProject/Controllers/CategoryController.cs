@@ -1,70 +1,68 @@
-﻿using MarbleWebProject.Helper;
 using MarbleWebProject.Models;
 using MarbleWebProject.Services;
+using MarbleWebProject.Services.Api;
 using Microsoft.AspNetCore.Mvc;
 
-namespace MarbleWebProject.Controllers
+namespace MarbleWebProject.Controllers;
+
+public class CategoryController : Controller
 {
-    public class CategoryController : Controller
+    private readonly IStoreCatalogApi _catalog;
+    private readonly IStoreAuthService _auth;
+
+    public CategoryController(IStoreCatalogApi catalog, IStoreAuthService auth)
     {
+        _catalog = catalog;
+        _auth = auth;
+    }
 
-        public IActionResult Index(int id,int pageNumber = 1, int pageSize = 12)
+    public async Task<IActionResult> Index(int id, int pageNumber = 1, int pageSize = 12, CancellationToken cancellationToken = default)
+    {
+        var route = Request.Path.Value;
+        var session = await _auth.GetSessionAsync(cancellationToken);
+        var contentRequest = new ProductsByCageoryRequest
         {
-            var route = Request.Path.Value ?? string.Empty;
-            BaseResponse<ProductsByCageoryResponse> routeResponse = new BaseResponse<ProductsByCageoryResponse>();
-            var returnData = new ProductsByCageoryResponse();
-            TokenResponse loginResponse = new TokenResponse();
-            using (var cms = new CmsClient())
-            {
-                loginResponse = cms.getSession();
-                var contentRequest = new ProductsByCageoryRequest { pageNumber = pageNumber, pageSize = pageSize, LanguageCode = loginResponse.LanguageCode,ID=id /*Url = route.TrimEnd('/').Split('/').Last()*/ };
-                routeResponse = cms.GetProductByCategory(contentRequest, loginResponse.Token);
-            }
-            if (routeResponse.Status)
-            {
-                returnData = routeResponse.Data;
-                TempData["catUrl"] = route.Trim('/').Split('/', StringSplitOptions.RemoveEmptyEntries).LastOrDefault() ?? string.Empty;
-                TempData["Title"] = routeResponse.Data.MetaTitle;
-                TempData["Keywords"] = routeResponse.Data.MetaKeyword;
-                TempData["Description"] = routeResponse.Data.MetaDesc;
-                return View(returnData);
-            }
-            return RedirectToAction("PageNotFound", "Error");
-        }
-        public IActionResult GetProducts(int pageNumber = 1, int pageSize = 12)
+            pageNumber = pageNumber,
+            pageSize = pageSize,
+            LanguageCode = session.LanguageCode,
+            ID = id
+        };
+        var routeResponse = await _catalog.GetProductsByCategoryAsync(contentRequest, cancellationToken);
+
+        if (routeResponse.Status)
         {
-            var url = TempData["catUrl"];
-            var routeResponse = new BaseResponse<ProductsByCageoryResponse>();
-            var returnData = new ProductsByCageoryResponse();
-            TokenResponse loginResponse;
-
-            using (var cms = new CmsClient())
-            {
-                loginResponse = cms.getSession();
-                var contentRequest = new ProductsByCageoryRequest
-                {
-                    pageNumber = pageNumber,
-                    pageSize = pageSize,
-                    LanguageCode = loginResponse.LanguageCode,
-                    //Url = url.ToString()
-                };
-
-                routeResponse = cms.GetProductByCategory(contentRequest, loginResponse.Token);
-            }
-
-            if (routeResponse.Status)
-            {
-                returnData = routeResponse.Data;
-
-                returnData = routeResponse.Data;
-                TempData["catUrl"] = url;
-                TempData["Title"] = routeResponse.Data.MetaTitle;
-                TempData["Keywords"] = routeResponse.Data.MetaKeyword;
-                TempData["Description"] = routeResponse.Data.MetaDesc;
-                return PartialView("_CategoryProductListPartial", returnData);
-            }
-
-            return NotFound();
+            TempData["catUrl"] = route?.TrimEnd('/').Split('/').Last();
+            TempData["catId"] = id;
+            TempData["Title"] = routeResponse.Data.MetaTitle;
+            TempData["Keywords"] = routeResponse.Data.MetaKeyword;
+            TempData["Description"] = routeResponse.Data.MetaDesc;
+            return View(routeResponse.Data);
         }
+
+        return RedirectToAction("PageNotFound", "Error");
+    }
+
+    public async Task<IActionResult> GetProducts(int id, int pageNumber = 1, int pageSize = 12, CancellationToken cancellationToken = default)
+    {
+        var session = await _auth.GetSessionAsync(cancellationToken);
+        var contentRequest = new ProductsByCageoryRequest
+        {
+            pageNumber = pageNumber,
+            pageSize = pageSize,
+            LanguageCode = session.LanguageCode,
+            ID = id
+        };
+        var routeResponse = await _catalog.GetProductsByCategoryAsync(contentRequest, cancellationToken);
+
+        if (routeResponse.Status)
+        {
+            TempData["catId"] = id;
+            TempData["Title"] = routeResponse.Data.MetaTitle;
+            TempData["Keywords"] = routeResponse.Data.MetaKeyword;
+            TempData["Description"] = routeResponse.Data.MetaDesc;
+            return PartialView("_CategoryProductListPartial", routeResponse.Data);
+        }
+
+        return NotFound();
     }
 }

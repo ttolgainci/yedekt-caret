@@ -1,0 +1,16 @@
+﻿@model CategoryListModel
+
+
+<li>
+
+    <a href="/@Model.Url"> @Model.Name</a>
+    @if (Model.SubCat.Count > 0)
+    {
+        <ul>
+            @foreach (var subCategory in Model.SubCat)
+            {
+                @Html.Partial("_CategoryPartial", subCategory)
+            }
+        </ul>
+    }
+</li>

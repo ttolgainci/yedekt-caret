@@ -1,5 +1,4 @@
-﻿using MarbleWebProject.Infrastructure;
-using MarbleWebProject.Models;
+﻿using MarbleWebProject.Models;
 using Microsoft.ApplicationInsights;
 using Microsoft.AspNetCore.Diagnostics;
 using Microsoft.AspNetCore.Mvc;
@@ -20,28 +19,15 @@ namespace MarbleWebProject.Controllers
         public IActionResult AppError()
         {
             var exceptionHandlerPathFeature = HttpContext.Features.Get<IExceptionHandlerPathFeature>();
-            if (exceptionHandlerPathFeature?.Error != null)
+            _telemetryClient.TrackException(exceptionHandlerPathFeature.Error);
+            _telemetryClient.TrackEvent("Error.ServerError", new Dictionary<string, string>
             {
-                _telemetryClient.TrackException(exceptionHandlerPathFeature.Error);
-                _telemetryClient.TrackEvent("Error.ServerError", new Dictionary<string, string>
-                {
-                    ["originalPath"] = exceptionHandlerPathFeature.Path ?? "",
-                    ["error"] = exceptionHandlerPathFeature.Error.Message
-                });
-            }
-
-            var correlation =
-                HttpContext.Items[CorrelationIdDefaults.HttpContextItemKey] as string
-                ?? CorrelationIdAmbient.Current;
-            return View(new ErrorViewModel
-            {
-                Heading = "Sunucu hatası",
-                Message = "Beklenmeyen bir hata oluştu. Destek ile görüşürken aşağıdaki kimlikleri paylaşabilirsiniz.",
-                RequestId = Activity.Current?.Id ?? HttpContext.TraceIdentifier,
-                CorrelationId = correlation
+                ["originalPath"] = exceptionHandlerPathFeature.Path,
+                ["error"] = exceptionHandlerPathFeature.Error.Message
             });
-        }
+            return View(new ErrorViewModel { RequestId = Activity.Current?.Id ?? HttpContext.TraceIdentifier });
 
+        }
         [Route("404")]
         public IActionResult PageNotFound(int code)
         {
@@ -54,9 +40,6 @@ namespace MarbleWebProject.Controllers
             {
                 ["originalPath"] = originalPath
             });
-            ViewData["CorrelationId"] =
-                HttpContext.Items[CorrelationIdDefaults.HttpContextItemKey] as string
-                ?? CorrelationIdAmbient.Current;
             return View();
         }
     }

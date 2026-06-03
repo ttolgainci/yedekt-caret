@@ -1,117 +1,96 @@
-﻿using System.Linq;
-using MarbleWebProject.Helper;
 using MarbleWebProject.Models;
+using MarbleWebProject.Services.Api;
 using Microsoft.AspNetCore.Mvc;
+using System.Text.Json;
 
-namespace MarbleWebProject.Controllers
+namespace MarbleWebProject.Controllers;
+
+public class CheckoutController : Controller
 {
-    public class CheckoutController : Controller
+    private readonly IStoreStorefrontApi _storefront;
+    private readonly IConfiguration _configuration;
+
+    public CheckoutController(IStoreStorefrontApi storefront, IConfiguration configuration)
     {
-        [HttpGet]
-        public IActionResult Index()
+        _storefront = storefront;
+        _configuration = configuration;
+    }
+
+    public IActionResult Index() => View();
+
+    [HttpPost]
+    [Route("checkout/place-order")]
+    public async Task<IActionResult> PlaceOrder([FromBody] CheckoutPlaceOrderForm form, CancellationToken cancellationToken)
+    {
+        var guestId = Request.Cookies["UserIDForBasket"];
+        if (string.IsNullOrWhiteSpace(guestId))
+            return BadRequest(new { message = "Sepet oturumu bulunamadı." });
+
+        var key = _configuration["Checkout:GuestCheckoutKey"] ?? "";
+        if (string.IsNullOrWhiteSpace(key))
+            return StatusCode(500, new { message = "Checkout anahtarı yapılandırılmamış." });
+
+        var shipping = JsonSerializer.Serialize(new
         {
-            var vm = LoadCheckoutViewModel();
-            return View(vm);
+            form.FirstName,
+            form.LastName,
+            form.Company,
+            form.Country,
+            form.Street,
+            form.Street2,
+            form.City,
+            form.State,
+            form.Postcode,
+            form.Phone,
+            form.Email
+        });
+
+        var request = new PlaceGuestOrderApiRequest
+        {
+            GuestUserId = guestId,
+            Order = new PlaceOrderApiRequest
+            {
+                LanguageCode = form.LanguageCode ?? "tr",
+                ShippingAddressJson = shipping,
+                BillingAddressJson = shipping,
+                CouponCode = form.CouponCode,
+                ShippingMethod = "Standard"
+            }
+        };
+
+        try
+        {
+            var result = await _storefront.PlaceGuestOrderAsync(request, key, cancellationToken);
+            if (!result.Status)
+                return BadRequest(new { message = result.ErrorMessage ?? "Sipariş oluşturulamadı." });
+
+            return Ok(new
+            {
+                orderId = result.Data?.OrderId,
+                grandTotal = result.Data?.GrandTotal,
+                currencyCode = result.Data?.CurrencyCode
+            });
         }
-
-        [HttpPost]
-        [ValidateAntiForgeryToken]
-        public IActionResult Complete()
+        catch (Exception ex)
         {
-            var vm = LoadCheckoutViewModel();
-
-            if (string.IsNullOrWhiteSpace(AppConfig.StorefrontGuestCheckoutKey))
-            {
-                vm.AlertMessage = "Misafir sipariş kapalı: API ve Web appsettings içinde aynı gizli anahtarı ayarlayın (Orders:GuestCheckoutKey / StorefrontApi:GuestCheckoutKey).";
-                vm.AlertSuccess = false;
-                return View("Index", vm);
-            }
-
-            var guestId = Request.Cookies["UserIDForBasket"];
-            if (string.IsNullOrWhiteSpace(guestId))
-            {
-                vm.AlertMessage = "Sepet tanımlanamadı.";
-                vm.AlertSuccess = false;
-                return View("Index", vm);
-            }
-
-            TokenResponse loginResponse;
-            using (var cms = new CmsClient())
-            {
-                loginResponse = cms.getSession();
-                var request = new PlaceGuestOrderRequestDto
-                {
-                    GuestUserId = guestId.Trim(),
-                    Order = new PlaceOrderRequestDto
-                    {
-                        LanguageCode = loginResponse.LanguageCode ?? string.Empty,
-                        ShippingMethod = "Standard"
-                    }
-                };
-
-                var result = cms.PlaceGuestOrder(request);
-                if (result.Status && result.Data != null)
-                {
-                    vm.AlertMessage = $"Sipariş alındı. No: {result.Data.OrderId}";
-                    vm.AlertSuccess = true;
-                    vm.LastOrderId = result.Data.OrderId;
-                    vm.LastGrandTotal = result.Data.GrandTotal;
-                    vm.LastCurrencyCode = result.Data.CurrencyCode;
-                    vm.Lines.Clear();
-                    vm.TotalQuantity = 0;
-                    vm.TotalSummaryHtml = null;
-                    return View("Index", vm);
-                }
-
-                vm.AlertMessage = string.IsNullOrWhiteSpace(result.ErrorMessage) ? "Sipariş tamamlanamadı." : result.ErrorMessage;
-                vm.AlertSuccess = false;
-            }
-
-            return View("Index", vm);
-        }
-
-        private CheckoutViewModel LoadCheckoutViewModel()
-        {
-            var vm = new CheckoutViewModel
-            {
-                GuestCheckoutConfigured = !string.IsNullOrWhiteSpace(AppConfig.StorefrontGuestCheckoutKey)
-            };
-
-            using (var cms = new CmsClient())
-            {
-                var loginResponse = cms.getSession();
-                var guestId = Request.Cookies["UserIDForBasket"] ?? string.Empty;
-                var request = new BasketAllRequest
-                {
-                    UserID = guestId,
-                    LanguageCode = loginResponse.LanguageCode
-                };
-                var routeResponse = cms.GetBasketAll(request, loginResponse.Token);
-                if (routeResponse.Status && routeResponse.Data != null && routeResponse.Data.Count > 0)
-                {
-                    foreach (var item in routeResponse.Data)
-                    {
-                        vm.Lines.Add(new CartModel
-                        {
-                            CartQuantity = item.quantity,
-                            CurrencyName = item.Currency,
-                            MainImage = item.Image,
-                            Price = item.Price,
-                            ProductID = item.ProductID,
-                            ProductName = item.Name,
-                            Url = item.Url,
-                            ProductVariantID = item.ProductVariantID
-                        });
-                    }
-
-                    var getTotal = routeResponse.Data.Sum(c => (c.Price ?? 0) * (c.quantity ?? 0));
-                    var currency = routeResponse.Data.FirstOrDefault()?.Currency ?? string.Empty;
-                    vm.TotalSummaryHtml = "<span class='basket-total-price'>" + getTotal + "</span>" + currency;
-                    vm.TotalQuantity = routeResponse.Data.Sum(c => c.quantity ?? 0);
-                }
-            }
-
-            return vm;
+            return StatusCode(500, new { message = ex.Message });
         }
     }
+}
+
+public sealed class CheckoutPlaceOrderForm
+{
+    public string? FirstName { get; set; }
+    public string? LastName { get; set; }
+    public string? Company { get; set; }
+    public string? Country { get; set; }
+    public string? Street { get; set; }
+    public string? Street2 { get; set; }
+    public string? City { get; set; }
+    public string? State { get; set; }
+    public string? Postcode { get; set; }
+    public string? Phone { get; set; }
+    public string? Email { get; set; }
+    public string? CouponCode { get; set; }
+    public string? LanguageCode { get; set; }
 }

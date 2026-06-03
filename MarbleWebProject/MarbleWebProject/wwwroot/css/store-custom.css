@@ -1,0 +1,26 @@
+/* Header kategori megamenü — API görselleri (<img>, demo-bg yerine) */
+.megamenu.demo .demo-item .category-menu-media {
+    position: relative;
+    display: block;
+    margin-bottom: 1.2rem;
+    padding-top: 80.95%;
+    overflow: hidden;
+    background-color: #f4f4f4;
+    border: 0.1rem solid #ebebeb;
+}
+
+.megamenu.demo .demo-item .category-menu-media img {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    display: block;
+}
+
+.megamenu.demo .demo-item a:hover .category-menu-media img,
+.megamenu.demo .demo-item a:focus .category-menu-media img {
+    transform: scale(1.03);
+    transition: transform 0.3s ease;
+}

@@ -1,0 +1,47 @@
+@model List<AllBannerResponse>
+@{
+    var slides = Model?.Where(x => !string.IsNullOrWhiteSpace(x.Image)).ToList() ?? new List<AllBannerResponse>();
+}
+<div class="intro-slider-container">
+    <div class="owl-carousel owl-simple owl-light owl-nav-inside" data-toggle="owl" data-owl-options='{"nav": false}'>
+        @if (slides.Count > 0)
+        {
+            @foreach (var item in slides)
+            {
+                <div class="intro-slide" style="background-image: url(@MediaUrlHelper.Build(item.Image));">
+                    <div class="container intro-content">
+                        @if (!string.IsNullOrWhiteSpace(item.Name))
+                        {
+                            <h3 class="intro-subtitle">@item.Name</h3>
+                        }
+                        @if (!string.IsNullOrWhiteSpace(item.Url))
+                        {
+                            <a href="/@item.Url.TrimStart('/')" class="btn btn-primary">
+                                <span>@Html.Translate("#Shop Now#")</span>
+                                <i class="icon-long-arrow-right"></i>
+                            </a>
+                        }
+                    </div>
+                </div>
+            }
+        }
+        else
+        {
+            <div class="intro-slide" style="background-image: url(/assets/images/demos/demo-2/slider/slide-1.jpg);">
+                <div class="container intro-content">
+                    <h3 class="intro-subtitle">@Html.Translate("#Bedroom Furniture#")</h3>
+                    <h1 class="intro-title">@Html.Translate("#Find Comfort#")<br>@Html.Translate("#That Suits You.#")</h1>
+                    <a href="/" class="btn btn-primary"><span>@Html.Translate("#Shop Now#")</span><i class="icon-long-arrow-right"></i></a>
+                </div>
+            </div>
+            <div class="intro-slide" style="background-image: url(/assets/images/demos/demo-2/slider/slide-2.jpg);">
+                <div class="container intro-content">
+                    <h3 class="intro-subtitle">@Html.Translate("#Deals and Promotions#")</h3>
+                    <h1 class="intro-title">@Html.Translate("#Ypperlig#")<br>@Html.Translate("#Coffee Table#")</h1>
+                    <a href="/" class="btn btn-primary"><span>@Html.Translate("#Shop Now#")</span><i class="icon-long-arrow-right"></i></a>
+                </div>
+            </div>
+        }
+    </div>
+    <span class="slider-loader text-white"></span>
+</div>

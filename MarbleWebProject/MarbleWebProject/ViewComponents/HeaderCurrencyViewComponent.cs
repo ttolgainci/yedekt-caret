@@ -1,14 +1,9 @@
 ﻿using Microsoft.AspNetCore.Mvc;
 
-namespace MarbleWebProject.ViewComponents
-{
+namespace MarbleWebProject.ViewComponents;
 
-    [ViewComponent]
-    public class HeaderCurrencyViewComponent : ViewComponent
-    {
-        public async Task<IViewComponentResult> InvokeAsync()
-        {
-            return View();
-        }
-    }
+[ViewComponent]
+public class HeaderCurrencyViewComponent : ViewComponent
+{
+    public Task<IViewComponentResult> InvokeAsync() => Task.FromResult<IViewComponentResult>(View());
 }
