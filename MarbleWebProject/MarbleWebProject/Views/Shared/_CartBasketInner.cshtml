@@ -1,0 +1,65 @@
+@using MarbleWebProject.Helper
+@model BasketSetModel
+@{
+    var hasItems = Model?.CartList?.Count > 0;
+    var setTotalPrice = hasItems ? Model!.Info.Total : "";
+}
+@if (!hasItems)
+{
+    <div class="store-cart-drawer-empty">
+        <p>@Html.Translate("#Your cart is empty.#")</p>
+    </div>
+}
+else
+{
+    <div class="store-cart-lines basket-list">
+        @foreach (var item in Model!.CartList)
+        {
+            var qty = item.CartQuantity ?? 1;
+            var unitPrice = item.Price ?? 0;
+            var lineTotal = unitPrice * qty;
+            var productUrl = (item.Url ?? "#").Trim();
+            if (!productUrl.StartsWith('/'))
+            {
+                productUrl = "/" + productUrl.TrimStart('/');
+            }
+            <div class="store-cart-line cartProductItem basket-product-code_@item.ProductID"
+                 data-pid="@item.ProductID"
+                 data-url="@productUrl"
+                 data-qty="@qty">
+                <a href="@productUrl" class="store-cart-line-image">
+                    <img src="@MediaUrlHelper.Build(item.MainImage)" alt="@item.ProductName">
+                </a>
+                <div class="store-cart-line-info">
+                    <a href="@productUrl" class="store-cart-line-title">@item.ProductName</a>
+                    <div class="store-cart-line-unit">
+                        <span class="cartProductPrice basket-product-price">@unitPrice.ToString("N2")</span> @item.CurrencyName
+                    </div>
+                    <div class="store-cart-line-qty">
+                        <button type="button" class="store-cart-qty-btn js-cart-qty-minus" aria-label="-">−</button>
+                        <span class="store-cart-qty-value">@qty</span>
+                        <button type="button" class="store-cart-qty-btn js-cart-qty-plus" aria-label="+">+</button>
+                    </div>
+                </div>
+                <div class="store-cart-line-total">
+                    @lineTotal.ToString("N2") @item.CurrencyName
+                </div>
+                <button type="button"
+                        class="store-cart-line-remove js-cart-line-remove"
+                        data-pid="@item.ProductID"
+                        title="@Html.Translate("#Remove#")">
+                    <i class="icon-close"></i>
+                </button>
+            </div>
+        }
+    </div>
+    <div class="dropdown-cart-total">
+        <span>@Html.Translate("#Total#")</span>
+        <span class="cart-total-price basket-total-price">@Html.Raw(setTotalPrice)</span>
+    </div>
+    <div class="dropdown-cart-action store-cart-drawer-actions">
+        <a href="/checkout" class="btn btn-primary btn-block">@Html.Translate("#Checkout#")</a>
+        <a href="#" class="btn btn-outline-primary-2 btn-block js-cart-drawer-continue"><span>@Html.Translate("#Continue Shopping#")</span></a>
+        <a href="/cart" class="btn btn-link btn-block store-cart-drawer-view-cart">@Html.Translate("#View Cart#")</a>
+    </div>
+}

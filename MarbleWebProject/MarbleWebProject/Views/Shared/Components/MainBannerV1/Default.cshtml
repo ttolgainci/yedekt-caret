@@ -10,9 +10,17 @@
             {
                 <div class="intro-slide" style="background-image: url(@MediaUrlHelper.Build(item.Image));">
                     <div class="container intro-content">
-                        @if (!string.IsNullOrWhiteSpace(item.Name))
+                        @{
+                            var slideTitle = !string.IsNullOrWhiteSpace(item.Title) ? item.Title : item.Name;
+                            var slideSubtitle = item.Subtitle ?? "";
+                        }
+                        @if (!string.IsNullOrWhiteSpace(slideSubtitle))
                         {
-                            <h3 class="intro-subtitle">@item.Name</h3>
+                            <h3 class="intro-subtitle">@slideSubtitle</h3>
+                        }
+                        @if (!string.IsNullOrWhiteSpace(slideTitle))
+                        {
+                            <h1 class="intro-title">@Html.Raw(slideTitle.Replace("\n", "<br />"))</h1>
                         }
                         @if (!string.IsNullOrWhiteSpace(item.Url))
                         {

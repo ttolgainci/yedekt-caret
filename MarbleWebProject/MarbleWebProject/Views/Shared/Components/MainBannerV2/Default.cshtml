@@ -1,47 +1,68 @@
-@model List<AllBannerResponse>
+@model MainBannerV2ViewModel
 @{
-    var slides = Model?.Where(x => !string.IsNullOrWhiteSpace(x.Image)).ToList() ?? new List<AllBannerResponse>();
+    var slides = Model?.Slides ?? new List<AllBannerResponse>();
+    if (slides.Count == 0)
+    {
+        return;
+    }
+
+    string Href(AllBannerResponse item) =>
+        string.IsNullOrWhiteSpace(item.Url) ? "#" : "/" + item.Url.TrimStart('/');
+
+    const string owlOptions = """{"loop": true, "nav": false, "responsive": {"768": {"nav": true}}}""";
 }
-<div class="intro-slider-container">
-    <div class="owl-carousel owl-simple owl-light owl-nav-inside" data-toggle="owl" data-owl-options='{"nav": false}'>
-        @if (slides.Count > 0)
-        {
-            @foreach (var item in slides)
-            {
-                <div class="intro-slide" style="background-image: url(@MediaUrlHelper.Build(item.Image));">
-                    <div class="container intro-content">
-                        @if (!string.IsNullOrWhiteSpace(item.Name))
+<div class="intro-section bg-lighter pt-5 pb-6">
+    <div class="container">
+        <div class="row align-items-stretch">
+            <div class="col-lg-8">
+                <div class="intro-slider-container slider-container-ratio slider-container-1 mb-2 mb-lg-0">
+                    <div class="intro-slider intro-slider-1 owl-carousel owl-simple owl-light owl-nav-inside" data-toggle="owl"
+                         data-owl-options='@owlOptions'>
+                        @foreach (var item in slides)
                         {
-                            <h3 class="intro-subtitle">@item.Name</h3>
-                        }
-                        @if (!string.IsNullOrWhiteSpace(item.Url))
-                        {
-                            <a href="/@item.Url.TrimStart('/')" class="btn btn-primary">
-                                <span>@Html.Translate("#Shop Now#")</span>
-                                <i class="icon-long-arrow-right"></i>
-                            </a>
+                            var img = MediaUrlHelper.Build(item.Image);
+                            if (string.IsNullOrWhiteSpace(img) && !string.IsNullOrWhiteSpace(item.Image))
+                            {
+                                var rel = item.Image.Trim().Replace('\\', '/').TrimStart('/');
+                                img = AppConfig.CDNServices.ContentUploads.TrimEnd('/') + "/" + rel;
+                            }
+                            var href = Href(item);
+                            var slideTitle = !string.IsNullOrWhiteSpace(item.Title) ? item.Title : item.Name;
+                            var slideSubtitle = item.Subtitle ?? "";
+                            var alt = string.IsNullOrWhiteSpace(slideTitle) ? "Slide" : slideTitle;
+                            <div class="intro-slide">
+                                <figure class="slide-image">
+                                    <picture>
+                                        <source media="(max-width: 480px)" srcset="@img">
+                                        <img src="@img" alt="@alt" width="1920" height="1080" decoding="async">
+                                    </picture>
+                                </figure>
+                                <div class="intro-content">
+                                    @if (!string.IsNullOrWhiteSpace(slideSubtitle))
+                                    {
+                                        <h3 class="intro-subtitle">@slideSubtitle</h3>
+                                    }
+                                    @if (!string.IsNullOrWhiteSpace(slideTitle))
+                                    {
+                                        <h1 class="intro-title">@Html.Raw(slideTitle.Replace("\n", "<br />"))</h1>
+                                    }
+                                    <a href="@href" class="btn btn-outline-white">
+                                        <span>@Html.Translate("#View#")</span>
+                                        <i class="icon-long-arrow-right"></i>
+                                    </a>
+                                </div>
+                            </div>
                         }
                     </div>
-                </div>
-            }
-        }
-        else
-        {
-            <div class="intro-slide" style="background-image: url(/assets/images/demos/demo-2/slider/slide-1.jpg);">
-                <div class="container intro-content">
-                    <h3 class="intro-subtitle">@Html.Translate("#Bedroom Furniture#")</h3>
-                    <h1 class="intro-title">@Html.Translate("#Find Comfort#")<br>@Html.Translate("#That Suits You.#")</h1>
-                    <a href="/" class="btn btn-primary"><span>@Html.Translate("#Shop Now#")</span><i class="icon-long-arrow-right"></i></a>
+                    <span class="slider-loader"></span>
                 </div>
             </div>
-            <div class="intro-slide" style="background-image: url(/assets/images/demos/demo-2/slider/slide-2.jpg);">
-                <div class="container intro-content">
-                    <h3 class="intro-subtitle">@Html.Translate("#Deals and Promotions#")</h3>
-                    <h1 class="intro-title">@Html.Translate("#Ypperlig#")<br>@Html.Translate("#Coffee Table#")</h1>
-                    <a href="/" class="btn btn-primary"><span>@Html.Translate("#Shop Now#")</span><i class="icon-long-arrow-right"></i></a>
+            <div class="col-lg-4">
+                <div class="home-vehicle-search-wrap mb-2 mb-lg-0">
+                    @await Html.PartialAsync("_HomeVehicleSearchPanel", Model?.VehicleMakes ?? new List<VehicleMakeListItem>())
                 </div>
             </div>
-        }
+        </div>
+        <div class="mb-6"></div>
     </div>
-    <span class="slider-loader text-white"></span>
 </div>

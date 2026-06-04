@@ -3,7 +3,7 @@
     var items = Model?.Where(x => !string.IsNullOrWhiteSpace(x.Image)).Take(4).ToList() ?? new List<AllBannerResponse>();
     string Img(int fallback) => items.Count > fallback ? MediaUrlHelper.Build(items[fallback].Image) : $"/assets/images/demos/demo-2/banners/banner-{fallback + 1}.jpg";
     string Url(int i) => items.Count > i && !string.IsNullOrWhiteSpace(items[i].Url) ? "/" + items[i].Url.TrimStart('/') : "#";
-    string Title(int i) => items.Count > i ? items[i].Name : "";
+    string Title(int i) => items.Count > i ? (!string.IsNullOrWhiteSpace(items[i].Title) ? items[i].Title : items[i].Name) : "";
 }
 <div class="banner-group">
     <div class="container">

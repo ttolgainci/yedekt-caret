@@ -1,0 +1,8 @@
+@model ProductList
+@if (Model.Quantity.HasValue && Model.Quantity.Value > 0)
+{
+    <p class="product-list-qty">
+        <span class="product-list-qty-label">@Html.Translate("#Quantity#"):</span>
+        @Model.Quantity.Value @Html.Translate("#pcs#")
+    </p>
+}

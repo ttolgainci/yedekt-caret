@@ -6,6 +6,7 @@
         public string UserID { get; set; }
         public string LanguageCode { get; set; }
         public int? CartQuantity { get; set; }
+        public bool IsDelta { get; set; }
         public string Url { get; set; }
     }
 }

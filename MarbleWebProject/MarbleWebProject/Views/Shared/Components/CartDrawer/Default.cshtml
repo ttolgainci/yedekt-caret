@@ -1,0 +1,35 @@
+@model BasketSetModel
+@{
+    var hasItems = Model?.CartList?.Count > 0;
+    var qty = hasItems ? Model!.Info.TotalQuantity ?? 0 : 0;
+    var itemsTemplate = Html.Translate("#Cart items count subtitle#");
+    if (string.IsNullOrWhiteSpace(itemsTemplate) || !itemsTemplate.Contains("{0}"))
+    {
+        itemsTemplate = "Sepetinizde {0} ürün bulunmaktadır";
+    }
+    var itemsSubtitle = hasItems
+        ? string.Format(itemsTemplate, qty)
+        : Html.Translate("#Your cart is empty.#");
+}
+<div class="store-cart-drawer-overlay" id="store-cart-drawer-overlay" aria-hidden="true"></div>
+<aside id="store-cart-drawer"
+       class="store-cart-drawer"
+       aria-hidden="true"
+       data-label-total="@Html.Translate("#Total#")"
+       data-label-checkout="@Html.Translate("#Checkout#")"
+       data-label-continue="@Html.Translate("#Continue Shopping#")"
+       data-label-view-cart="@Html.Translate("#View Cart#")"
+       data-label-remove="@Html.Translate("#Remove#")"
+       data-label-empty="@Html.Translate("#Your cart is empty.#")"
+       data-label-items-template="@Html.Translate("#Cart items count subtitle#")">
+    <div class="store-cart-drawer-header">
+        <h2 class="store-cart-drawer-title">@Html.Translate("#Shopping Cart#")</h2>
+        <button type="button" class="store-cart-drawer-close" aria-label="@Html.Translate("#Close#")">
+            <i class="icon-close"></i>
+        </button>
+    </div>
+    <p class="store-cart-drawer-subtitle" id="store-cart-drawer-subtitle">@itemsSubtitle</p>
+    <div class="store-cart-drawer-body basket-area-main" id="store-cart-drawer-body">
+        @await Html.PartialAsync("_CartBasketInner", Model)
+    </div>
+</aside>

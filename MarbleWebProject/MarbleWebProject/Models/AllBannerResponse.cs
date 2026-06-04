@@ -5,7 +5,10 @@
         public string? Order { get; set; }
         public int ID { get; set; }
         public int BannerID { get; set; }
-        public string Name { get; set; }
+        public string Title { get; set; } = "";
+        public string Subtitle { get; set; } = "";
+        /// <summary>Geriye dönük uyumluluk.</summary>
+        public string Name { get; set; } = "";
         public string Image { get; set; }
         public string Url { get; set; }
         public bool? Status { get; set; }

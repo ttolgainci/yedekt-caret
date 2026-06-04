@@ -32,15 +32,14 @@
     <div class="col-6 col-md-4 col-lg-4">
         <div class="product text-center">
             <figure class="product-media">
-                    <span class="product-label" style="background-color:@item.StockStatusColor">@item.StockStatus</span>
+                @await Html.PartialAsync("_ProductListStockPartial", item)
                 <a href="/@Model.Url/@item.Url">
                     <img src="@AppConfig.CDNServices.ContentUploads@item.MainImage" alt="Product image" class="product-image">
                 </a>
 
                 <div class="product-action">
-                    @*  <a href="#" class="btn-product btn-cart"><span>add to cart</span></a> *@
-                    <a href="/@Model.Url/@item.Url" class="btn-product" title="Quick view"><span>@Html.Translate("#Shop Now#")</span></a>
-                    @*  <a href="#" class="btn-product btn-compare" title="Compare"><span>compare</span></a> *@
+                    @{ ViewData["ProductUrl"] = $"/{Model.Url?.Trim('/')}/{item.Url?.Trim('/')}"; }
+                    @await Html.PartialAsync("_ProductListAddToCartPartial", item)
                 </div><!-- End .product-action -->
             </figure><!-- End .product-media -->
 
@@ -53,6 +52,8 @@
                     <span class="new-price">@item.Price @item.CurrencyName</span>
                     @*  <span class="old-price">$84.00</span> *@
                 </div><!-- End .product-price -->
+                @await Html.PartialAsync("_ProductListQuantityPartial", item)
+                @await Html.PartialAsync("_ProductListBrandFooter", item)
                 @*  <div class="product-size">
             <a href="#" class="disabled" title="Small">S</a>
             <a href="#" title="Medium">M</a>

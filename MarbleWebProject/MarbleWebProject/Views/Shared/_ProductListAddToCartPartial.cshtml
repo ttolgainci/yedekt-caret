@@ -1,0 +1,21 @@
+@model ProductList
+@{
+    var productUrl = (ViewData["ProductUrl"] as string ?? "#").Trim();
+    if (!productUrl.StartsWith('/'))
+    {
+        productUrl = "/" + productUrl.TrimStart('/');
+    }
+    var addLabel = Html.Translate("#Add to cart#");
+    var inBasketLabel = Html.Translate("#in the basket#");
+}
+<a href="#"
+   class="btn-product btn-cart js-add-to-cart"
+   onclick="setProductToBasket(this); return false;"
+   data-pid="@Model.ProductID"
+   data-purl="@productUrl"
+   data-qty="1"
+   data-add-label="@addLabel"
+   data-inbasket-label="@inBasketLabel"
+   title="@addLabel">
+    <span>@addLabel</span>
+</a>

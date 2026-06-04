@@ -1,14 +1,16 @@
 ﻿@using MarbleWebProject.Helper
 @model ProductInfo
 @{
-    string btnText = Html.Translate("#Add to cart#");
+    var addToCartLabel = Html.Translate("#Add to cart#");
+    var inBasketLabel = Html.Translate("#in the basket#");
+    string btnText = addToCartLabel;
     int? basketQuantity = 0;
     string shippingText = "";
 
     @if (Model.HasBasket)
     {
         basketQuantity = Model.BasketQuantity;
-        btnText = Html.Translate("#in the basket#");
+        btnText = inBasketLabel;
     }
     @if (Model.ShippingPrice==null)
     {
@@ -58,19 +60,25 @@
             </div>
         }
 
-         <div class="details-filter-row details-row-size">
-            <label style="width:25%!important">@Html.Translate("#Stock Status#") : </label>
-            <div class="product-nav product-nav-thumbs">
-                @Model.StockStatus
-            </div>
-        </div><!-- End .details-filter-row -->
+        @if (!string.IsNullOrWhiteSpace(Model.StockStatus))
+        {
+            <div class="details-filter-row details-row-size">
+                <label style="width:25%!important">@Html.Translate("#Stock Status#") : </label>
+                <div class="product-nav product-nav-thumbs">
+                    @Model.StockStatus
+                </div>
+            </div><!-- End .details-filter-row -->
+        }
 
-        <div class="details-filter-row details-row-size">
-            <label style="width:25%!important">@Html.Translate("#Stock Quantity#") : </label>
-            <div class="product-nav product-nav-thumbs">
-                @Model.Quantity
-            </div>
-        </div><!-- End .details-filter-row -->
+        @if (Model.Quantity.HasValue)
+        {
+            <div class="details-filter-row details-row-size">
+                <label style="width:25%!important">@Html.Translate("#Quantity#") : </label>
+                <div class="product-nav product-nav-thumbs">
+                    @Model.Quantity.Value @Html.Translate("#pcs#")
+                </div>
+            </div><!-- End .details-filter-row -->
+        }
       <!-- End .details-filter-row -->
         <div class="details-filter-row details-row-size">
             <label style="width:25%!important">@Html.Translate("#Shipping#") :  </label>
@@ -92,7 +100,7 @@
                 <div class="product-details-quantity">
                     <input type="number" class="form-control product-detail-Quantity" value="@basketQuantity" min="@Model.MinimumQuantity" max="@Model.Quantity" step="1" data-decimals="0" required>
                 </div><!-- End .product-details-quantity -->             
-                <a href="#" onclick="setProductToBasket(this)" data-pid="@Model.ProductID" data-purl="@Model.Url" class="btn-product btn-cart"><span>@btnText</span></a>
+                <a href="#" onclick="setProductToBasket(this); return false;" data-pid="@Model.ProductID" data-purl="@Model.Url" data-add-label="@addToCartLabel" data-inbasket-label="@inBasketLabel" class="btn-product btn-cart"><span>@btnText</span></a>
                 <div class="details-action-wrapper">
                     <a href="#" data-pid="@Model.ProductID" onclick="setProductToSepete(this)" class="btn-product btn-wishlist" title="Wishlist"><span>@Html.Translate("#Add to Wishlist#")</span></a>
                     @*  <a href="#" class="btn-product btn-compare" title="Compare"><span>Add to Compare</span></a> *@

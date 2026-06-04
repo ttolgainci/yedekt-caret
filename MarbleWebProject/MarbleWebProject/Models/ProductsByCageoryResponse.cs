@@ -23,6 +23,7 @@
         public string CurrencyName { get; set; }
         public string Description { get; set; }
         public string StockStatus { get; set; }
+        public int? Quantity { get; set; }
         public List<ImageList> Images { get; set; }
         public string MainImage { get; set; }
         public string Url { get; set; }
@@ -30,6 +31,9 @@
         public int CategoryID { get; set; }
         public string CategoryName { get; set; }
         public string StockStatusColor { get; set; }
+        public int? BrandID { get; set; }
+        public string BrandName { get; set; } = string.Empty;
+        public string BrandPicture { get; set; } = string.Empty;
     }
     public class ImageList
     {

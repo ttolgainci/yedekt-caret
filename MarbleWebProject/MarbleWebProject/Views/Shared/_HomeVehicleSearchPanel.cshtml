@@ -1,0 +1,40 @@
+@model IReadOnlyList<VehicleMakeListItem>
+@{
+    var makes = Model ?? Array.Empty<VehicleMakeListItem>();
+}
+<div class="home-vehicle-search-panel" data-home-vehicle-search>
+    <p class="home-vehicle-search-lead mb-3">
+        Uygun parçaları daha kolay bulabilmek için <strong>aracınızın model bilgilerini seçin.</strong>
+    </p>
+    <div class="form-group mb-2">
+        <label class="sr-only" for="homeVehicleMake">@Html.Translate("#Make#")</label>
+        <select id="homeVehicleMake" class="form-control" data-vehicle-make>
+            <option value="">@Html.Translate("#Make#")</option>
+            @foreach (var make in makes.OrderBy(x => x.Name))
+            {
+                <option value="@make.Id">@make.Name</option>
+            }
+        </select>
+    </div>
+    <div class="form-group mb-2">
+        <label class="sr-only" for="homeVehicleModel">@Html.Translate("#Model#")</label>
+        <select id="homeVehicleModel" class="form-control" data-vehicle-model disabled>
+            <option value="">@Html.Translate("#Model#")</option>
+        </select>
+    </div>
+    <div class="form-group mb-2">
+        <label class="sr-only" for="homeVehicleGeneration">@Html.Translate("#Generation#")</label>
+        <select id="homeVehicleGeneration" class="form-control" data-vehicle-generation disabled>
+            <option value="">@Html.Translate("#Generation#")</option>
+        </select>
+    </div>
+    <div class="form-group mb-3">
+        <label class="sr-only" for="homeVehicleEngine">@Html.Translate("#Engine#")</label>
+        <select id="homeVehicleEngine" class="form-control" data-vehicle-engine disabled>
+            <option value="">@Html.Translate("#Engine#")</option>
+        </select>
+    </div>
+    <button type="button" class="btn btn-block btn-vehicle-search" data-vehicle-search-btn disabled>
+        @Html.Translate("#Search#")
+    </button>
+</div>

@@ -1,0 +1,48 @@
+@using MarbleWebProject.Helpers
+@model ProductResultSearchViewModel
+
+<div class="products mb-3 product-result-grid">
+    <div class="row justify-content-center">
+        @foreach (var item in Model.Products)
+        {
+            var img = MediaUrlHelper.Build(item.MainImage);
+            var productUrl = "/" + (item.Url ?? "").TrimStart('/');
+            <div class="col-6 col-md-4 col-lg-4 col-xl-3">
+                <div class="product product-7 text-center">
+                    <figure class="product-media">
+                        @await Html.PartialAsync("_ProductListStockPartial", item)
+                        <a href="@productUrl">
+                            <img src="@img" alt="@item.ProductName" class="product-image">
+                        </a>
+                        <div class="product-action">
+                            @{ ViewData["ProductUrl"] = productUrl; }
+                            @await Html.PartialAsync("_ProductListAddToCartPartial", item)
+                        </div>
+                    </figure>
+                    <div class="product-body">
+                        @if (!string.IsNullOrWhiteSpace(item.CategoryName))
+                        {
+                            <div class="product-cat">
+                                <span>@item.CategoryName</span>
+                            </div>
+                        }
+                        <h3 class="product-title"><a href="@productUrl">@item.ProductName</a></h3>
+                        @if (item.Price.HasValue)
+                        {
+                            var currency = !string.IsNullOrWhiteSpace(item.CurrencyName) ? item.CurrencyName : Model.CurrencySymbol;
+                            <div class="product-price">
+                                @Model.FormatPriceWithCurrency(item.Price, currency)
+                            </div>
+                        }
+                        @await Html.PartialAsync("_ProductListQuantityPartial", item)
+                    </div>
+                </div>
+            </div>
+        }
+    </div>
+</div>
+
+@if (Model.Products.Count == 0)
+{
+    <p class="text-center py-5">@Html.Translate("#No products found.#")</p>
+}

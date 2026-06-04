@@ -1,47 +1,61 @@
 @model List<AllBannerResponse>
 @{
-    var items = Model?.Where(x => !string.IsNullOrWhiteSpace(x.Image)).Take(4).ToList() ?? new List<AllBannerResponse>();
-    string Img(int fallback) => items.Count > fallback ? MediaUrlHelper.Build(items[fallback].Image) : $"/assets/images/demos/demo-2/banners/banner-{fallback + 1}.jpg";
-    string Url(int i) => items.Count > i && !string.IsNullOrWhiteSpace(items[i].Url) ? "/" + items[i].Url.TrimStart('/') : "#";
-    string Title(int i) => items.Count > i ? items[i].Name : "";
+    var items = Model?.Where(x => x.Status == true && !string.IsNullOrWhiteSpace(x.Image)).Take(4).ToList() ?? new List<AllBannerResponse>();
+    if (items.Count == 0)
+    {
+        return;
+    }
+
+    string Img(int i) => MediaUrlHelper.Build(items[i].Image);
+    string Href(int i) => string.IsNullOrWhiteSpace(items[i].Url) ? "#" : "/" + items[i].Url.TrimStart('/');
+    string Title(int i) => !string.IsNullOrWhiteSpace(items[i].Title) ? items[i].Title : (items[i].Name ?? "");
 }
 <div class="banner-group">
     <div class="container">
         <div class="row">
             <div class="col-md-12 col-lg-5">
                 <div class="banner banner-large banner-overlay banner-overlay-light">
-                    <a href="@Url(0)"><img src="@Img(0)" alt="Banner"></a>
+                    <a href="@Href(0)"><img src="@Img(0)" alt="@Title(0)"></a>
                     <div class="banner-content banner-content-top">
                         @if (!string.IsNullOrEmpty(Title(0))) { <h3 class="banner-title">@Title(0)</h3> }
-                        <a href="@Url(0)" class="btn btn-outline-gray banner-link">@Html.Translate("#Shop Now#")<i class="icon-long-arrow-right"></i></a>
+                        <a href="@Href(0)" class="btn btn-outline-gray banner-link">@Html.Translate("#Shop Now#")<i class="icon-long-arrow-right"></i></a>
                     </div>
                 </div>
             </div>
+            @if (items.Count > 1)
+            {
             <div class="col-md-6 col-lg-3">
                 <div class="banner banner-overlay">
-                    <a href="@Url(1)"><img src="@Img(1)" alt="Banner"></a>
+                    <a href="@Href(1)"><img src="@Img(1)" alt="@Title(1)"></a>
                     <div class="banner-content banner-content-bottom">
                         @if (!string.IsNullOrEmpty(Title(1))) { <h3 class="banner-title text-white">@Title(1)</h3> }
-                        <a href="@Url(1)" class="btn btn-outline-white banner-link">@Html.Translate("#Discover Now#")<i class="icon-long-arrow-right"></i></a>
+                        <a href="@Href(1)" class="btn btn-outline-white banner-link">@Html.Translate("#Discover Now#")<i class="icon-long-arrow-right"></i></a>
                     </div>
                 </div>
             </div>
+            }
+            @if (items.Count > 2)
+            {
             <div class="col-md-6 col-lg-4">
                 <div class="banner banner-overlay">
-                    <a href="@Url(2)"><img src="@Img(2)" alt="Banner"></a>
+                    <a href="@Href(2)"><img src="@Img(2)" alt="@Title(2)"></a>
                     <div class="banner-content banner-content-top">
                         @if (!string.IsNullOrEmpty(Title(2))) { <h3 class="banner-title text-white">@Title(2)</h3> }
-                        <a href="@Url(2)" class="btn btn-outline-white banner-link">@Html.Translate("#Discover Now#")<i class="icon-long-arrow-right"></i></a>
+                        <a href="@Href(2)" class="btn btn-outline-white banner-link">@Html.Translate("#Discover Now#")<i class="icon-long-arrow-right"></i></a>
                     </div>
                 </div>
+                @if (items.Count > 3)
+                {
                 <div class="banner banner-overlay banner-overlay-light">
-                    <a href="@Url(3)"><img src="@Img(3)" alt="Banner"></a>
+                    <a href="@Href(3)"><img src="@Img(3)" alt="@Title(3)"></a>
                     <div class="banner-content banner-content-top">
                         @if (!string.IsNullOrEmpty(Title(3))) { <h3 class="banner-title">@Title(3)</h3> }
-                        <a href="@Url(3)" class="btn btn-outline-gray banner-link">@Html.Translate("#Shop Now#")<i class="icon-long-arrow-right"></i></a>
+                        <a href="@Href(3)" class="btn btn-outline-gray banner-link">@Html.Translate("#Shop Now#")<i class="icon-long-arrow-right"></i></a>
                     </div>
                 </div>
+                }
             </div>
+            }
         </div>
     </div>
 </div>

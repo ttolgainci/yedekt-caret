@@ -5,13 +5,13 @@ using Microsoft.AspNetCore.Mvc;
 
 namespace MarbleWebProject.ViewComponents;
 
-[ViewComponent]
-public class HeaderBasketV1ViewComponent : ViewComponent
+[ViewComponent(Name = "CartDrawer")]
+public class CartDrawerViewComponent : ViewComponent
 {
     private readonly IStoreBasketApi _basket;
     private readonly IStoreAuthService _auth;
 
-    public HeaderBasketV1ViewComponent(IStoreBasketApi basket, IStoreAuthService auth)
+    public CartDrawerViewComponent(IStoreBasketApi basket, IStoreAuthService auth)
     {
         _basket = basket;
         _auth = auth;

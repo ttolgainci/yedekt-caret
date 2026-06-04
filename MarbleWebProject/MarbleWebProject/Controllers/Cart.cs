@@ -1,3 +1,4 @@
+using MarbleWebProject.Helpers;
 using MarbleWebProject.Models;
 using MarbleWebProject.Services.Api;
 using Microsoft.AspNetCore.Mvc;
@@ -17,82 +18,108 @@ public class Cart : Controller
 
     public async Task<IActionResult> Index(CancellationToken cancellationToken = default)
     {
-        var rtn = new BasketSetModel();
-        var userGuid = HttpContext.Request.Cookies["UserIDForBasket"] ?? "";
+        var userGuid = GetBasketUserId();
         await _auth.GetSessionAsync(cancellationToken);
-        var routeResponse = await _basket.GetBasketAllAsync(new BasketAllRequest { UserID = userGuid }, cancellationToken);
-
-        if (routeResponse.Status && routeResponse.Data != null && routeResponse.Data.Count > 0)
-        {
-            foreach (var item in routeResponse.Data)
-            {
-                rtn.CartList.Add(new CartModel
-                {
-                    CartQuantity = item.quantity,
-                    CurrencyName = item.Currency,
-                    MainImage = item.Image,
-                    Price = item.Price,
-                    ProductID = item.ProductID,
-                    ProductName = item.Name,
-                    Url = item.Url
-                });
-            }
-            var currency = routeResponse.Data.FirstOrDefault()?.Currency ?? "";
-            var getTotal = routeResponse.Data.Sum(c => c.Price * c.quantity);
-            rtn.Info.Total = "<span class='basket-total-price'>" + getTotal + "</span>" + currency;
-            rtn.Info.TotalQuantity = routeResponse.Data.Sum(c => c.quantity);
-        }
-
-        return View(rtn);
+        var model = await LoadBasketSetModelAsync(userGuid, cancellationToken);
+        return View(model);
     }
 
     [HttpPost]
     public async Task<IActionResult> AddToCart(int ProductID, string Url, int? CartQuantity, CancellationToken cancellationToken = default)
     {
         var session = await _auth.GetSessionAsync(cancellationToken);
-        var userGuid = HttpContext.Request.Cookies["UserIDForBasket"] ?? "";
-        var contentRequest = new BasketRequest
+        var userGuid = GetBasketUserId();
+        var qty = CartQuantity is < 1 ? 1 : CartQuantity!.Value;
+
+        await _basket.GetByIdBasketAsync(new BasketRequest
         {
             LanguageCode = session.LanguageCode,
             ProductID = ProductID,
-            CartQuantity = CartQuantity,
-            Url = Url,
+            CartQuantity = qty,
+            Url = Url ?? string.Empty,
             UserID = userGuid
-        };
-        var routeResponse = await _basket.GetByIdBasketAsync(contentRequest, cancellationToken);
-        var basketReturnModel = new BasketReturnModel();
+        }, cancellationToken);
 
-        if (routeResponse.Status && routeResponse.Data != null && routeResponse.Data.Count > 0)
+        return await BasketJsonAsync(userGuid, cancellationToken);
+    }
+
+    [HttpPost]
+    public async Task<IActionResult> ChangeCartQuantity(int ProductID, string Url, int Delta, CancellationToken cancellationToken = default)
+    {
+        var session = await _auth.GetSessionAsync(cancellationToken);
+        var userGuid = GetBasketUserId();
+        var all = await _basket.GetBasketAllAsync(new BasketAllRequest { UserID = userGuid }, cancellationToken);
+        var merged = all.Status && all.Data != null
+            ? CartBasketMergeHelper.MergeLines(all.Data)
+            : new List<OrderBasket>();
+
+        var line = merged.FirstOrDefault(x => x.ProductID == ProductID);
+        var currentQty = line?.quantity ?? 0;
+        var newQty = currentQty + Delta;
+
+        if (newQty < 1)
         {
-            var getTotal = routeResponse.Data.Sum(c => c.Price * c.quantity);
-            var currency = routeResponse.Data.FirstOrDefault()?.Currency ?? "";
-            basketReturnModel.TotalPrice = "<span class='basket-total-price'>" + getTotal + "</span>" + currency;
-            basketReturnModel.TotalQuantity = routeResponse.Data.Sum(c => c.quantity);
+            await _basket.DeleteProductFromCartAsync(new DeleteBasketRequest
+            {
+                ProductID = ProductID,
+                UserID = userGuid,
+                LanguageCode = session.LanguageCode
+            }, cancellationToken);
+        }
+        else
+        {
+            await _basket.GetByIdBasketAsync(new BasketRequest
+            {
+                LanguageCode = session.LanguageCode,
+                ProductID = ProductID,
+                CartQuantity = Delta,
+                IsDelta = true,
+                Url = Url ?? line?.Url ?? string.Empty,
+                UserID = userGuid
+            }, cancellationToken);
         }
 
-        return Json(new { CartList = routeResponse.Data, Info = basketReturnModel });
+        return await BasketJsonAsync(userGuid, cancellationToken);
     }
 
     [HttpPost]
     public async Task<IActionResult> DeleteFromCart(int ProductID, CancellationToken cancellationToken = default)
     {
         var session = await _auth.GetSessionAsync(cancellationToken);
-        var contentRequest = new DeleteBasketRequest
-        {
-            LanguageCode = session.LanguageCode,
-            ProductID = ProductID
-        };
-        var routeResponse = await _basket.DeleteProductFromCartAsync(contentRequest, cancellationToken);
-        var basketReturnModel = new BasketReturnModel();
+        var userGuid = GetBasketUserId();
 
-        if (routeResponse.Status && routeResponse.Data != null && routeResponse.Data.Count > 0)
+        await _basket.DeleteProductFromCartAsync(new DeleteBasketRequest
         {
-            var getTotal = routeResponse.Data.Sum(c => c.Price * c.quantity);
-            var currency = routeResponse.Data.FirstOrDefault()?.Currency ?? "";
-            basketReturnModel.TotalPrice = "<span class='basket-total-price'>" + getTotal + "</span>" + currency;
-            basketReturnModel.TotalQuantity = routeResponse.Data.Sum(c => c.quantity);
-        }
+            ProductID = ProductID,
+            UserID = userGuid,
+            LanguageCode = session.LanguageCode
+        }, cancellationToken);
 
-        return Json(new { CartList = routeResponse.Data, Info = basketReturnModel });
+        return await BasketJsonAsync(userGuid, cancellationToken);
+    }
+
+    private string GetBasketUserId() =>
+        HttpContext.Request.Cookies["UserIDForBasket"] ?? string.Empty;
+
+    private async Task<BasketSetModel> LoadBasketSetModelAsync(string userGuid, CancellationToken cancellationToken)
+    {
+        var routeResponse = await _basket.GetBasketAllAsync(new BasketAllRequest { UserID = userGuid }, cancellationToken);
+        return routeResponse.Status && routeResponse.Data != null
+            ? CartBasketMergeHelper.BuildBasketSetModel(routeResponse.Data)
+            : new BasketSetModel();
+    }
+
+    private async Task<IActionResult> BasketJsonAsync(string userGuid, CancellationToken cancellationToken)
+    {
+        var routeResponse = await _basket.GetBasketAllAsync(new BasketAllRequest { UserID = userGuid }, cancellationToken);
+        var merged = routeResponse.Status && routeResponse.Data != null
+            ? CartBasketMergeHelper.MergeLines(routeResponse.Data)
+            : new List<OrderBasket>();
+
+        return Json(new
+        {
+            CartList = merged,
+            Info = CartBasketMergeHelper.BuildReturnInfo(merged)
+        });
     }
 }

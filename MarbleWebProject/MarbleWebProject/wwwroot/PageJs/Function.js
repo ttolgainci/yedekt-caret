@@ -26,3 +26,13 @@ function randomGuid() {
             return v.toString(16);
         });
 }
+
+// Ana sayfa marka şeridi — Owl (main.js) sonrası boyutları düzeltir; tema ile aynı .brands-border yapısı
+$(window).on('load', function () {
+    if (!$.fn.owlCarousel) {
+        return;
+    }
+    $('.js-home-brands-carousel.owl-loaded').each(function () {
+        $(this).trigger('refresh.owl.carousel');
+    });
+});

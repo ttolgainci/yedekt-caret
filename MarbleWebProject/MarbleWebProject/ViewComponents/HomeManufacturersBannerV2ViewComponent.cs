@@ -1,5 +1,3 @@
-using MarbleWebProject.Helper;
-using MarbleWebProject.Models;
 using MarbleWebProject.Services.Api;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.Caching.Memory;
@@ -10,38 +8,22 @@ namespace MarbleWebProject.ViewComponents;
 public class HomeManufacturersBannerV2ViewComponent : ViewComponent
 {
     private readonly IMemoryCache _cache;
-    private readonly IStoreContentApi _content;
+    private readonly IStoreCatalogApi _catalog;
     private readonly IStoreAuthService _auth;
 
-    public HomeManufacturersBannerV2ViewComponent(IMemoryCache cache, IStoreContentApi content, IStoreAuthService auth)
+    public HomeManufacturersBannerV2ViewComponent(IMemoryCache cache, IStoreCatalogApi catalog, IStoreAuthService auth)
     {
         _cache = cache;
-        _content = content;
+        _catalog = catalog;
         _auth = auth;
     }
 
     public async Task<IViewComponentResult> InvokeAsync(CancellationToken cancellationToken = default)
     {
-        var cacheHelper = new CacheHelper(_cache);
-        var key = "ManufacturersBanner" + AppConfig.CMSService.CustomName + AppConfig.CMSService.LanguageCode;
-
-        if (!cacheHelper.IfCache(key))
-        {
-            var session = await _auth.GetSessionAsync(cancellationToken);
-            var routeResponse = await _content.GetBannerAllAsync(
-                new BannerAllRequest { LanguageCode = session.LanguageCode, Type = "MANUFACTURESBANNER" },
-                cancellationToken);
-
-            if (routeResponse.Status)
-            {
-                cacheHelper.SetCache(key, routeResponse.Data);
-                return View(routeResponse.Data);
-            }
-            cacheHelper.SetCache(key, new List<AllBannerResponse>());
+        var brands = await HomeManufacturersBannerHelper.LoadAsync(_cache, _catalog, _auth, cancellationToken);
+        if (brands == null)
             return Content(string.Empty);
-        }
 
-        var returnData = cacheHelper.GetCache(key) as List<AllBannerResponse>;
-        return View(returnData ?? new List<AllBannerResponse>());
+        return View("~/Views/Shared/_HomeBrandsCarousel.cshtml", brands);
     }
 }

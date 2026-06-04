@@ -172,6 +172,11 @@ var routeDefinitions = routeList.Count > 0
     ? DynamicRouteHelper.GenerateRouteAll(routeList)
     : DynamicRouteHelper.GenerateStaticRoutesOnly();
 
+app.MapControllerRoute(
+    name: "product-result-search",
+    pattern: "arama",
+    defaults: new { controller = "ProductResult", action = "Index" });
+
 foreach (var routeDefinition in routeDefinitions.GenerateRoute)
 {
     app.MapControllerRoute(

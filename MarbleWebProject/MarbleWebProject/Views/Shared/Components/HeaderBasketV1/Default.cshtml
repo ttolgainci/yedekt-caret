@@ -1,49 +1,14 @@
-@using MarbleWebProject.Helper
 @model BasketSetModel
 @{
     var hasItems = Model?.CartList?.Count > 0;
-    var setTotalPrice = hasItems ? Model!.Info.Total : "";
     var setTotalQty = hasItems ? Model!.Info.TotalQuantity : 0;
 }
-<div class="dropdown cart-dropdown">
-    <a href="#" class="dropdown-toggle" role="button" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false" data-display="static">
+<div class="cart-dropdown">
+    <a href="#" class="js-open-cart-drawer" role="button" aria-haspopup="dialog" aria-controls="store-cart-drawer">
         <div class="icon">
             <i class="icon-shopping-cart"></i>
             <span class="cart-count basket-quantity-count" @(hasItems ? "" : "style=display:none")>@setTotalQty</span>
         </div>
         <p>@Html.Translate("#Cart#")</p>
     </a>
-    <div class="dropdown-menu dropdown-menu-right basket-area-main" @(hasItems ? "" : "style=display:none")>
-        <div class="dropdown-cart-products basket-list">
-            @if (hasItems)
-            {
-                @foreach (var item in Model!.CartList)
-                {
-                    <div class="product cartProductItem basket-product-code_@item.ProductID">
-                        <div class="product-cart-details">
-                            <h4 class="product-title"><a href="@item.Url">@item.ProductName</a></h4>
-                            <span class="cart-product-info">
-                                <span class="cart-product-qty basket-product-quantity">@item.CartQuantity</span>
-                                x <span class="cartProductPrice basket-product-price">@item.Price</span> @item.CurrencyName
-                            </span>
-                        </div>
-                        <figure class="product-image-container">
-                            <a href="@item.Url" class="product-image">
-                                <img src="@MediaUrlHelper.Build(item.MainImage)" alt="product">
-                            </a>
-                        </figure>
-                        <a onclick="removeProductFromBasket(this)" data-pid="@item.ProductID" class="btn-remove" title="Remove Product"><i class="icon-close"></i></a>
-                    </div>
-                }
-            }
-        </div>
-        <div class="dropdown-cart-total">
-            <span>@Html.Translate("#Total#")</span>
-            <span class="cart-total-price">@Html.Raw(setTotalPrice)</span>
-        </div>
-        <div class="dropdown-cart-action">
-            <a href="/cart" class="btn btn-primary">@Html.Translate("#View Cart#")</a>
-            <a href="/checkout" class="btn btn-outline-primary-2"><span>@Html.Translate("#Checkout#")</span><i class="icon-long-arrow-right"></i></a>
-        </div>
-    </div>
 </div>

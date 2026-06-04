@@ -1,0 +1,7 @@
+@model ProductList
+@if (!string.IsNullOrWhiteSpace(Model.BrandName))
+{
+    <div class="product-card-brand">
+        <span class="product-card-brand-name">@Model.BrandName</span>
+    </div>
+}

@@ -10,38 +10,52 @@ namespace MarbleWebProject.ViewComponents;
 public class HomeManufacturersBannerV1ViewComponent : ViewComponent
 {
     private readonly IMemoryCache _cache;
-    private readonly IStoreContentApi _content;
+    private readonly IStoreCatalogApi _catalog;
     private readonly IStoreAuthService _auth;
 
-    public HomeManufacturersBannerV1ViewComponent(IMemoryCache cache, IStoreContentApi content, IStoreAuthService auth)
+    public HomeManufacturersBannerV1ViewComponent(IMemoryCache cache, IStoreCatalogApi catalog, IStoreAuthService auth)
     {
         _cache = cache;
-        _content = content;
+        _catalog = catalog;
         _auth = auth;
     }
 
     public async Task<IViewComponentResult> InvokeAsync(CancellationToken cancellationToken = default)
     {
-        var cacheHelper = new CacheHelper(_cache);
-        var key = "ManufacturersBanner" + AppConfig.CMSService.CustomName + AppConfig.CMSService.LanguageCode;
+        var brands = await HomeManufacturersBannerHelper.LoadAsync(_cache, _catalog, _auth, cancellationToken);
+        if (brands == null)
+            return Content(string.Empty);
 
+        return View("~/Views/Shared/_HomeBrandsCarousel.cshtml", brands);
+    }
+}
+
+internal static class HomeManufacturersBannerHelper
+{
+    public static async Task<List<HomeBrandModel>?> LoadAsync(
+        IMemoryCache cache,
+        IStoreCatalogApi catalog,
+        IStoreAuthService auth,
+        CancellationToken cancellationToken)
+    {
+        var cacheHelper = new CacheHelper(cache);
+        var key = "HomeBrands:" + AppConfig.CMSService.CustomName + ":" + AppConfig.CMSService.LanguageCode;
+
+        List<HomeBrandModel> brands;
         if (!cacheHelper.IfCache(key))
         {
-            var session = await _auth.GetSessionAsync(cancellationToken);
-            var routeResponse = await _content.GetBannerAllAsync(
-                new BannerAllRequest { LanguageCode = session.LanguageCode, Type = "MANUFACTURESBANNER" },
-                cancellationToken);
-
-            if (routeResponse.Status)
-            {
-                cacheHelper.SetCache(key, routeResponse.Data);
-                return View(routeResponse.Data);
-            }
-            cacheHelper.SetCache(key, new List<AllBannerResponse>());
-            return Content(string.Empty);
+            var session = await auth.GetSessionAsync(cancellationToken);
+            var response = await catalog.GetStorefrontBrandsAsync(session.LanguageCode, cancellationToken);
+            brands = response.Status && response.Data != null
+                ? response.Data.Where(b => !string.IsNullOrWhiteSpace(b.Picture)).ToList()
+                : new List<HomeBrandModel>();
+            cacheHelper.SetCache(key, brands);
+        }
+        else
+        {
+            brands = cacheHelper.GetCache(key) as List<HomeBrandModel> ?? new List<HomeBrandModel>();
         }
 
-        var returnData = cacheHelper.GetCache(key) as List<AllBannerResponse>;
-        return View(returnData ?? new List<AllBannerResponse>());
+        return brands.Count == 0 ? null : brands;
     }
 }

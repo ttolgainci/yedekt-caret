@@ -1,0 +1,238 @@
+@model ProductResultSearchViewModel
+@{
+    Layout = "~/Views/Shared/_Layout.cshtml";
+    var showing = Model.Products.Count;
+    var total = Model.TotalCount;
+}
+
+<div class="page-header text-center" style="background-image: url('/assets/images/page-header-bg.jpg')">
+    <div class="container">
+        <h1 class="page-title">@Model.Title<span>@Html.Translate("#Shop#")</span></h1>
+    </div>
+</div>
+
+<nav aria-label="breadcrumb" class="breadcrumb-nav mb-2">
+    <div class="container">
+        <ol class="breadcrumb">
+            <li class="breadcrumb-item"><a href="/">@Html.Translate("#Home#")</a></li>
+            <li class="breadcrumb-item active" aria-current="page">@Html.Translate("#Search#")</li>
+        </ol>
+    </div>
+</nav>
+
+<div class="page-content">
+    <div class="container">
+        <div class="row">
+            <aside class="col-lg-3 order-lg-first">
+                <div class="sidebar sidebar-shop">
+                    <div class="widget widget-clean">
+                        <label>@Html.Translate("#Filters#")</label>
+                        <a href="@Model.BuildAramaUrl(includeCurrentCategory: false, includeCurrentBrand: false, includeCurrentPrice: false)" class="sidebar-filter-clear">@Html.Translate("#Clear All#")</a>
+                    </div>
+
+                    <div class="widget widget-collapsible">
+                        <h3 class="widget-title">
+                            <button type="button" class="btn btn-link widget-collapse-btn" data-toggle="collapse" data-target="#widget-search-categories" aria-expanded="true" aria-controls="widget-search-categories">
+                                @Html.Translate("#Category#")
+                            </button>
+                        </h3>
+                        <div class="collapse show" id="widget-search-categories">
+                            <div class="widget-body">
+                                @if (!string.IsNullOrWhiteSpace(Model.Summary))
+                                {
+                                    <p class="mb-2 small text-muted">@Model.Summary</p>
+                                }
+                                @if (Model.FilterCategories.Count == 0)
+                                {
+                                    <p class="mb-0 small text-muted">Kategori bulunamadı.</p>
+                                }
+                                else
+                                {
+                                    <div class="filter-items filter-items-count product-result-filter-scroll">
+                                        @foreach (var cat in Model.FilterCategories)
+                                        {
+                                            var isActive = Model.CategoryId == cat.CategoryId;
+                                            var filterUrl = Model.BuildCategoryToggleUrl(cat.CategoryId);
+                                            var inputId = $"filter-cat-{cat.CategoryId}";
+                                            <div class="filter-item filter-item--toggle@(isActive ? " is-active" : "")" data-filter-url="@filterUrl">
+                                                <div class="custom-control custom-checkbox">
+                                                    <input type="checkbox" class="custom-control-input js-product-result-filter" id="@inputId" @(isActive ? "checked" : null) tabindex="-1" aria-hidden="true" />
+                                                    <label class="custom-control-label" for="@inputId">@cat.Name</label>
+                                                </div>
+                                                <span class="item-count">@cat.ProductCount</span>
+                                            </div>
+                                        }
+                                    </div>
+                                }
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="widget widget-collapsible">
+                        <h3 class="widget-title">
+                            <button type="button" class="btn btn-link widget-collapse-btn" data-toggle="collapse" data-target="#widget-search-brands" aria-expanded="true" aria-controls="widget-search-brands">
+                                @Html.Translate("#Brand#")
+                            </button>
+                        </h3>
+                        <div class="collapse show" id="widget-search-brands">
+                            <div class="widget-body">
+                                @if (Model.FilterBrands.Count == 0)
+                                {
+                                    <p class="mb-0 small text-muted">Marka bulunamadı.</p>
+                                }
+                                else
+                                {
+                                    <div class="filter-items filter-items-count product-result-filter-scroll">
+                                        @foreach (var brand in Model.FilterBrands)
+                                        {
+                                            var isActive = Model.BrandId == brand.BrandId;
+                                            var filterUrl = Model.BuildBrandToggleUrl(brand.BrandId);
+                                            var inputId = $"filter-brand-{brand.BrandId}";
+                                            <div class="filter-item filter-item--toggle@(isActive ? " is-active" : "")" data-filter-url="@filterUrl">
+                                                <div class="custom-control custom-checkbox">
+                                                    <input type="checkbox" class="custom-control-input js-product-result-filter" id="@inputId" @(isActive ? "checked" : null) tabindex="-1" aria-hidden="true" />
+                                                    <label class="custom-control-label" for="@inputId">@brand.Name</label>
+                                                </div>
+                                                <span class="item-count">@brand.ProductCount</span>
+                                            </div>
+                                        }
+                                    </div>
+                                }
+                            </div>
+                        </div>
+                    </div>
+
+                    @if (Model.PriceRange is { HasRange: true } pr)
+                    {
+                        var sliderMin = Model.MinPrice ?? pr.RangeMin;
+                        var sliderMax = Model.MaxPrice ?? pr.RangeMax;
+                        <div class="widget widget-collapsible">
+                            <h3 class="widget-title">
+                                <button type="button" class="btn btn-link widget-collapse-btn" data-toggle="collapse" data-target="#widget-search-price" aria-expanded="true" aria-controls="widget-search-price">
+                                    @Html.Translate("#Price#")
+                                </button>
+                            </h3>
+                            <div class="collapse show" id="widget-search-price">
+                                <div class="widget-body">
+                                    <div class="filter-price"
+                                         id="arama-price-filter"
+                                         data-range-min="@pr.RangeMin.ToString(System.Globalization.CultureInfo.InvariantCulture)"
+                                         data-range-max="@pr.RangeMax.ToString(System.Globalization.CultureInfo.InvariantCulture)"
+                                         data-start-min="@sliderMin.ToString(System.Globalization.CultureInfo.InvariantCulture)"
+                                         data-start-max="@sliderMax.ToString(System.Globalization.CultureInfo.InvariantCulture)"
+                                         data-currency="@pr.CurrencySymbol"
+                                         data-url-without-price="@Model.BuildAramaUrlWithoutPrice()">
+                                        <div class="filter-price-text">
+                                            @Html.Translate("#Price Range#"):
+                                            <span id="arama-filter-price-range"></span>
+                                        </div>
+                                        <div id="arama-price-slider"></div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    }
+                </div>
+            </aside>
+
+            <div class="col-lg-9" id="arama-product-results">
+                <div class="toolbox">
+                    <div class="toolbox-left">
+                        <div class="toolbox-info">
+                            @Html.Translate("#Showing#") <span>@showing @Html.Translate("#of#") @total</span> @Html.Translate("#Products#")
+                        </div>
+                    </div>
+                    <div class="toolbox-right">
+                        <div class="toolbox-sort">
+                            <label for="sortby">@Html.Translate("#Sort by#"):</label>
+                            <div class="select-custom">
+                                <select name="sortby" id="sortby" class="form-control" disabled>
+                                    <option value="popularity" selected>@Html.Translate("#Most Popular#")</option>
+                                </select>
+                            </div>
+                        </div>
+                        <div class="toolbox-layout">
+                            <span class="btn-layout active" title="4 columns">
+                                <svg width="22" height="10">
+                                    <rect x="0" y="0" width="4" height="4" />
+                                    <rect x="6" y="0" width="4" height="4" />
+                                    <rect x="12" y="0" width="4" height="4" />
+                                    <rect x="18" y="0" width="4" height="4" />
+                                    <rect x="0" y="6" width="4" height="4" />
+                                    <rect x="6" y="6" width="4" height="4" />
+                                    <rect x="12" y="6" width="4" height="4" />
+                                    <rect x="18" y="6" width="4" height="4" />
+                                </svg>
+                            </span>
+                        </div>
+                    </div>
+                </div>
+
+                @await Html.PartialAsync("_ProductResultListPartial", Model)
+
+                @if (Model.TotalPages > 1)
+                {
+                    var maxPageLinks = 5;
+                    var startPage = Math.Max(1, Model.PageNumber - maxPageLinks / 2);
+                    var endPage = Math.Min(Model.TotalPages, startPage + maxPageLinks - 1);
+                    if (endPage - startPage < maxPageLinks - 1)
+                    {
+                        startPage = Math.Max(1, endPage - maxPageLinks + 1);
+                    }
+                    <nav aria-label="Page navigation">
+                        <ul class="pagination justify-content-center">
+                            <li class="page-item @(Model.PageNumber <= 1 ? "disabled" : "")">
+                                @if (Model.PageNumber <= 1)
+                                {
+                                    <span class="page-link page-link-prev"><i class="icon-long-arrow-left"></i>@Html.Translate("#Prev#")</span>
+                                }
+                                else
+                                {
+                                    <a class="page-link page-link-prev" href="@Model.BuildAramaUrl(pageNumber: Model.PageNumber - 1)"><i class="icon-long-arrow-left"></i>@Html.Translate("#Prev#")</a>
+                                }
+                            </li>
+                            @for (var p = startPage; p <= endPage; p++)
+                            {
+                                <li class="page-item @(p == Model.PageNumber ? "active" : "")">
+                                    @if (p == Model.PageNumber)
+                                    {
+                                        <span class="page-link">@p</span>
+                                    }
+                                    else
+                                    {
+                                        <a class="page-link" href="@Model.BuildAramaUrl(pageNumber: p)">@p</a>
+                                    }
+                                </li>
+                            }
+                            <li class="page-item @(Model.PageNumber >= Model.TotalPages ? "disabled" : "")">
+                                @if (Model.PageNumber >= Model.TotalPages)
+                                {
+                                    <span class="page-link page-link-next">@Html.Translate("#Next#")<i class="icon-long-arrow-right"></i></span>
+                                }
+                                else
+                                {
+                                    <a class="page-link page-link-next" href="@Model.BuildAramaUrl(pageNumber: Model.PageNumber + 1)">@Html.Translate("#Next#")<i class="icon-long-arrow-right"></i></a>
+                                }
+                            </li>
+                        </ul>
+                    </nav>
+                }
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="sidebar-filter-overlay"></div>
+
+@section Styles {
+    <link rel="stylesheet" href="~/assets/css/plugins/nouislider/nouislider.css">
+}
+
+@section Scripts {
+    @if (Model.PriceRange is { HasRange: true })
+    {
+        <script src="~/assets/js/wNumb.js"></script>
+        <script src="~/assets/js/nouislider.min.js"></script>
+    }
+    <script src="~/PageJs/product-result-filters.js" asp-append-version="true"></script>
+}

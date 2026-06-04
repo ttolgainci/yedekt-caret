@@ -39,6 +39,14 @@ public class HomeBannerGroupV2ViewComponent : ViewComponent
             cacheHelper.SetCache(key, banners);
         }
 
-        return View(banners ?? new List<AllBannerResponse>());
+        var slides = (banners ?? new List<AllBannerResponse>())
+            .Where(x => x.Status == true && !string.IsNullOrWhiteSpace(x.Image))
+            .OrderBy(x => int.TryParse(x.Order, out var order) ? order : x.ID)
+            .ToList();
+
+        if (slides.Count == 0)
+            return Content(string.Empty);
+
+        return View(slides);
     }
 }

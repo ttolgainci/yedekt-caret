@@ -9,104 +9,245 @@ function resolveMediaUrl(path) {
     return base + path.replace(/^\/+/, '');
 }
 
+function getCartDrawerLabels() {
+    var el = document.getElementById('store-cart-drawer');
+    if (!el) {
+        return {
+            total: 'Total',
+            checkout: 'Checkout',
+            continueShopping: 'Continue Shopping',
+            viewCart: 'View Cart',
+            remove: 'Remove',
+            empty: 'Your cart is empty.',
+            itemsTemplate: 'Sepetinizde {0} ürün bulunmaktadır'
+        };
+    }
+    return {
+        total: el.getAttribute('data-label-total') || 'Total',
+        checkout: el.getAttribute('data-label-checkout') || 'Checkout',
+        continueShopping: el.getAttribute('data-label-continue') || 'Continue Shopping',
+        viewCart: el.getAttribute('data-label-view-cart') || 'View Cart',
+        remove: el.getAttribute('data-label-remove') || 'Remove',
+        empty: el.getAttribute('data-label-empty') || 'Your cart is empty.',
+        itemsTemplate: el.getAttribute('data-label-items-template') || 'Sepetinizde {0} ürün bulunmaktadır'
+    };
+}
+
+function formatItemsSubtitle(template, count) {
+    var tpl = template || 'Sepetinizde {0} ürün bulunmaktadır';
+    if (tpl.indexOf('{0}') >= 0) {
+        return tpl.replace('{0}', String(count));
+    }
+    return tpl + ' ' + count;
+}
+
+function updateCartDrawerSubtitle(totalQuantity) {
+    var labels = getCartDrawerLabels();
+    var $sub = $('#store-cart-drawer-subtitle');
+    if (!$sub.length) return;
+    if (!totalQuantity || totalQuantity < 1) {
+        $sub.text(labels.empty);
+        return;
+    }
+    $sub.text(formatItemsSubtitle(labels.itemsTemplate, totalQuantity));
+}
+
+function cartItemPid(item) {
+    return item.productID || item.ProductID || 0;
+}
+
+function cartItemQty(item) {
+    return parseInt(item.quantity || item.Quantity, 10) || 0;
+}
+
+function mergeCartLines(data) {
+    if (!data || !data.length) return [];
+    var map = {};
+    for (var i = 0; i < data.length; i++) {
+        var item = data[i];
+        var pid = cartItemPid(item);
+        if (!pid) continue;
+        if (!map[pid]) {
+            map[pid] = {
+                productID: pid,
+                name: item.name || item.Name || '',
+                price: item.price != null ? item.price : item.Price,
+                currency: item.currency || item.Currency || '',
+                image: item.image || item.Image || '',
+                url: item.url || item.Url || '',
+                quantity: 0
+            };
+        }
+        map[pid].quantity += cartItemQty(item);
+    }
+    var merged = [];
+    for (var key in map) {
+        if (Object.prototype.hasOwnProperty.call(map, key)) {
+            merged.push(map[key]);
+        }
+    }
+    return merged;
+}
+
+function formatLineMoney(value) {
+    var n = parseFloat(value);
+    if (isNaN(n)) return '0.00';
+    return n.toFixed(2);
+}
+
+function buildCartDrawerHtml(data, dataTotal) {
+    var labels = getCartDrawerLabels();
+    var str = '';
+    var lines = mergeCartLines(data);
+
+    if (!lines.length) {
+        str += "<div class='store-cart-drawer-empty'><p>" + labels.empty + "</p></div>";
+        return str;
+    }
+
+    str += "<div class='store-cart-lines basket-list'>";
+    for (var i = 0; i < lines.length; i++) {
+        var item = lines[i];
+        var qty = parseInt(item.quantity, 10) || 1;
+        var unitPrice = parseFloat(item.price) || 0;
+        var lineTotal = unitPrice * qty;
+        var url = item.url || '#';
+        if (url.charAt(0) !== '/') url = '/' + url.replace(/^\/+/, '');
+
+        str += "<div class='store-cart-line cartProductItem basket-product-code_" + item.productID + "' data-pid='" + item.productID + "' data-url='" + url + "' data-qty='" + qty + "'>";
+        str += "<a href='" + url + "' class='store-cart-line-image'>";
+        str += "<img src='" + resolveMediaUrl(item.image) + "' alt=''>";
+        str += "</a>";
+        str += "<div class='store-cart-line-info'>";
+        str += "<a href='" + url + "' class='store-cart-line-title'>" + item.name + "</a>";
+        str += "<div class='store-cart-line-unit'><span class='cartProductPrice basket-product-price'>" + formatLineMoney(unitPrice) + "</span> " + (item.currency || '') + "</div>";
+        str += "<div class='store-cart-line-qty'>";
+        str += "<button type='button' class='store-cart-qty-btn js-cart-qty-minus' aria-label='-'>−</button>";
+        str += "<span class='store-cart-qty-value'>" + qty + "</span>";
+        str += "<button type='button' class='store-cart-qty-btn js-cart-qty-plus' aria-label='+'>+</button>";
+        str += "</div></div>";
+        str += "<div class='store-cart-line-total'>" + formatLineMoney(lineTotal) + " " + (item.currency || '') + "</div>";
+        str += "<button type='button' class='store-cart-line-remove js-cart-line-remove' data-pid='" + item.productID + "' title='" + labels.remove + "'><i class='icon-close'></i></button>";
+        str += "</div>";
+    }
+    str += "</div>";
+    str += "<div class='dropdown-cart-total'>";
+    str += "<span>" + labels.total + "</span>";
+    str += "<span class='cart-total-price basket-total-price'>" + (dataTotal && dataTotal.totalPrice ? dataTotal.totalPrice : '') + "</span>";
+    str += "</div>";
+    str += "<div class='dropdown-cart-action store-cart-drawer-actions'>";
+    str += "<a href='/checkout' class='btn btn-primary btn-block'>" + labels.checkout + "</a>";
+    str += "<a href='#' class='btn btn-outline-primary-2 btn-block js-cart-drawer-continue'><span>" + labels.continueShopping + "</span></a>";
+    str += "<a href='/cart' class='btn btn-link btn-block store-cart-drawer-view-cart'>" + labels.viewCart + "</a>";
+    str += "</div>";
+    return str;
+}
+
+var cartQtyRequestPending = false;
+
+function changeCartLineQuantity(productId, url, delta) {
+    if (cartQtyRequestPending) return;
+    cartQtyRequestPending = true;
+
+    $.ajax({
+        type: 'POST',
+        url: '/Cart/ChangeCartQuantity',
+        contentType: 'application/x-www-form-urlencoded; charset=UTF-8',
+        data: { ProductID: productId, Url: url, Delta: delta },
+        success: function (result) {
+            updateCartFromResponse(result);
+        },
+        complete: function () {
+            cartQtyRequestPending = false;
+        }
+    });
+}
+
+function updateCartFromResponse(result) {
+    if (!result) return;
+    var data = mergeCartLines(result.cartList || []);
+    var dataTotal = result.info || {};
+    var html = buildCartDrawerHtml(data, dataTotal);
+    $('#store-cart-drawer-body').html(html);
+
+    var totalQty = dataTotal.totalQuantity ? parseInt(dataTotal.totalQuantity, 10) : 0;
+    if (!totalQty && data.length) {
+        totalQty = 0;
+        for (var i = 0; i < data.length; i++) {
+            totalQty += cartItemQty(data[i]);
+        }
+    }
+
+    if (totalQty > 0) {
+        $('.basket-quantity-count').text(totalQty).show();
+    } else {
+        $('.basket-quantity-count').empty().hide();
+    }
+
+    updateCartDrawerSubtitle(totalQty);
+    $('.cart-table-total .basket-total-price').html(dataTotal.totalPrice || '');
+}
+
+function openStoreCartDrawer() {
+    $('body').addClass('store-cart-drawer-open');
+    $('#store-cart-drawer').attr('aria-hidden', 'false');
+    $('#store-cart-drawer-overlay').attr('aria-hidden', 'false');
+}
+
+function closeStoreCartDrawer() {
+    $('body').removeClass('store-cart-drawer-open');
+    $('#store-cart-drawer').attr('aria-hidden', 'true');
+    $('#store-cart-drawer-overlay').attr('aria-hidden', 'true');
+}
+
 function setProductToBasket(d) {
-
-
-
     var pID = d.getAttribute("data-pid");
-    /*var qty = $("#productQty_" + pID + "").val();*/
-    var qty = $('.product-detail-code_' + pID +' input[type="number"].product-detail-Quantity').val();
+    var qty = $('.product-detail-code_' + pID + ' input[type="number"].product-detail-Quantity').val();
+    if (!qty || isNaN(parseInt(qty, 10))) {
+        qty = d.getAttribute("data-qty") || '1';
+    }
+    var cartQty = parseInt(qty, 10);
+    if (isNaN(cartQty) || cartQty < 1) {
+        cartQty = 1;
+    }
     var purl = d.getAttribute("data-purl");
+    var inBasketLabel = d.getAttribute("data-inbasket-label") || '';
+
     $.ajax({
         type: 'POST',
         url: '/Cart/AddToCart',
         contentType: 'application/x-www-form-urlencoded; charset=UTF-8',
-        data: { ProductID: pID, Url: purl, CartQuantity: parseInt(qty),},
+        data: { ProductID: pID, Url: purl, CartQuantity: cartQty },
         success: function (result) {
-            var data = result.cartList;
-            var dataTotal = result.info;
-            var str = "";
-            /*$("#setBasketProductDiv").empty();*/
-            $(".basket-area-main").empty();
-            str += "<div class='dropdown-cart-products basket-list'>";
-            for (var i = 0; i < data.length; i++) {
-                var item = data[i];
+            updateCartFromResponse(result);
+            openStoreCartDrawer();
 
-                str += "   <div class='product cartProductItem basket-product-code_" + item.productID + "'>";
-                str += "       <div class='product-cart-details productItem'>";
-                str += "           <h4 class='product-title'>";
-                str += "               <a href='" + item.url + "'>" + item.name + "</a>";
-                str += "           </h4>";
-                str += "           <span class='cart-product-info'>";
-                str += "               <span class='cart-product-qty basket-product-quantity'>" + parseInt(item.quantity) + "</span>";
-                str += "              x <span class='cartProductPrice basket-product-price'>" + item.price + "</span> " + item.currency + " ";
-                str += "           </span>";
-                str += "       </div>";
-                str += "       <figure class='product-image-container'>";
-                str += "           <a href='" + item.url + "' class='product-image'>";
-                str += "               <img src='" + resolveMediaUrl(item.image) + "' alt='product'>";
-                str += "           </a>";
-                str += "       </figure>";
-                str += "       <a onclick='removeProductFromBasket(this)' data-pid='" + item.productID + "' class='btn-remove' title='Remove Product'><i class='icon-close'></i></a>";
-                str += "   </div>";
+            var addLabel = d.getAttribute("data-add-label") || "";
+            if (inBasketLabel && addLabel) {
+                var $btnLabels = $();
+                var $detailBtn = $('.product-detail-code_' + pID + ' .btn-product.btn-cart span');
+                var $listBtn = $(d).find('span');
+                if ($detailBtn.length) {
+                    $btnLabels = $btnLabels.add($detailBtn);
+                }
+                if ($listBtn.length) {
+                    $btnLabels = $btnLabels.add($listBtn);
+                }
+                $btnLabels.text(inBasketLabel);
+                setTimeout(function () {
+                    $btnLabels.text(addLabel);
+                }, 1000);
             }
-            str += "   </div>";
-            str += "<div class='dropdown-cart-total'>";
-            str += "<span>total</span>";
-            str += "<span class='cart-total-price'>" + dataTotal.totalPrice + "</span>";
-            str += "</div>";
-            str += " <div class='dropdown-cart-action'>";
-            str += "   <a href='/cart' class='btn btn-primary'>View Cart</a>";
-            str += "   <a href='checkout.html' class='btn btn-outline-primary-2'><span>Checkout</span><i class='icon-long-arrow-right'></i></a>";
-            str += " </div>";
-            $(".basket-quantity-count").text(parseInt(dataTotal.totalQuantity));
-            $(".basket-quantity-count").show();
-            $('.product-detail-code_' + pID + ' .btn-product').text("in the basket");
-            $(".basket-area-main").append(str);
-            $(".basket-area-main").show();
         },
-        error: function () {
-
-        }
-    })
-
-
-
-
+        error: function () { }
+    });
 }
+
 function removeProductFromBasket(d) {
-    var pID = d.getAttribute("data-pid");
-
-    //var total = $("#basketTotal").text();
-    //var price = $("#cartproductPrice_" + pID + "").text();
-    //var dropCount = $(".basket-quantity-count").text();
-    //var cartproductqty = $("#cartproductqty_" + pID + "").text();
-    //var setCartCount = parseInt(dropCount) - parseInt(cartproductqty);
-    //$(".basket-quantity-count").empty();
-    //$(".basket-quantity-count").append(setCartCount);
-    //var dropTotal = parseFloat(total) - (parseFloat(price) * parseInt(cartproductqty));
-    //$("#basketTotal").text(dropTotal);
-    //$("#basket_" + pID + "").remove();
-    var total = $(".basket-area-main .basket-total-price").text();
-    var price = $('.basket-product-code_' + pID + ' .basket-product-price').text();
-    var basketproductqty = $('.basket-product-code_' + pID + ' .basket-product-quantity').text();
-    var dropCount = $(".basket-quantity-count").text();
-    var setBasketCount = parseInt(dropCount) - parseInt(basketproductqty);
-    $(".basket-quantity-count").empty();
-    $(".basket-quantity-count").append(setBasketCount);
-    var dropTotal = parseFloat(total) - (parseFloat(price) * parseInt(basketproductqty));
-    $(".basket-area-main .basket-total-price").text(dropTotal);
-    $(".basket-product-code_" + pID + "").remove();
-
-    $(".cart-table-total .basket-total-price").text(dropTotal);
-    $(".cart-product-code_" + pID + "").remove();
-
-    if ($('.cartProductItem').length == 0) {
-        $(".basket-list").empty();
-        $(".basket-area-main").hide();
-        $(".basket-quantity-count").empty();
-        $(".basket-quantity-count").hide();
-    }
+    var $el = $(d);
+    var $line = $el.closest('.store-cart-line');
+    var pID = parseInt($line.attr('data-pid') || $el.attr('data-pid'), 10);
+    if (!pID) return;
 
     $.ajax({
         type: 'POST',
@@ -114,135 +255,122 @@ function removeProductFromBasket(d) {
         contentType: 'application/x-www-form-urlencoded; charset=UTF-8',
         data: { ProductID: pID },
         success: function (result) {
-
-        },
-        error: function () {
-
+            updateCartFromResponse(result);
         }
-    })
+    });
 }
+
 function removeProductFromCart(d) {
     var pID = d.getAttribute("data-pid");
 
-    var total = $(".basket-area-main .basket-total-price").text();
-    var price = $('.cart-product-code_' + pID + ' .cart-product-price').text();
-    var dropCount = $(".basket-quantity-count").text();
-    var cartproductqty = $('.cart-product-code_' + pID + ' input[type="number"].cart-product-quantity-new').val();
-    var setCartCount = parseInt(dropCount) - parseInt(cartproductqty);
-    $(".basket-quantity-count").empty();
-    $(".basket-quantity-count").append(setCartCount);
-    var dropTotal = parseFloat(total) - (parseFloat(price) * parseInt(cartproductqty));
-    $(".cart-table-total .basket-total-price").text(dropTotal);
-    $(".basket-area-main .basket-total-price").text(dropTotal);
-    $(".cart-product-code_" + pID + "").remove();
-    $(".basket-product-code_" + pID + "").remove();
-
-    if ($('.cartProductItem').length == 0) {
-        $(".basket-list").empty();
-        $(".basket-area-main").hide();
-        $(".basket-quantity-count").empty();
-        $(".basket-quantity-count").hide();
-    }
-
     $.ajax({
         type: 'POST',
         url: '/Cart/DeleteFromCart',
         contentType: 'application/x-www-form-urlencoded; charset=UTF-8',
         data: { ProductID: pID },
         success: function (result) {
-
+            updateCartFromResponse(result);
+            $('.cart-product-code_' + pID).remove();
         },
-        error: function () {
-
-        }
-    })
+        error: function () { }
+    });
 }
+
+$(function () {
+    $(document).on('click', '.js-open-cart-drawer', function (e) {
+        e.preventDefault();
+        openStoreCartDrawer();
+    });
+
+    $(document).on('click', '.store-cart-drawer-close, .store-cart-drawer-overlay, .js-cart-drawer-continue', function (e) {
+        e.preventDefault();
+        closeStoreCartDrawer();
+    });
+
+    $(document).on('keydown', function (e) {
+        if (e.key === 'Escape' && $('body').hasClass('store-cart-drawer-open')) {
+            closeStoreCartDrawer();
+        }
+    });
+
+    $(document).on('click', '.js-cart-line-remove', function (e) {
+        e.preventDefault();
+        e.stopPropagation();
+        removeProductFromBasket(this);
+    });
+
+    $(document).on('click', '.js-cart-qty-plus', function (e) {
+        e.preventDefault();
+        e.stopPropagation();
+        var $line = $(this).closest('.store-cart-line');
+        var pid = parseInt($line.attr('data-pid'), 10);
+        var url = $line.attr('data-url') || '';
+        if (!pid) return;
+        changeCartLineQuantity(pid, url, 1);
+    });
+
+    $(document).on('click', '.js-cart-qty-minus', function (e) {
+        e.preventDefault();
+        e.stopPropagation();
+        var $line = $(this).closest('.store-cart-line');
+        var pid = parseInt($line.attr('data-pid'), 10);
+        var url = $line.attr('data-url') || '';
+        if (!pid) return;
+        changeCartLineQuantity(pid, url, -1);
+    });
+});
+
 (function () {
     $('body', document)
         .on('click', '.cartBasketList .icon-plus', function () {
             var mainDivId = $(this).closest('.cartProductItem').attr('id').split("_")[1];
-            //var getTotal = $("#basketTotal").text();
-            //var getHasQty = $("#cartproductqty_" + mainDivId + "").text();
-            //var getQty = $("#productQtySpinner_" + mainDivId + "").val();
-            //var getHasPrice = $("#cartproductPrice_" + mainDivId + "").text();
-            //var getUrl = $("#cartproductUrl_" + mainDivId + "").attr("href");
-            var getTotal = $(".basket-area-main .basket-total-price").text();
-            var getHasQty = $('.cart-product-code_'+mainDivId+' input[type="text"].cart-product-quantity-old').val();
-            var getQty = $('.cart-product-code_' + mainDivId + ' input[type="number"].cart-product-quantity-new').val();
-            var getHasPrice = $('.cart-product-code_' + mainDivId + ' .cart-product-price').text();
-            var getUrl = $('.cart-product-code_' + mainDivId + ' .cart-product-url').attr("href");
-           
-            
-            
-            if (parseInt(getQty) > parseInt(getHasQty)) {
-                var newPrice = (parseInt(getQty) - parseInt(getHasQty)) * parseFloat(getHasPrice);
-                 //$(".cartListTotal #basketTotal").text(parseFloat(getTotal) + parseFloat(newPrice));
-                //$("#cartproductqty_" + mainDivId + "").text(parseInt(getQty));
-                //var oldQty = $(".basket-quantity-count").text();
-                //$(".basket-quantity-count").text(parseInt(oldQty) + (parseInt(getQty) - parseInt(getHasQty)));
-                //$("#setTotalPriceForCart #basketTotal").text(parseFloat(getTotal) + parseFloat(newPrice));
-
-                $(".cart-table-total .basket-total-price").text(parseFloat(getTotal) + parseFloat(newPrice)); 
-                $('.cart-product-code_' + mainDivId + ' input[type="text"].cart-product-quantity-old').val(parseInt(getQty));
-                var oldQty = $(".basket-quantity-count").text();
-                $(".basket-quantity-count").text(parseInt(oldQty) + (parseInt(getQty) - parseInt(getHasQty)));
-                $(".basket-area-main .basket-total-price").text(parseFloat(getTotal) + parseFloat(newPrice));
-            }        
-            $.ajax({
-                type: 'POST',
-                url: '/Cart/AddToCart',
-                contentType: 'application/x-www-form-urlencoded; charset=UTF-8',
-                data: { ProductID: mainDivId, Url: getUrl, CartQuantity: getQty },
-                success: function (result) {
-
-                },
-                error: function () {
-
-                }
-            })
-
-        })
-        .on('click', '.cartBasketList .icon-minus', function () {
-            var mainDivId = $(this).closest('.cartProductItem').attr('id').split("_")[1];
-
-            //var getTotal = $("#basketTotal").text();
-            //var getHasQty = $("#cartproductqty_" + mainDivId + "").text();
-            //var getQty = $("#productQtySpinner_" + mainDivId + "").val();
-            //var getHasPrice = $("#cartproductPrice_" + mainDivId + "").text();
-            //var getUrl = $("#cartproductUrl_" + mainDivId + "").attr("href");
-            var getTotal = $(".basket-area-main .basket-total-price").text();
+            var getTotal = $(".basket-total-price").first().text();
             var getHasQty = $('.cart-product-code_' + mainDivId + ' input[type="text"].cart-product-quantity-old').val();
             var getQty = $('.cart-product-code_' + mainDivId + ' input[type="number"].cart-product-quantity-new').val();
             var getHasPrice = $('.cart-product-code_' + mainDivId + ' .cart-product-price').text();
             var getUrl = $('.cart-product-code_' + mainDivId + ' .cart-product-url').attr("href");
-            if (parseInt(getQty) < parseInt(getHasQty)) {
-                var newPrice = (parseInt(getHasQty) - parseInt(getQty)) * parseFloat(getHasPrice);
-                //$(".cartListTotal #basketTotal").text(parseFloat(getTotal) - parseFloat(newPrice));
 
-                //$("#cartproductqty_" + mainDivId + "").text(parseInt(getQty));
-                //var oldQty = $(".basket-quantity-count").text();
-                //$(".basket-quantity-count").text(parseInt(oldQty) - (parseInt(getHasQty) - parseInt(getQty)));
-                //$("#setTotalPriceForCart #basketTotal").text(parseFloat(getTotal) - parseFloat(newPrice));
-                $(".cart-table-total .basket-total-price").text(parseFloat(getTotal) - parseFloat(newPrice));
-                $('.cart-product-code_' + mainDivId + ' input[type="text"].cart-product-quantity-old').val(parseInt(getQty));
+            if (parseInt(getQty, 10) > parseInt(getHasQty, 10)) {
+                var newPrice = (parseInt(getQty, 10) - parseInt(getHasQty, 10)) * parseFloat(getHasPrice);
+                $(".cart-table-total .basket-total-price").text(parseFloat(getTotal) + parseFloat(newPrice));
+                $('.cart-product-code_' + mainDivId + ' input[type="text"].cart-product-quantity-old').val(parseInt(getQty, 10));
                 var oldQty = $(".basket-quantity-count").text();
-                $(".basket-quantity-count").text(parseInt(oldQty) - (parseInt(getHasQty) - parseInt(getQty)));
-                $(".basket-area-main .basket-total-price").text(parseFloat(getTotal) - parseFloat(newPrice));
+                $(".basket-quantity-count").text(parseInt(oldQty, 10) + (parseInt(getQty, 10) - parseInt(getHasQty, 10)));
+                $(".basket-total-price").first().text(parseFloat(getTotal) + parseFloat(newPrice));
             }
-            //$("#basketTotal").text(parseFloat(getTotal) + parseFloat(getHasPrice));
             $.ajax({
                 type: 'POST',
                 url: '/Cart/AddToCart',
                 contentType: 'application/x-www-form-urlencoded; charset=UTF-8',
                 data: { ProductID: mainDivId, Url: getUrl, CartQuantity: getQty },
                 success: function (result) {
-
-                },
-                error: function () {
-
+                    updateCartFromResponse(result);
                 }
-            })
-
+            });
         })
-        ;
+        .on('click', '.cartBasketList .icon-minus', function () {
+            var mainDivId = $(this).closest('.cartProductItem').attr('id').split("_")[1];
+            var getTotal = $(".basket-total-price").first().text();
+            var getHasQty = $('.cart-product-code_' + mainDivId + ' input[type="text"].cart-product-quantity-old').val();
+            var getQty = $('.cart-product-code_' + mainDivId + ' input[type="number"].cart-product-quantity-new').val();
+            var getHasPrice = $('.cart-product-code_' + mainDivId + ' .cart-product-price').text();
+            var getUrl = $('.cart-product-code_' + mainDivId + ' .cart-product-url').attr("href");
+            if (parseInt(getQty, 10) < parseInt(getHasQty, 10)) {
+                var newPrice = (parseInt(getHasQty, 10) - parseInt(getQty, 10)) * parseFloat(getHasPrice);
+                $(".cart-table-total .basket-total-price").text(parseFloat(getTotal) - parseFloat(newPrice));
+                $('.cart-product-code_' + mainDivId + ' input[type="text"].cart-product-quantity-old').val(parseInt(getQty, 10));
+                var oldQty = $(".basket-quantity-count").text();
+                $(".basket-quantity-count").text(parseInt(oldQty, 10) - (parseInt(getHasQty, 10) - parseInt(getQty, 10)));
+                $(".basket-total-price").first().text(parseFloat(getTotal) - parseFloat(newPrice));
+            }
+            $.ajax({
+                type: 'POST',
+                url: '/Cart/AddToCart',
+                contentType: 'application/x-www-form-urlencoded; charset=UTF-8',
+                data: { ProductID: mainDivId, Url: getUrl, CartQuantity: getQty },
+                success: function (result) {
+                    updateCartFromResponse(result);
+                }
+            });
+        });
 })();
