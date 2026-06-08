@@ -164,4 +164,70 @@ public sealed class StoreCatalogApi : IStoreCatalogApi
             path += $"&maxPrice={maxPrice.Value.ToString(System.Globalization.CultureInfo.InvariantCulture)}";
         return _api.GetAsync<BaseResponse<VehicleSearchPriceRangeModel>>(path, bearerToken: null, cancellationToken);
     }
+
+    public Task<BaseResponse<List<VehicleSearchCategoryListItem>>> GetSubcategoriesByCategoryAsync(
+        int categoryId,
+        string languageCode,
+        int? brandId = null,
+        CancellationToken cancellationToken = default)
+    {
+        var lang = string.IsNullOrWhiteSpace(languageCode) ? "tr" : languageCode.Trim();
+        var path = $"/api/catalog/categories/{categoryId}/subcategories?languageCode={Uri.EscapeDataString(lang)}";
+        if (brandId is > 0)
+            path += $"&brandId={brandId.Value}";
+        return _api.GetAsync<BaseResponse<List<VehicleSearchCategoryListItem>>>(path, bearerToken: null, cancellationToken);
+    }
+
+    public Task<BaseResponse<List<VehicleSearchBrandListItem>>> GetBrandsByCategoryAsync(
+        int categoryId,
+        string languageCode,
+        int? brandId = null,
+        CancellationToken cancellationToken = default)
+    {
+        var lang = string.IsNullOrWhiteSpace(languageCode) ? "tr" : languageCode.Trim();
+        var path = $"/api/catalog/categories/{categoryId}/brands?languageCode={Uri.EscapeDataString(lang)}";
+        if (brandId is > 0)
+            path += $"&brandId={brandId.Value}";
+        return _api.GetAsync<BaseResponse<List<VehicleSearchBrandListItem>>>(path, bearerToken: null, cancellationToken);
+    }
+
+    public Task<BaseResponse<VehicleSearchProductsResponse>> GetProductsByCategorySearchAsync(
+        int categoryId,
+        string languageCode,
+        int? brandId = null,
+        decimal? minPrice = null,
+        decimal? maxPrice = null,
+        int pageNumber = 1,
+        int pageSize = 12,
+        CancellationToken cancellationToken = default)
+    {
+        var lang = string.IsNullOrWhiteSpace(languageCode) ? "tr" : languageCode.Trim();
+        var path = $"/api/catalog/categories/{categoryId}/products?languageCode={Uri.EscapeDataString(lang)}&pageNumber={pageNumber}&pageSize={pageSize}";
+        if (brandId is > 0)
+            path += $"&brandId={brandId.Value}";
+        if (minPrice.HasValue)
+            path += $"&minPrice={minPrice.Value.ToString(System.Globalization.CultureInfo.InvariantCulture)}";
+        if (maxPrice.HasValue)
+            path += $"&maxPrice={maxPrice.Value.ToString(System.Globalization.CultureInfo.InvariantCulture)}";
+        return _api.GetAsync<BaseResponse<VehicleSearchProductsResponse>>(path, bearerToken: null, cancellationToken);
+    }
+
+    public Task<BaseResponse<VehicleSearchPriceRangeModel>> GetPriceRangeByCategoryAsync(
+        int categoryId,
+        string languageCode,
+        int? brandId = null,
+        decimal? minPrice = null,
+        decimal? maxPrice = null,
+        CancellationToken cancellationToken = default)
+    {
+        var lang = string.IsNullOrWhiteSpace(languageCode) ? "tr" : languageCode.Trim();
+        var path = $"/api/catalog/categories/{categoryId}/price-range?languageCode={Uri.EscapeDataString(lang)}";
+        if (brandId is > 0)
+            path += $"&brandId={brandId.Value}";
+        if (minPrice.HasValue)
+            path += $"&minPrice={minPrice.Value.ToString(System.Globalization.CultureInfo.InvariantCulture)}";
+        if (maxPrice.HasValue)
+            path += $"&maxPrice={maxPrice.Value.ToString(System.Globalization.CultureInfo.InvariantCulture)}";
+        return _api.GetAsync<BaseResponse<VehicleSearchPriceRangeModel>>(path, bearerToken: null, cancellationToken);
+    }
 }

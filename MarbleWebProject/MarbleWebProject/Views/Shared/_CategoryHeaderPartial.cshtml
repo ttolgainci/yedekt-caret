@@ -1,6 +1,7 @@
+@using MarbleWebProject.Helpers
 @model CategoryListModel
 @{
-    var categoryUrl = "/" + (Model.Url ?? "").TrimStart('/');
+    var categoryUrl = CategoryNavHelper.BuildCategoryUrl(Model);
     var children = (Model.SubCat ?? new List<CategoryListModel>())
         .Where(c => c.Status)
         .OrderBy(c => c.Order ?? c.Name)
@@ -24,7 +25,7 @@
                     <div class="demo-list">
                         @foreach (var sub in withImages)
                         {
-                            var subUrl = "/" + (sub.Url ?? "").TrimStart('/');
+                            var subUrl = CategoryNavHelper.BuildCategoryUrl(sub);
                             var imageUrl = MediaUrlHelper.Build(sub.Picture);
                             <div class="demo-item">
                                 <a href="@subUrl">
@@ -42,7 +43,7 @@
                         <ul class="mt-2">
                             @foreach (var sub in textOnly.Where(s => (s.SubCat?.Count ?? 0) == 0))
                             {
-                                var subUrl = "/" + (sub.Url ?? "").TrimStart('/');
+                                var subUrl = CategoryNavHelper.BuildCategoryUrl(sub);
                                 <li><a href="@subUrl">@sub.Name</a></li>
                             }
                         </ul>
@@ -62,7 +63,7 @@
                                 {
                                     continue;
                                 }
-                                var subUrl = "/" + (sub.Url ?? "").TrimStart('/');
+                                var subUrl = CategoryNavHelper.BuildCategoryUrl(sub);
                                 <div class="col-md-6 col-lg-4">
                                     <div class="menu-title">
                                         <a href="@subUrl">@sub.Name</a>
@@ -70,7 +71,7 @@
                                     <ul>
                                         @foreach (var grand in subChildren)
                                         {
-                                            var grandUrl = "/" + (grand.Url ?? "").TrimStart('/');
+                                            var grandUrl = CategoryNavHelper.BuildCategoryUrl(grand);
                                             <li><a href="@grandUrl">@grand.Name</a></li>
                                         }
                                     </ul>
@@ -95,7 +96,7 @@
                                         .OrderBy(c => c.Order ?? c.Name)
                                         .ThenBy(c => c.Name)
                                         .ToList();
-                                    var subUrl = "/" + (sub.Url ?? "").TrimStart('/');
+                                    var subUrl = CategoryNavHelper.BuildCategoryUrl(sub);
                                     <div class="col-md-6 col-lg-4">
                                         <div class="menu-title">
                                             <a href="@subUrl">@sub.Name</a>
@@ -105,7 +106,7 @@
                                             <ul>
                                                 @foreach (var grand in subChildren)
                                                 {
-                                                    var grandUrl = "/" + (grand.Url ?? "").TrimStart('/');
+                                                    var grandUrl = CategoryNavHelper.BuildCategoryUrl(grand);
                                                     <li><a href="@grandUrl">@grand.Name</a></li>
                                                 }
                                             </ul>

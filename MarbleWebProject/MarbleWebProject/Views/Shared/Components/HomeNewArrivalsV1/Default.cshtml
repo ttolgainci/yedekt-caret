@@ -2,12 +2,11 @@
 @model List<MarbleWebProject.Models.ProductList>
 @if (Model.Count > 0)
 {
-    var wasLabel = Html.Translate("#Was#").ToString();
     <div class="bg-lighter pt-5 pb-5 mb-5">
         <div class="container">
             <div class="heading text-center mb-4">
-                <h2 class="title">@Html.Translate("#Deals of the Week#")</h2>
-                <p class="title-desc">@Html.Translate("#Deals of the week subtitle#")</p>
+                <h2 class="title">@Html.Translate("#New Arrivals#")</h2>
+                <p class="title-desc">@Html.Translate("#New arrivals subtitle#")</p>
             </div>
 
             <div class="owl-carousel owl-simple" data-toggle="owl"
@@ -33,13 +32,9 @@
                     var productUrl = (item.Url ?? "#").Trim();
                     if (!productUrl.StartsWith('/'))
                         productUrl = "/" + productUrl.TrimStart('/');
-                    var hasDiscount = item.OriginalPrice is > 0 && item.Price.HasValue && item.OriginalPrice > item.Price;
                     <div class="product product-4">
                         <figure class="product-media">
-                            @if (hasDiscount)
-                            {
-                                <span class="product-label label-primary">@Html.Translate("#Sale#")</span>
-                            }
+                            <span class="product-label label-circle label-new">@Html.Translate("#New#")</span>
                             <a href="@productUrl">
                                 <img src="@img" alt="@item.ProductName" class="product-image">
                                 @if (!string.Equals(img, hoverImg, StringComparison.OrdinalIgnoreCase))
@@ -62,13 +57,7 @@
                             <h3 class="product-title"><a href="@productUrl">@item.ProductName</a></h3>
                             @if (item.Price.HasValue)
                             {
-                                <div class="product-price">
-                                    <span class="new-price">@item.Price @item.CurrencyName</span>
-                                    @if (hasDiscount)
-                                    {
-                                        <span class="old-price">@wasLabel @item.OriginalPrice @item.CurrencyName</span>
-                                    }
-                                </div>
+                                <div class="product-price">@item.Price @item.CurrencyName</div>
                             }
                         </div>
                     </div>

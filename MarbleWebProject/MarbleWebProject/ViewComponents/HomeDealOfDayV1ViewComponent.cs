@@ -13,18 +13,18 @@ public class HomeDealOfDayV1ViewComponent : ViewComponent
 
     public async Task<IViewComponentResult> InvokeAsync(CancellationToken cancellationToken = default)
     {
-        CampaignActiveModel? campaign = null;
+        List<ProductList> products = new();
         try
         {
-            var response = await _storefront.GetActiveCampaignsAsync(cancellationToken);
-            if (response.Status && response.Data?.Count > 0)
-                campaign = response.Data[0];
+            var response = await _storefront.GetDealOfWeekProductsAsync(8, cancellationToken);
+            if (response.Status && response.Data != null)
+                products = response.Data;
         }
         catch
         {
-            // static fallback in view
+            // empty → section hidden
         }
 
-        return View(campaign);
+        return View(products);
     }
 }

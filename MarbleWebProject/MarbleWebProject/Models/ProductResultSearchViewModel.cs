@@ -1,10 +1,19 @@
+using MarbleWebProject.Helpers;
+
 namespace MarbleWebProject.Models;
 
-/// <summary>Ürün arama sonuç sayfası (/arama).</summary>
+/// <summary>Ürün arama sonuç sayfası (/category/...-c{id} ve /arac/...-v{id}).</summary>
 public class ProductResultSearchViewModel
 {
+    public ProductSearchMode Mode { get; set; } = ProductSearchMode.None;
     public string Title { get; set; } = "Arama Sonuçları";
     public string? Summary { get; set; }
+
+    public string? CategorySlug { get; set; }
+    public string? VehicleMakeSlug { get; set; }
+    public string? VehicleModelSlug { get; set; }
+    public string? VehicleGenerationSlug { get; set; }
+    public string? VehicleEngineSlug { get; set; }
 
     public int? VehicleMakeId { get; set; }
     public int? VehicleModelId { get; set; }
@@ -27,6 +36,18 @@ public class ProductResultSearchViewModel
     public IReadOnlyList<VehicleSearchCategoryListItem> FilterCategories { get; set; } = Array.Empty<VehicleSearchCategoryListItem>();
     public IReadOnlyList<VehicleSearchBrandListItem> FilterBrands { get; set; } = Array.Empty<VehicleSearchBrandListItem>();
 
+    public string BasePath => Mode switch
+    {
+        ProductSearchMode.Category => UrlSlugHelper.BuildCategoryPath(CategorySlug, CategoryId ?? 0),
+        ProductSearchMode.Vehicle => UrlSlugHelper.BuildVehicleSearchPath(
+            VehicleMakeSlug,
+            VehicleModelSlug,
+            VehicleGenerationSlug,
+            VehicleEngineSlug,
+            VehicleEngineId ?? 0),
+        _ => "/arac"
+    };
+
     public string BuildAramaUrl(
         int? categoryId = null,
         int? brandId = null,
@@ -38,21 +59,17 @@ public class ProductResultSearchViewModel
         bool includeCurrentPrice = true)
     {
         var parts = new List<string>();
-        if (VehicleMakeId is > 0) parts.Add($"vehicleMakeId={VehicleMakeId}");
-        if (VehicleModelId is > 0) parts.Add($"vehicleModelId={VehicleModelId}");
-        if (VehicleGenerationId is > 0) parts.Add($"vehicleGenerationId={VehicleGenerationId}");
-        if (VehicleEngineId is > 0) parts.Add($"vehicleEngineId={VehicleEngineId}");
 
         var cat = categoryId;
         if (cat == null && includeCurrentCategory)
             cat = CategoryId;
-        if (cat is > 0)
+        if (cat is > 0 && Mode == ProductSearchMode.Vehicle)
             parts.Add($"categoryId={cat}");
 
         var brand = brandId;
         if (brand == null && includeCurrentBrand)
             brand = BrandId;
-        if (brand is > 0)
+        if (brand is > 0 && Mode is ProductSearchMode.Vehicle or ProductSearchMode.Category)
             parts.Add($"brandId={brand}");
 
         var min = minPrice;
@@ -61,25 +78,24 @@ public class ProductResultSearchViewModel
         var max = maxPrice;
         if (max == null && includeCurrentPrice)
             max = MaxPrice;
-        if (min.HasValue)
+        if (min.HasValue && Mode is ProductSearchMode.Vehicle or ProductSearchMode.Category)
             parts.Add($"minPrice={min.Value.ToString(System.Globalization.CultureInfo.InvariantCulture)}");
-        if (max.HasValue)
+        if (max.HasValue && Mode is ProductSearchMode.Vehicle or ProductSearchMode.Category)
             parts.Add($"maxPrice={max.Value.ToString(System.Globalization.CultureInfo.InvariantCulture)}");
 
         var page = pageNumber ?? PageNumber;
         if (page is > 1)
             parts.Add($"pageNumber={page}");
 
-        return parts.Count == 0 ? "/arama" : "/arama?" + string.Join("&", parts);
+        var path = BasePath;
+        return parts.Count == 0 ? path : path + "?" + string.Join("&", parts);
     }
 
-    /// <summary>Seçili kategoriye tekrar tıklanırsa filtreyi kaldırır.</summary>
     public string BuildCategoryToggleUrl(int categoryId) =>
         CategoryId == categoryId
             ? BuildAramaUrl(includeCurrentCategory: false, pageNumber: 1)
             : BuildAramaUrl(categoryId: categoryId, pageNumber: 1);
 
-    /// <summary>Seçili markaya tekrar tıklanırsa filtreyi kaldırır.</summary>
     public string BuildBrandToggleUrl(int brandId) =>
         BrandId == brandId
             ? BuildAramaUrl(includeCurrentBrand: false, pageNumber: 1)

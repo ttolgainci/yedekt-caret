@@ -34,6 +34,8 @@
         public int? BrandID { get; set; }
         public string BrandName { get; set; } = string.Empty;
         public string BrandPicture { get; set; } = string.Empty;
+        public decimal? OriginalPrice { get; set; }
+        public decimal? DiscountPercent { get; set; }
     }
     public class ImageList
     {

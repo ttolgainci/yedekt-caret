@@ -2,6 +2,7 @@ using MarbleWebProject.Helper;
 using MarbleWebProject.Helpers;
 using MarbleWebProject.Models;
 using MarbleWebProject.Models.Options;
+using MarbleWebProject.Services;
 using MarbleWebProject.Services.Api;
 using MarbleWebProject.Services.CheckoutDraft;
 using MarbleWebProject.Services.Storefront;
@@ -68,6 +69,7 @@ builder.Services.AddScoped<IStoreLocationApi, StoreLocationApi>();
 builder.Services.AddScoped<IStoreOrderApi, StoreOrderApi>();
 builder.Services.AddScoped<IBasketUserIdProvider, BasketUserIdProvider>();
 builder.Services.AddScoped<IStoreCatalogApi, StoreCatalogApi>();
+builder.Services.AddScoped<IProductSearchUrlResolver, ProductSearchUrlResolver>();
 builder.Services.AddScoped<IStoreBasketApi, StoreBasketApi>();
 builder.Services.AddScoped<IStoreShippingApi, StoreShippingApi>();
 builder.Services.AddScoped<IStoreContentApi, StoreContentApi>();
@@ -161,9 +163,6 @@ app.Use(async (ctx, next) =>
 });
 app.UseAuthorization();
 
-app.MapControllerRoute(name: "default", pattern: "{controller=Home}/{action=Index}/{id?}");
-app.MapControllerRoute(name: "sitemap", pattern: "sitemap.xml", defaults: new { controller = "Sitemap", action = "Index" });
-
 List<RouteListModel> routeList;
 try
 {
@@ -182,6 +181,23 @@ var routeDefinitions = routeList.Count > 0
     ? DynamicRouteHelper.GenerateRouteAll(routeList)
     : DynamicRouteHelper.GenerateStaticRoutesOnly();
 
+app.MapControllers();
+
+app.MapControllerRoute(
+    name: "product-result-category",
+    pattern: "category/{categorySlug}",
+    defaults: new { controller = "ProductResult", action = "Category" });
+
+app.MapControllerRoute(
+    name: "product-result-vehicle",
+    pattern: "arac/{vehiclePath}",
+    defaults: new { controller = "ProductResult", action = "Vehicle" });
+
+app.MapControllerRoute(
+    name: "product-result-vehicle-legacy",
+    pattern: "arama/{makeSlug}/{modelSlug}/{generationSlug}/{engineSlug}",
+    defaults: new { controller = "ProductResult", action = "VehicleLegacy" });
+
 app.MapControllerRoute(
     name: "product-result-search",
     pattern: "arama",
@@ -194,6 +210,9 @@ foreach (var routeDefinition in routeDefinitions.GenerateRoute)
         pattern: routeDefinition.Pattern,
         defaults: routeDefinition.Defaults);
 }
+
+app.MapControllerRoute(name: "sitemap", pattern: "sitemap.xml", defaults: new { controller = "Sitemap", action = "Index" });
+app.MapControllerRoute(name: "default", pattern: "{controller=Home}/{action=Index}/{id?}");
 
 app.Run();
 

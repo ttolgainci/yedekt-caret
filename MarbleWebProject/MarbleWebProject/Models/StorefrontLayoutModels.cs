@@ -9,6 +9,8 @@ public static class StorefrontWidgetCodes
     public const string BannerGroup = "BANNER_GROUP";
     public const string ProductsTab = "PRODUCTS_TAB";
     public const string DealOfDay = "DEAL_OF_DAY";
+    public const string DiscountedProducts = "DISCOUNTED_PRODUCTS";
+    public const string NewArrivals = "NEW_ARRIVALS";
     public const string TopSelling = "TOP_SELLING";
     public const string BlogPosts = "BLOG_POSTS";
     public const string FeaturedCategories = "FEATURED_CATEGORIES";

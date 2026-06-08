@@ -3,6 +3,7 @@
     Layout = "~/Views/Shared/_Layout.cshtml";
     var showing = Model.Products.Count;
     var total = Model.TotalCount;
+    var showFilters = Model.Mode is ProductSearchMode.Vehicle or ProductSearchMode.Category;
 }
 
 <div class="page-header text-center" style="background-image: url('/assets/images/page-header-bg.jpg')">
@@ -15,7 +16,14 @@
     <div class="container">
         <ol class="breadcrumb">
             <li class="breadcrumb-item"><a href="/">@Html.Translate("#Home#")</a></li>
-            <li class="breadcrumb-item active" aria-current="page">@Html.Translate("#Search#")</li>
+            @if (Model.Mode == ProductSearchMode.Category)
+            {
+                <li class="breadcrumb-item active" aria-current="page">@Model.Title</li>
+            }
+            else
+            {
+                <li class="breadcrumb-item active" aria-current="page">@Html.Translate("#Search#")</li>
+            }
         </ol>
     </div>
 </nav>
@@ -23,6 +31,8 @@
 <div class="page-content">
     <div class="container">
         <div class="row">
+            @if (showFilters)
+            {
             <aside class="col-lg-3 order-lg-first">
                 <div class="sidebar sidebar-shop">
                     <div class="widget widget-clean">
@@ -52,7 +62,9 @@
                                         @foreach (var cat in Model.FilterCategories)
                                         {
                                             var isActive = Model.CategoryId == cat.CategoryId;
-                                            var filterUrl = Model.BuildCategoryToggleUrl(cat.CategoryId);
+                                            var filterUrl = Model.Mode == ProductSearchMode.Category
+                                                ? cat.Url
+                                                : Model.BuildCategoryToggleUrl(cat.CategoryId);
                                             var inputId = $"filter-cat-{cat.CategoryId}";
                                             <div class="filter-item filter-item--toggle@(isActive ? " is-active" : "")" data-filter-url="@filterUrl">
                                                 <div class="custom-control custom-checkbox">
@@ -134,8 +146,9 @@
                     }
                 </div>
             </aside>
+            }
 
-            <div class="col-lg-9" id="arama-product-results">
+            <div class="@(showFilters ? "col-lg-9" : "col-lg-12")" id="arama-product-results">
                 <div class="toolbox">
                     <div class="toolbox-left">
                         <div class="toolbox-info">

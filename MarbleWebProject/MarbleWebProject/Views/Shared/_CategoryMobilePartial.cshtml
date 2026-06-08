@@ -1,9 +1,10 @@
-﻿@model CategoryListModel
+﻿@using MarbleWebProject.Helpers
+@model CategoryListModel
 
 
 <li>
 
-    <a href="/@Model.Url"> @Model.Name</a>
+    <a href="@CategoryNavHelper.BuildCategoryUrl(Model)"> @Model.Name</a>
     @if (Model.SubCat.Count > 0)
     {
         <ul>

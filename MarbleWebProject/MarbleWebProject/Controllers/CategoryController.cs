@@ -1,3 +1,4 @@
+using MarbleWebProject.Helpers;
 using MarbleWebProject.Models;
 using MarbleWebProject.Services;
 using MarbleWebProject.Services.Api;
@@ -16,28 +17,11 @@ public class CategoryController : Controller
         _auth = auth;
     }
 
-    public async Task<IActionResult> Index(int id, int pageNumber = 1, int pageSize = 12, CancellationToken cancellationToken = default)
+    public IActionResult Index(int id)
     {
-        var route = Request.Path.Value;
-        var session = await _auth.GetSessionAsync(cancellationToken);
-        var contentRequest = new ProductsByCageoryRequest
-        {
-            pageNumber = pageNumber,
-            pageSize = pageSize,
-            LanguageCode = session.LanguageCode,
-            ID = id
-        };
-        var routeResponse = await _catalog.GetProductsByCategoryAsync(contentRequest, cancellationToken);
-
-        if (routeResponse.Status)
-        {
-            TempData["catUrl"] = route?.TrimEnd('/').Split('/').Last();
-            TempData["catId"] = id;
-            TempData["Title"] = routeResponse.Data.MetaTitle;
-            TempData["Keywords"] = routeResponse.Data.MetaKeyword;
-            TempData["Description"] = routeResponse.Data.MetaDesc;
-            return View(routeResponse.Data);
-        }
+        var slug = Request.Path.Value?.Trim('/').Split('/').LastOrDefault();
+        if (!string.IsNullOrWhiteSpace(slug) && id > 0)
+            return RedirectPermanent(UrlSlugHelper.BuildCategoryPath(slug, id));
 
         return RedirectToAction("PageNotFound", "Error");
     }
@@ -54,13 +38,16 @@ public class CategoryController : Controller
         };
         var routeResponse = await _catalog.GetProductsByCategoryAsync(contentRequest, cancellationToken);
 
-        if (routeResponse.Status)
+        if (routeResponse.Status && routeResponse.Data != null)
         {
-            TempData["catId"] = id;
-            TempData["Title"] = routeResponse.Data.MetaTitle;
-            TempData["Keywords"] = routeResponse.Data.MetaKeyword;
-            TempData["Description"] = routeResponse.Data.MetaDesc;
-            return PartialView("_CategoryProductListPartial", routeResponse.Data);
+            var slug = UrlSlugHelper.NormalizeSlug(routeResponse.Data.Url);
+            if (!string.IsNullOrEmpty(slug))
+            {
+                var url = UrlSlugHelper.BuildCategoryPath(slug, routeResponse.Data.CategoryID);
+                if (pageNumber > 1)
+                    url += $"?pageNumber={pageNumber}";
+                return RedirectPermanent(url);
+            }
         }
 
         return NotFound();

@@ -49,4 +49,30 @@ public interface IStoreCatalogApi
         decimal? minPrice = null,
         decimal? maxPrice = null,
         CancellationToken cancellationToken = default);
+    Task<BaseResponse<List<VehicleSearchCategoryListItem>>> GetSubcategoriesByCategoryAsync(
+        int categoryId,
+        string languageCode,
+        int? brandId = null,
+        CancellationToken cancellationToken = default);
+    Task<BaseResponse<List<VehicleSearchBrandListItem>>> GetBrandsByCategoryAsync(
+        int categoryId,
+        string languageCode,
+        int? brandId = null,
+        CancellationToken cancellationToken = default);
+    Task<BaseResponse<VehicleSearchProductsResponse>> GetProductsByCategorySearchAsync(
+        int categoryId,
+        string languageCode,
+        int? brandId = null,
+        decimal? minPrice = null,
+        decimal? maxPrice = null,
+        int pageNumber = 1,
+        int pageSize = 12,
+        CancellationToken cancellationToken = default);
+    Task<BaseResponse<VehicleSearchPriceRangeModel>> GetPriceRangeByCategoryAsync(
+        int categoryId,
+        string languageCode,
+        int? brandId = null,
+        decimal? minPrice = null,
+        decimal? maxPrice = null,
+        CancellationToken cancellationToken = default);
 }

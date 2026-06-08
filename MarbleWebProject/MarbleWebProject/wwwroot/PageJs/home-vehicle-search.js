@@ -104,16 +104,40 @@
 
         $btn.on('click', function () {
             var engineId = $engine.val();
-            if (!engineId) return;
-            var params = new URLSearchParams();
-            params.set('vehicleEngineId', engineId);
             var makeId = $make.val();
             var modelId = $model.val();
             var genId = $gen.val();
-            if (makeId) params.set('vehicleMakeId', makeId);
-            if (modelId) params.set('vehicleModelId', modelId);
-            if (genId) params.set('vehicleGenerationId', genId);
-            window.location.href = '/arama?' + params.toString();
+            if (!engineId || !makeId || !modelId || !genId) return;
+
+            var query = new URLSearchParams({
+                makeId: makeId,
+                modelId: modelId,
+                generationId: genId,
+                engineId: engineId
+            });
+
+            $btn.prop('disabled', true);
+            fetch('/vehicle-catalog/search-url?' + query.toString())
+                .then(function (res) { return res.json(); })
+                .then(function (res) {
+                    if (res && res.status && res.url) {
+                        window.location.href = res.url;
+                        return;
+                    }
+                    window.location.href = '/arama?vehicleEngineId=' + encodeURIComponent(engineId)
+                        + '&vehicleMakeId=' + encodeURIComponent(makeId)
+                        + '&vehicleModelId=' + encodeURIComponent(modelId)
+                        + '&vehicleGenerationId=' + encodeURIComponent(genId);
+                })
+                .catch(function () {
+                    window.location.href = '/arama?vehicleEngineId=' + encodeURIComponent(engineId)
+                        + '&vehicleMakeId=' + encodeURIComponent(makeId)
+                        + '&vehicleModelId=' + encodeURIComponent(modelId)
+                        + '&vehicleGenerationId=' + encodeURIComponent(genId);
+                })
+                .finally(function () {
+                    $btn.prop('disabled', !$engine.val());
+                });
         });
     }
 

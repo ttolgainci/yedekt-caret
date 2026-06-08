@@ -1,6 +1,7 @@
+@using MarbleWebProject.Helpers
 @model CategoryListModel
 <li>
-    <a href="/@Model.Url.TrimStart('/')" class="@(Model.SubCat.Count > 0 ? "sf-with-ul" : null)">@Model.Name</a>
+    <a href="@CategoryNavHelper.BuildCategoryUrl(Model)" class="@(Model.SubCat.Count > 0 ? "sf-with-ul" : null)">@Model.Name</a>
     @if (Model.SubCat.Count > 0)
     {
         <ul>
