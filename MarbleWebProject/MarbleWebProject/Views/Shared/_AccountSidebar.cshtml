@@ -1,0 +1,32 @@
+@{
+    var active = ViewBag.AccountActiveSection as string ?? "";
+    var displayName = ViewBag.AccountDisplayName as string ?? "";
+}
+
+<div class="store-account-sidebar">
+    <div class="store-account-sidebar-user">@displayName</div>
+
+    <div class="store-account-sidebar-section">
+        <h4 class="store-account-sidebar-heading">Siparişlerim</h4>
+        <ul class="store-account-nav">
+            <li>
+                <a class="@(active == "orders" ? "active" : "")" href="/account/orders">Tüm Siparişlerim</a>
+            </li>
+        </ul>
+    </div>
+
+    <div class="store-account-sidebar-section">
+        <h4 class="store-account-sidebar-heading">Hesabım &amp; Yardım</h4>
+        <ul class="store-account-nav">
+            <li>
+                <a class="@(active == "profile" ? "active" : "")" href="/account/profile">Kullanıcı Bilgilerim</a>
+            </li>
+            <li>
+                <a class="@(active == "addresses" ? "active" : "")" href="/account/addresses">Adres Bilgilerim</a>
+            </li>
+            <li>
+                <a class="@(active == "password" ? "active" : "")" href="/account/password">Şifre Değişikliği</a>
+            </li>
+        </ul>
+    </div>
+</div>

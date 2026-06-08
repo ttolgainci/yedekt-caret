@@ -1,0 +1,23 @@
+@{
+    ViewData["Title"] = "Adres Bilgilerim";
+}
+
+<div class="store-account-panel store-account-addresses-panel">
+    <div class="store-account-addresses-header">
+        <h2 class="store-account-panel-title mb-0">Adres Bilgilerim</h2>
+        <button type="button" class="btn btn-outline-primary-2 btn-sm" id="account-addr-new-btn">+ Yeni Adres Ekle</button>
+    </div>
+
+    <div id="account-addr-empty" class="store-account-empty d-none">
+        Henüz kayıtlı adresiniz yok.
+    </div>
+
+    <div id="account-addr-list" class="checkout-addr-grid"></div>
+</div>
+
+@await Html.PartialAsync("~/Views/Checkout/_AddressModals.cshtml")
+
+@section Scripts {
+    <script src="~/PageJs/CustomerAddresses.js"></script>
+}
+

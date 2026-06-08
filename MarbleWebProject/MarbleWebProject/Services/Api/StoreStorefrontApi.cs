@@ -47,6 +47,13 @@ public sealed class StoreStorefrontApi : IStoreStorefrontApi
         return await _api.GetAsync<BaseResponse<List<ProductList>>>(path, null, cancellationToken);
     }
 
+    public async Task<BaseResponse<List<ProductList>>> GetTopSellingProductsAsync(int limit = 12, CancellationToken cancellationToken = default)
+    {
+        var session = await _auth.GetSessionAsync(cancellationToken);
+        var path = $"/api/catalog/home/top-selling-products?languageCode={Uri.EscapeDataString(session.LanguageCode)}&limit={limit}";
+        return await _api.GetAsync<BaseResponse<List<ProductList>>>(path, null, cancellationToken);
+    }
+
     public Task<BaseResponse<PlaceOrderApiResponse>> PlaceGuestOrderAsync(
         PlaceGuestOrderApiRequest request,
         string checkoutKey,

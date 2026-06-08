@@ -40,6 +40,7 @@
     @await Component.InvokeAsync("MasterMobileMenu")
     @await Component.InvokeAsync("LoginRegister")
     @await Component.InvokeAsync("CartDrawer")
+    @await Html.PartialAsync("_PageLoadingOverlay")
 
     <script src="~/assets/js/jquery.min.js"></script>
     <script src="~/assets/js/bootstrap.bundle.min.js"></script>
@@ -60,7 +61,9 @@
         };
     </script>
     <script src="~/PageJs/Master.js"></script>
+    <script src="~/PageJs/PageLoading.js" asp-append-version="true"></script>
     <script src="~/PageJs/CartBasket.js" asp-append-version="true"></script>
+    <script src="~/PageJs/CustomerAuth.js" asp-append-version="true"></script>
     <script src="~/PageJs/Function.js"></script>
     <script src="~/PageJs/home-vehicle-search.js" asp-append-version="true"></script>
     @await RenderSectionAsync("Scripts", required: false)

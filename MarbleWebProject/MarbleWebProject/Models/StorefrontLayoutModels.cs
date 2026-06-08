@@ -55,13 +55,27 @@ public sealed class PlaceOrderApiRequest
     public string? ShippingAddressJson { get; set; }
     public string? BillingAddressJson { get; set; }
     public string ShippingMethod { get; set; } = "Standard";
+    public int? CarrierID { get; set; }
+    public int? ShippingCityID { get; set; }
+    public int? ShippingTownID { get; set; }
+    public string? PostalCode { get; set; }
     public string? CouponCode { get; set; }
+    public int? CustomerId { get; set; }
+    public string? PaymentMethod { get; set; }
+    public int? BankAccountId { get; set; }
 }
 
 public sealed class PlaceOrderApiResponse
 {
     public int OrderId { get; set; }
+    public string? OrderNumber { get; set; }
     public decimal GrandTotal { get; set; }
     public string CurrencyCode { get; set; } = "";
+    public string CurrencySymbol { get; set; } = "";
     public decimal CampaignDiscount { get; set; }
+    public DateTime? PaymentDueAt { get; set; }
+    public int? BankAccountId { get; set; }
+    public string? BankName { get; set; }
+    public string? BankAccountHolder { get; set; }
+    public string? BankIban { get; set; }
 }

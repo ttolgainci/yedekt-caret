@@ -1,0 +1,20 @@
+@using MarbleWebProject.Helper
+@model MarbleWebProject.Models.HeaderAccountMenuModel
+<div class="account dropdown @(Model.IsLoggedIn ? "" : "d-none") js-customer-logged-only">
+    <a href="#" class="dropdown-toggle" role="button" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false" data-display="static" title="@Html.Translate("#My account#")">
+        <div class="icon">
+            <i class="icon-user"></i>
+        </div>
+        <p>@Html.Translate("#Account#")</p>
+    </a>
+    <div class="dropdown-menu dropdown-menu-right store-account-menu">
+        <div class="store-account-menu-user">
+            <span class="js-customer-display-name">@Model.DisplayName</span>
+        </div>
+        <a class="dropdown-item" href="/account/profile">@Html.Translate("#My User Information#")</a>
+        <a class="dropdown-item" href="/account/orders">@Html.Translate("#All My Orders#")</a>
+        <a class="dropdown-item" href="/account/addresses">@Html.Translate("#My Address Information#")</a>
+        <div class="dropdown-divider"></div>
+        <button type="button" class="dropdown-item js-customer-logout">@Html.Translate("#Log Out#")</button>
+    </div>
+</div>

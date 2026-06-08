@@ -1,7 +1,9 @@
 using MarbleWebProject.Helper;
+using MarbleWebProject.Helpers;
 using MarbleWebProject.Models;
 using MarbleWebProject.Models.Options;
 using MarbleWebProject.Services.Api;
+using MarbleWebProject.Services.CheckoutDraft;
 using MarbleWebProject.Services.Storefront;
 using Microsoft.ApplicationInsights;
 using Microsoft.AspNetCore.Server.Kestrel.Core;
@@ -59,12 +61,20 @@ builder.Services.AddHttpClient<IStoreApiClient, StoreApiClient>()
         return handler;
     });
 builder.Services.AddScoped<IStoreAuthService, StoreAuthService>();
+builder.Services.AddScoped<IStoreCustomerAuthApi, StoreCustomerAuthApi>();
+builder.Services.AddScoped<IStoreCustomerSession, StoreCustomerSession>();
+builder.Services.AddScoped<IStoreCustomerAddressApi, StoreCustomerAddressApi>();
+builder.Services.AddScoped<IStoreLocationApi, StoreLocationApi>();
+builder.Services.AddScoped<IStoreOrderApi, StoreOrderApi>();
+builder.Services.AddScoped<IBasketUserIdProvider, BasketUserIdProvider>();
 builder.Services.AddScoped<IStoreCatalogApi, StoreCatalogApi>();
 builder.Services.AddScoped<IStoreBasketApi, StoreBasketApi>();
+builder.Services.AddScoped<IStoreShippingApi, StoreShippingApi>();
 builder.Services.AddScoped<IStoreContentApi, StoreContentApi>();
 builder.Services.AddScoped<IStoreRouteBootstrap, StoreRouteBootstrap>();
 builder.Services.AddScoped<IStoreStorefrontApi, StoreStorefrontApi>();
 builder.Services.AddScoped<IStorefrontRuntimeProvider, StorefrontRuntimeProvider>();
+builder.Services.AddSingleton<ICheckoutDraftStore, CheckoutDraftStore>();
 
 builder.Services.AddScoped<TelemetryClient>();
 builder.Services.AddHttpContextAccessor();

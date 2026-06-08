@@ -37,4 +37,10 @@ public sealed class StoreBasketApi : IStoreBasketApi
         var token = await _auth.GetTokenAsync(cancellationToken);
         return await _api.PostAsync<BaseResponse<List<OrderBasket>>>("/Basket/DeleteProductFromCart", request, token, cancellationToken);
     }
+
+    public async Task<BaseResponse<List<OrderBasket>>> ClearCartAsync(BasketAllRequest request, CancellationToken cancellationToken = default)
+    {
+        var token = await _auth.GetTokenAsync(cancellationToken);
+        return await _api.PostAsync<BaseResponse<List<OrderBasket>>>("/Basket/ClearCart", request, token, cancellationToken);
+    }
 }

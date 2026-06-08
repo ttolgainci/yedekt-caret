@@ -1,4 +1,4 @@
-@using MarbleWebProject.Helper
+@* @using MarbleWebProject.Helper
 @model List<CategoryListModel>
 
 @if(Model.Count>0)
@@ -16,7 +16,6 @@
                             </a>
 
                             <div class="banner-content banner-content-center">
-                               @*  <h4 class="banner-subtitle text-white"><a href="#">New in</a></h4><!-- End .banner-subtitle --> *@
                                 <h3 class="banner-title text-white"><a href="/@item.Url"><strong>@item.Name</strong></h3><!-- End .banner-title -->
                                 <a href="/@item.Url" class="btn btn-outline-white banner-link underline">@Html.Translate("#Review#")</a>
                             </div><!-- End .banner-content -->
@@ -31,4 +30,6 @@
             <hr class="mt-0 mb-0">
         </div><!-- End .container -->
     </div>
-}
+} *@
+
+

@@ -1,0 +1,22 @@
+@{
+    Layout = "_Layout";
+}
+
+<div class="page-content store-account-page pb-5">
+    <div class="container">
+        <div class="store-account-dashboard">
+            <div class="row">
+                <aside class="col-md-4 col-lg-3 mb-4 mb-md-0">
+                    @await Html.PartialAsync("_AccountSidebar")
+                </aside>
+                <div class="col-md-8 col-lg-9 store-account-main">
+                    @RenderBody()
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    @await RenderSectionAsync("Scripts", required: false)
+}

@@ -1,0 +1,169 @@
+@using MarbleWebProject.Models
+@using MarbleWebProject.Helpers
+@{
+    var snapshot = ViewBag.Confirmation as CheckoutConfirmationModel;
+    var order = ViewBag.Order as ShopOrderDetailModel;
+    var orderNumber = !string.IsNullOrWhiteSpace(snapshot?.OrderNumber)
+        ? snapshot!.OrderNumber
+        : (order?.OrderNumber ?? Context.Request.Query["orderNumber"].ToString());
+    var orderId = snapshot?.OrderId ?? order?.Id ?? (int.TryParse(Context.Request.Query["orderId"], out var qid) ? qid : 0);
+    var paymentMethod = snapshot?.PaymentMethod ?? order?.PaymentMethod ?? Context.Request.Query["payment"].ToString();
+    var isCashOnDelivery = string.Equals(paymentMethod, "CashOnDelivery", StringComparison.OrdinalIgnoreCase)
+        || string.IsNullOrWhiteSpace(paymentMethod);
+    var isBankTransfer = string.Equals(paymentMethod, "BankTransfer", StringComparison.OrdinalIgnoreCase);
+    var bankName = order?.BankTransfer?.BankName ?? snapshot?.BankName;
+    var bankHolder = order?.BankTransfer?.AccountHolder ?? snapshot?.BankAccountHolder;
+    var bankIban = order?.BankTransfer?.Iban ?? snapshot?.BankIban;
+    var paymentDueAt = order?.BankTransfer?.PaymentDueAt ?? snapshot?.PaymentDueAt;
+    var bankInstructions = snapshot?.BankInstructions;
+    var receiptUploaded = order?.BankTransfer?.ReceiptUploadedAt != null || order?.Payment?.ReceiptUploadedAt != null;
+    var grandTotal = order?.GrandTotal ?? snapshot?.GrandTotal ?? 0;
+    var currencyCode = order?.CurrencyCode ?? snapshot?.CurrencyCode ?? "";
+    var currency = CurrencyDisplayHelper.GetLabel(order?.CurrencySymbol ?? snapshot?.CurrencySymbol, currencyCode);
+    ViewData["Title"] = "Sipariş onayı";
+}
+
+<div class="page-content checkout-confirmation-page pb-5">
+    <div class="container">
+        <div class="checkout-confirmation-card">
+            <div class="checkout-confirmation-icon" aria-hidden="true">
+                <i class="icon-check"></i>
+            </div>
+            <h1 class="checkout-confirmation-title">Siparişiniz alındı</h1>
+            <p class="checkout-confirmation-lead">Teşekkür ederiz. Siparişiniz alındı ve onay için işleme alındı.</p>
+
+            <div class="checkout-confirmation-order-box">
+                <span class="checkout-confirmation-order-label">Sipariş numaranız</span>
+                <strong class="checkout-confirmation-order-number">@(string.IsNullOrWhiteSpace(orderNumber) ? ("#" + orderId) : orderNumber)</strong>
+            </div>
+
+            @if (grandTotal > 0)
+            {
+                <p class="checkout-confirmation-total">
+                    <span>Toplam tutar</span>
+                    <strong>@grandTotal.ToString("N2") @currency</strong>
+                </p>
+            }
+
+            @if (isCashOnDelivery)
+            {
+                <div class="checkout-confirmation-note">
+                    <strong>Kapıda ödeme</strong>
+                    <p class="mb-0">Siparişiniz hazırlandığında kargoya verilecektir. Teslimat sırasında nakit veya kredi kartı ile ödeme yapabilirsiniz.</p>
+                </div>
+            }
+
+            @if (isBankTransfer)
+            {
+                <div class="checkout-confirmation-note checkout-bank-transfer-box">
+                    <strong>Havale / EFT bilgileri</strong>
+                    @if (!string.IsNullOrWhiteSpace(bankName))
+                    {
+                        <p class="mb-1"><span class="text-muted">Banka:</span> <strong>@bankName</strong></p>
+                    }
+                    @if (!string.IsNullOrWhiteSpace(bankHolder))
+                    {
+                        <p class="mb-1"><span class="text-muted">Hesap sahibi:</span> @bankHolder</p>
+                    }
+                    @if (!string.IsNullOrWhiteSpace(bankIban))
+                    {
+                        <p class="mb-1 checkout-bank-iban"><span class="text-muted">IBAN:</span> <code>@bankIban</code></p>
+                    }
+                    <p class="mb-1"><span class="text-muted">Tutar:</span> <strong>@grandTotal.ToString("N2") @currency</strong></p>
+                    <p class="mb-2"><span class="text-muted">Açıklama:</span> <strong>@(string.IsNullOrWhiteSpace(orderNumber) ? orderId.ToString() : orderNumber)</strong></p>
+                    @if (paymentDueAt.HasValue)
+                    {
+                        <p class="small text-muted mb-2">Son ödeme tarihi: <strong>@paymentDueAt.Value.ToLocalTime().ToString("g")</strong></p>
+                    }
+                    @if (!string.IsNullOrWhiteSpace(bankInstructions))
+                    {
+                        <p class="small text-muted mb-2">@bankInstructions</p>
+                    }
+                    <p class="small mb-0">Ödemenizi yaptıktan sonra dekont yükleyebilirsiniz. Siparişiniz ödeme onayından sonra hazırlanır.</p>
+                </div>
+
+                @if (orderId > 0 && (order == null || order.PaymentStatus != 1))
+                {
+                    <div class="checkout-receipt-upload mt-3" id="checkout-receipt-upload" data-order-id="@orderId">
+                        <h2 class="checkout-confirmation-subtitle">Dekont yükle</h2>
+                        @if (receiptUploaded)
+                        {
+                            <p class="text-success small mb-2" id="checkout-receipt-status">Dekontunuz alındı. Ödeme onayı bekleniyor.</p>
+                        }
+                        else
+                        {
+                            <p class="text-muted small mb-2" id="checkout-receipt-status">Havale dekontunuzu JPG, PNG veya PDF olarak yükleyin.</p>
+                        }
+                        <div class="d-flex flex-wrap align-items-center gap-2">
+                            <input type="file" id="checkout-receipt-file" class="form-control form-control-sm" accept=".jpg,.jpeg,.png,.gif,.webp,.pdf" />
+                            <button type="button" class="btn btn-outline-primary btn-sm" id="checkout-receipt-submit">Yükle</button>
+                        </div>
+                    </div>
+                }
+            }
+
+            @if (order != null && order.Lines.Count > 0)
+            {
+                <div class="checkout-confirmation-lines">
+                    <h2 class="checkout-confirmation-subtitle">Sipariş özeti</h2>
+                    <ul class="checkout-confirmation-line-list">
+                        @foreach (var line in order.Lines)
+                        {
+                            <li>
+                                <span class="checkout-confirmation-line-name">@line.ProductNameSnapshot</span>
+                                <span class="checkout-confirmation-line-qty">@(line.Quantity) adet</span>
+                                <span class="checkout-confirmation-line-price">@line.LineTotal.ToString("N2") @CurrencyDisplayHelper.GetLabel(order.CurrencySymbol, order.CurrencyCode)</span>
+                            </li>
+                        }
+                    </ul>
+                </div>
+            }
+
+            @if (!string.IsNullOrWhiteSpace(snapshot?.CustomerEmail))
+            {
+                <p class="checkout-confirmation-email text-muted small mb-0">
+                    Sipariş bilgileri <strong>@snapshot.CustomerEmail</strong> adresine gönderilecektir.
+                </p>
+            }
+
+            @if (isBankTransfer)
+            {
+                <script>
+                    (function () {
+                        var $box = $('#checkout-receipt-upload');
+                        if (!$box.length) return;
+                        $('#checkout-receipt-submit').on('click', function () {
+                            var fileInput = document.getElementById('checkout-receipt-file');
+                            if (!fileInput || !fileInput.files || !fileInput.files.length) {
+                                alert('Lütfen bir dosya seçin.');
+                                return;
+                            }
+                            var orderId = $box.data('order-id');
+                            var fd = new FormData();
+                            fd.append('file', fileInput.files[0]);
+                            var $btn = $(this).prop('disabled', true);
+                            fetch('/checkout/payment-receipt/' + orderId, { method: 'POST', body: fd })
+                                .then(function (r) { return r.json().then(function (j) { return { ok: r.ok, body: j }; }); })
+                                .then(function (res) {
+                                    if (!res.ok) throw new Error((res.body && res.body.message) || 'Yükleme başarısız.');
+                                    $('#checkout-receipt-status').removeClass('text-muted').addClass('text-success')
+                                        .text('Dekontunuz alındı. Ödeme onayı bekleniyor.');
+                                    fileInput.value = '';
+                                })
+                                .catch(function (err) { alert(err.message || 'Yükleme başarısız.'); })
+                                .finally(function () { $btn.prop('disabled', false); });
+                        });
+                    })();
+                </script>
+            }
+
+            <div class="checkout-confirmation-actions">
+                @if (ViewBag.IsCustomerLoggedIn as bool? == true)
+                {
+                    <a href="/account/orders" class="btn btn-primary store-account-btn-primary">Siparişlerim</a>
+                }
+                <a href="/" class="btn btn-outline-primary-2">Alışverişe devam</a>
+            </div>
+        </div>
+    </div>
+</div>

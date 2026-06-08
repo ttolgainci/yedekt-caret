@@ -2,7 +2,9 @@
 @model BasketSetModel
 @{
     var hasItems = Model?.CartList?.Count > 0;
-    var setTotalPrice = hasItems ? Model!.Info.Total : "";
+    var setTotalPrice = hasItems
+        ? (string.IsNullOrWhiteSpace(Model!.Info.GrandTotal) ? Model.Info.Total : Model.Info.GrandTotal)
+        : "";
 }
 @if (!hasItems)
 {
@@ -58,8 +60,8 @@ else
         <span class="cart-total-price basket-total-price">@Html.Raw(setTotalPrice)</span>
     </div>
     <div class="dropdown-cart-action store-cart-drawer-actions">
-        <a href="/checkout" class="btn btn-primary btn-block">@Html.Translate("#Checkout#")</a>
+        <a href="/checkout" class="btn btn-outline-primary-2 btn-block store-cart-drawer-checkout">@Html.Translate("#PROCEED TO CHECKOUT#")</a>
+        <a href="/cart" class="btn btn-primary btn-block store-cart-drawer-view-cart">@Html.Translate("#View Cart#")</a>
         <a href="#" class="btn btn-outline-primary-2 btn-block js-cart-drawer-continue"><span>@Html.Translate("#Continue Shopping#")</span></a>
-        <a href="/cart" class="btn btn-link btn-block store-cart-drawer-view-cart">@Html.Translate("#View Cart#")</a>
     </div>
 }

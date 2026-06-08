@@ -1,0 +1,73 @@
+@{
+    ViewData["Title"] = "Kullanıcı Bilgilerim";
+}
+
+<div class="store-account-panel">
+    <h2 class="store-account-panel-title">Kullanıcı Bilgilerim</h2>
+
+    <form id="profile-form" class="store-account-form">
+        <div class="row">
+            <div class="col-sm-6">
+                <label for="profile-firstname">Ad</label>
+                <input type="text" class="form-control" id="profile-firstname" autocomplete="given-name" />
+            </div>
+            <div class="col-sm-6">
+                <label for="profile-lastname">Soyadı</label>
+                <input type="text" class="form-control" id="profile-lastname" autocomplete="family-name" />
+            </div>
+        </div>
+
+        <label for="profile-email">E-posta Adresi</label>
+        <input type="email" class="form-control" id="profile-email" readonly disabled />
+
+        <label for="profile-phone">Cep Telefonu</label>
+        <div class="store-account-phone-row">
+            <span class="store-account-phone-prefix">+90</span>
+            <input type="tel" class="form-control store-account-phone-input" id="profile-phone" autocomplete="tel" placeholder="5XX XXX XX XX" />
+        </div>
+
+        <label>Doğum Tarihi</label>
+        <div class="row store-account-birth-row">
+            <div class="col-4">
+                <select class="form-control" id="profile-birth-day" aria-label="Gün">
+                    <option value="">Gün</option>
+                </select>
+            </div>
+            <div class="col-4">
+                <select class="form-control" id="profile-birth-month" aria-label="Ay">
+                    <option value="">Ay</option>
+                </select>
+            </div>
+            <div class="col-4">
+                <select class="form-control" id="profile-birth-year" aria-label="Yıl">
+                    <option value="">Yıl</option>
+                </select>
+            </div>
+        </div>
+
+        <div id="profile-corporate-fields" class="d-none">
+            <label for="profile-company">Firma Adı</label>
+            <input type="text" class="form-control" id="profile-company" />
+            <div class="row">
+                <div class="col-sm-6">
+                    <label for="profile-taxoffice">Vergi Dairesi</label>
+                    <input type="text" class="form-control" id="profile-taxoffice" />
+                </div>
+                <div class="col-sm-6">
+                    <label for="profile-taxnumber">Vergi No</label>
+                    <input type="text" class="form-control" id="profile-taxnumber" />
+                </div>
+            </div>
+        </div>
+
+        <div class="store-account-form-footer">
+            <button type="submit" class="btn btn-primary store-account-btn-primary" id="profile-save-btn">Güncelle</button>
+        </div>
+        <div id="profile-message" class="store-account-message d-none" role="alert"></div>
+    </form>
+</div>
+
+@section Scripts {
+    <script src="~/PageJs/CustomerProfile.js"></script>
+}
+

@@ -1,0 +1,130 @@
+@using MarbleWebProject.Helper
+
+@* Kayıtlı adres seçimi *@
+<div class="modal fade checkout-modal" id="checkout-address-list-modal" tabindex="-1" role="dialog" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered" role="document">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title font-weight-bold">@Html.Translate("#Shipping Address#")</h5>
+                <button type="button" class="close" data-dismiss="modal" aria-label="@Html.Translate("#Close#")">
+                    <span aria-hidden="true"><i class="icon-close"></i></span>
+                </button>
+            </div>
+            <div class="modal-body">
+                <div id="checkout-addr-list" class="checkout-addr-list"></div>
+                <button type="button" class="btn btn-outline-secondary btn-block mt-2" id="checkout-addr-list-new-btn">
+                    + @Html.Translate("#Add New Address#")
+                </button>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-primary btn-block" id="checkout-addr-list-select-btn">@Html.Translate("#Select Address#")</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+@* Adres ekle / düzenle *@
+<div class="modal fade checkout-modal" id="checkout-address-form-modal" tabindex="-1" role="dialog" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered modal-lg" role="document">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title font-weight-bold" id="checkout-addr-form-title">@Html.Translate("#Add address#")</h5>
+                <button type="button" class="close" data-dismiss="modal" aria-label="@Html.Translate("#Close#")">
+                    <span aria-hidden="true"><i class="icon-close"></i></span>
+                </button>
+            </div>
+            <div class="modal-body">
+                <form id="checkout-addr-form" class="checkout-addr-form" autocomplete="off">
+                    <input type="hidden" id="checkout-addr-id" value="0" />
+
+                    <div class="row">
+                        <div class="col-sm-6">
+                            <div class="form-group">
+                                <label for="checkout-addr-firstname">@Html.Translate("#First Name *#")</label>
+                                <input type="text" class="form-control" id="checkout-addr-firstname" required />
+                            </div>
+                        </div>
+                        <div class="col-sm-6">
+                            <div class="form-group">
+                                <label for="checkout-addr-lastname">@Html.Translate("#Last Name *#")</label>
+                                <input type="text" class="form-control" id="checkout-addr-lastname" required />
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="form-group">
+                        <label for="checkout-addr-phone">@Html.Translate("#Phone *#")</label>
+                        <input type="tel" class="form-control" id="checkout-addr-phone" placeholder="0 (5xx) xxx xx xx" required />
+                    </div>
+
+                    <div class="form-group">
+                        <label for="checkout-addr-country">@Html.Translate("#Country *#")</label>
+                        <select class="form-control" id="checkout-addr-country" required></select>
+                    </div>
+
+                    <div class="row">
+                        <div class="col-sm-6">
+                            <div class="form-group">
+                                <label for="checkout-addr-city">@Html.Translate("#City *#")</label>
+                                <select class="form-control" id="checkout-addr-city" required></select>
+                            </div>
+                        </div>
+                        <div class="col-sm-6">
+                            <div class="form-group">
+                                <label for="checkout-addr-town">@Html.Translate("#District *#")</label>
+                                <select class="form-control" id="checkout-addr-town" required></select>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="alert alert-warning py-2 small mb-3">
+                        @Html.Translate("#Enter street, building and door number for smooth delivery.#")
+                    </div>
+
+                    <div class="form-group">
+                        <label for="checkout-addr-line1">@Html.Translate("#Address *#")</label>
+                        <textarea class="form-control" id="checkout-addr-line1" rows="2" placeholder="@Html.Translate("#Street, neighborhood, building no...#")" required></textarea>
+                    </div>
+
+                    <div class="form-group">
+                        <label for="checkout-addr-label">@Html.Translate("#Address Title *#")</label>
+                        <input type="text" class="form-control" id="checkout-addr-label" placeholder="@Html.Translate("#Home, Work, Corporate...#")" required />
+                    </div>
+
+                    <div class="form-group mb-2">
+                        <label class="d-block mb-2">@Html.Translate("#Invoice Type#")</label>
+                        <div class="checkout-invoice-toggle" role="group">
+                            <button type="button" class="checkout-invoice-btn active" data-invoice="Individual">@Html.Translate("#Individual#")</button>
+                            <button type="button" class="checkout-invoice-btn" data-invoice="Corporate">@Html.Translate("#Corporate#")</button>
+                        </div>
+                    </div>
+
+                    <div id="checkout-addr-corporate-fields" class="checkout-corporate-fields" style="display:none;">
+                        <div class="alert alert-info py-2 small mb-3">
+                            @Html.Translate("#If you are a sole proprietorship, enter your TCKN.#")
+                        </div>
+                        <div class="form-group">
+                            <label for="checkout-addr-tax-number">@Html.Translate("#Tax ID / TCKN *#")</label>
+                            <input type="text" class="form-control" id="checkout-addr-tax-number" />
+                        </div>
+                        <div class="form-group">
+                            <label for="checkout-addr-tax-office">@Html.Translate("#Tax Office *#")</label>
+                            <input type="text" class="form-control" id="checkout-addr-tax-office" />
+                        </div>
+                        <div class="form-group">
+                            <label for="checkout-addr-company">@Html.Translate("#Company Name *#")</label>
+                            <input type="text" class="form-control" id="checkout-addr-company" />
+                        </div>
+                        <div class="custom-control custom-checkbox mb-0">
+                            <input type="checkbox" class="custom-control-input" id="checkout-addr-e-invoice" />
+                            <label class="custom-control-label" for="checkout-addr-e-invoice">@Html.Translate("#I am an e-invoice taxpayer#")</label>
+                        </div>
+                    </div>
+                </form>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-primary btn-block" id="checkout-addr-form-save-btn">@Html.Translate("#Save#")</button>
+            </div>
+        </div>
+    </div>
+</div>

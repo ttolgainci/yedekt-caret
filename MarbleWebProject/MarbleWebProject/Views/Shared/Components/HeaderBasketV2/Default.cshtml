@@ -1,10 +1,11 @@
 @model BasketSetModel
+@using MarbleWebProject.Helper
 @{
     var hasItems = Model?.CartList?.Count > 0;
     var setTotalQty = hasItems ? Model!.Info.TotalQuantity : 0;
 }
-<div class="cart-dropdown">
-    <a href="#" class="js-open-cart-drawer" role="button" aria-haspopup="dialog" aria-controls="store-cart-drawer">
+<div class="dropdown cart-dropdown">
+    <a href="#" class="dropdown-toggle js-open-cart-drawer" role="button" aria-haspopup="dialog" aria-controls="store-cart-drawer" title="@Html.Translate("#Cart#")">
         <div class="icon">
             <i class="icon-shopping-cart"></i>
             <span class="cart-count basket-quantity-count" @(hasItems ? "" : "style=display:none")>@setTotalQty</span>

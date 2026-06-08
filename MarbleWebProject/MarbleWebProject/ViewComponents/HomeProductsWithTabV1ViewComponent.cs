@@ -1,3 +1,5 @@
+using MarbleWebProject.Models;
+using MarbleWebProject.Services.Api;
 using Microsoft.AspNetCore.Mvc;
 
 namespace MarbleWebProject.ViewComponents;
@@ -5,5 +7,24 @@ namespace MarbleWebProject.ViewComponents;
 [ViewComponent]
 public class HomeProductsWithTabV1ViewComponent : ViewComponent
 {
-    public Task<IViewComponentResult> InvokeAsync() => Task.FromResult<IViewComponentResult>(View());
+    private readonly IStoreStorefrontApi _storefront;
+
+    public HomeProductsWithTabV1ViewComponent(IStoreStorefrontApi storefront) => _storefront = storefront;
+
+    public async Task<IViewComponentResult> InvokeAsync(CancellationToken cancellationToken = default)
+    {
+        List<ProductList> products = new();
+        try
+        {
+            var response = await _storefront.GetTopSellingProductsAsync(12, cancellationToken);
+            if (response.Status && response.Data != null)
+                products = response.Data;
+        }
+        catch
+        {
+            // empty → section hidden
+        }
+
+        return View(products);
+    }
 }

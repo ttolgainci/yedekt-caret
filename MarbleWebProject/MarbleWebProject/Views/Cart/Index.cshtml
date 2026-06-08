@@ -1,10 +1,10 @@
 ﻿@model BasketSetModel
 
-<div class="page-header text-center" style="background-image: url('assets/images/page-header-bg.jpg')">
+@*<div class="page-header text-center" style="background-image: url('assets/images/page-header-bg.jpg')">
 	<div class="container">
 		<h1 class="page-title">Shopping Cart<span>Shop</span></h1>
 	</div><!-- End .container -->
-</div><!-- End .page-header -->
+</div><!-- End .page-header -->*@
 <nav aria-label="breadcrumb" class="breadcrumb-nav">
 	<div class="container">
 		<ol class="breadcrumb">
@@ -55,7 +55,7 @@
 											<input type="number" class="form-control cart-product-quantity-new" id="productQtySpinner_@item.ProductID" value="@item.CartQuantity" min="1" max="10" step="1" data-decimals="0" required>
 										</div><!-- End .cart-product-quantity -->
 									</td>
-									<td class="total-col"><span class="cartProductPrice cart-product-price" id="cartproductPrice_@item.ProductID">@item.Price</span> @item.CurrencyName</td>
+									<td class="total-col"><span class="cartProductPrice cart-product-price" id="cartproductPrice_@item.ProductID">@((item.Price ?? 0).ToString("N2"))</span> @item.CurrencyName</td>
 									<td class="remove-col"><button onclick="removeProductFromCart(this)" data-pid="@item.ProductID" class="btn-remove"><i class="icon-close"></i></button></td>
 								</tr>
 							}
@@ -63,7 +63,7 @@
 						</tbody>
 					</table><!-- End .table table-wishlist -->
 
-					<div class="cart-bottom">
+					@*<div class="cart-bottom">
 						<div class="cart-discount">
 							<form action="#">
 								<div class="input-group">
@@ -74,9 +74,7 @@
 								</div><!-- End .input-group -->
 							</form>
 						</div><!-- End .cart-discount -->
-
-						@* <a href="#" class="btn btn-outline-dark-2"><span>UPDATE CART</span><i class="icon-refresh"></i></a> *@
-					</div><!-- End .cart-bottom -->
+					</div><!-- End .cart-bottom -->*@
 				</div><!-- End .col-lg-9 -->
 				<aside class="col-lg-3">
 					<div class="summary summary-cart">
@@ -86,59 +84,43 @@
 							<tbody>
 								<tr class="summary-subtotal">
 									<td>Subtotal:</td>
-									<td>@Html.Raw(@Model.Info.Total)</td>
+									<td class="cart-summary-subtotal">@Html.Raw(string.IsNullOrWhiteSpace(Model.Info.Subtotal) ? Model.Info.Total : Model.Info.Subtotal)</td>
 								</tr><!-- End .summary-subtotal -->
 								<tr class="summary-shipping">
-									<td>Shipping:</td>
-									<td>&nbsp;</td>
+									<td>Kargo:</td>
+									<td class="cart-summary-shipping">
+										@if (Model.Info.ShippingPrice.HasValue)
+										{
+											@Model.Info.ShippingPrice.Value.ToString("N2")@(!string.IsNullOrWhiteSpace(Model.Info.CurrencyName) ? $" {Model.Info.CurrencyName}" : "")
+										}
+										else
+										{
+											<span>—</span>
+										}
+									</td>
+								</tr>
+								<tr class="summary-shipping-row@(string.IsNullOrWhiteSpace(Model.Info.CarrierName) ? " d-none" : "")" id="cart-summary-shipping-meta-row">
+									<td colspan="2">
+										<small class="text-muted cart-summary-shipping-meta">@Model.Info.CarrierName@(Model.Info.TotalDesi.HasValue ? $" · {Model.Info.TotalDesi.Value:N2} desi" : "")</small>
+									</td>
 								</tr>
 
-								<tr class="summary-shipping-row">
-									<td>
-										<div class="custom-control custom-radio">
-											<input type="radio" id="free-shipping" name="shipping" class="custom-control-input">
-											<label class="custom-control-label" for="free-shipping">Free Shipping</label>
-										</div><!-- End .custom-control -->
-									</td>
-									<td>$0.00</td>
-								</tr><!-- End .summary-shipping-row -->
-
-								<tr class="summary-shipping-row">
-									<td>
-										<div class="custom-control custom-radio">
-											<input type="radio" id="standart-shipping" name="shipping" class="custom-control-input">
-											<label class="custom-control-label" for="standart-shipping">Standart:</label>
-										</div><!-- End .custom-control -->
-									</td>
-									<td>$10.00</td>
-								</tr><!-- End .summary-shipping-row -->
-
-								<tr class="summary-shipping-row">
-									<td>
-										<div class="custom-control custom-radio">
-											<input type="radio" id="express-shipping" name="shipping" class="custom-control-input">
-											<label class="custom-control-label" for="express-shipping">Express:</label>
-										</div><!-- End .custom-control -->
-									</td>
-									<td>$20.00</td>
-								</tr><!-- End .summary-shipping-row -->
-
-								<tr class="summary-shipping-estimate">
+								@*<tr class="summary-shipping-estimate">
 									<td>Estimate for Your Country<br> <a href="dashboard.html">Change address</a></td>
 									<td>&nbsp;</td>
-								</tr><!-- End .summary-shipping-estimate -->
+								</tr><!-- End .summary-shipping-estimate -->*@
 
 								<tr class="summary-total">
 									<td>Total:</td>
-									<td>@Html.Raw(@Model.Info.Total)</td>
+									<td class="cart-summary-grandtotal">@Html.Raw(string.IsNullOrWhiteSpace(Model.Info.GrandTotal) ? Model.Info.Total : Model.Info.GrandTotal)</td>
 								</tr><!-- End .summary-total -->
 							</tbody>
 						</table><!-- End .table table-summary -->
 
-						<a href="checkout.html" class="btn btn-outline-primary-2 btn-order btn-block">PROCEED TO CHECKOUT</a>
+						<a href="/checkout" class="btn btn-outline-primary-2 btn-order btn-block">PROCEED TO CHECKOUT</a>
 					</div><!-- End .summary -->
 
-					<a href="category.html" class="btn btn-outline-dark-2 btn-block mb-3"><span>CONTINUE SHOPPING</span><i class="icon-refresh"></i></a>
+					@*<a href="category.html" class="btn btn-outline-dark-2 btn-block mb-3"><span>CONTINUE SHOPPING</span><i class="icon-refresh"></i></a>*@
 				</aside><!-- End .col-lg-3 -->
 			</div><!-- End .row -->
 		</div><!-- End .container -->

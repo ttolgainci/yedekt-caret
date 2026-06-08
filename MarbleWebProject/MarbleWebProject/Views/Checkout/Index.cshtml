@@ -1,222 +1,418 @@
-<div class="page-header text-center" style="background-image: url('assets/images/page-header-bg.jpg')">
-	<div class="container">
-		<h1 class="page-title">Checkout<span>Shop</span></h1>
-	</div><!-- End .container -->
-</div><!-- End .page-header -->
+@model BasketSetModel
+@using MarbleWebProject.Helper
+@using MarbleWebProject.Models
+@{
+    ViewData["Title"] = "Ödeme";
+    var isLoggedIn = ViewBag.IsCustomerLoggedIn as bool? == true;
+    var languageCode = ViewBag.LanguageCode as string ?? "tr";
+    var carrierId = ViewBag.CarrierId as int?;
+    var carrierName = ViewBag.CarrierName as string;
+    var shippingPrice = Model.Info.ShippingPrice;
+    var subtotalValue = Model.CartList.Sum(c => (c.Price ?? 0) * (c.CartQuantity ?? 1));
+    var cartItemsJson = Model.CartList.Select(c => new { productId = c.ProductID, quantity = c.CartQuantity is < 1 ? 1 : c.CartQuantity!.Value }).ToList();
+    var customerEmail = ViewBag.CustomerEmail as string;
+    var bankTransferEnabled = ViewBag.BankTransferEnabled as bool? == true;
+    var bank = ViewBag.BankInfo as StoreBankTransferInfoModel;
+    var bankAccounts = bank?.Accounts?.Where(x => x.IsActive).OrderBy(x => x.SortOrder).ThenBy(x => x.ID).ToList() ?? new List<StoreBankAccountItemModel>();
+    var hasBankInfo = bankAccounts.Count > 0;
+}
+
 <nav aria-label="breadcrumb" class="breadcrumb-nav">
-	<div class="container">
-		<ol class="breadcrumb">
-			<li class="breadcrumb-item"><a href="index.html">Home</a></li>
-			<li class="breadcrumb-item"><a href="#">Shop</a></li>
-			<li class="breadcrumb-item active" aria-current="page">Checkout</li>
-		</ol>
-	</div><!-- End .container -->
-</nav><!-- End .breadcrumb-nav -->
+    <div class="container">
+        <ol class="breadcrumb">
+            <li class="breadcrumb-item"><a href="/">Ana sayfa</a></li>
+            <li class="breadcrumb-item"><a href="/cart">Sepet</a></li>
+            <li class="breadcrumb-item active" aria-current="page">Ödeme</li>
+        </ol>
+    </div>
+</nav>
 
-<div class="page-content">
-	<div class="checkout">
-		<div class="container">
-			<div class="checkout-discount">
-				<form action="#">
-					<input type="text" class="form-control" required id="checkout-discount-input">
-					<label for="checkout-discount-input" class="text-truncate">Have a coupon? <span>Click here to enter your code</span></label>
-				</form>
-			</div><!-- End .checkout-discount -->
-			<form id="checkout-form" action="#" method="post">
-				<div class="row">
-					
+<div class="page-content checkout-page">
+    <div class="container">
+        <form id="checkout-form" action="#" method="post">
+            <input type="hidden" id="co-carrier-id" value="@(carrierId.HasValue ? carrierId.Value.ToString() : "")" />
+            <input type="hidden" id="co-shipping-address-id" value="" />
+            <input type="hidden" id="co-billing-address-id" value="" />
+            <input type="hidden" id="co-invoice-type" value="Individual" />
+            <input type="hidden" id="co-tax-number" value="" />
+            <input type="hidden" id="co-tax-office" value="" />
+            <input type="hidden" id="co-company-name" value="" />
+            <input type="hidden" id="co-e-invoice" value="false" />
+            <input type="hidden" id="co-shipping-city-id" value="" />
+            <input type="hidden" id="co-shipping-town-id" value="" />
 
+            <div class="row">
+                <div class="col-lg-8">
+                    <div class="accordion accordion-rounded checkout-accordion" id="checkout-accordion">
 
-					<div class="col-lg-9">
-						<h2 class="checkout-title">Billing Details</h2><!-- End .checkout-title -->
-						<div class="row">
-							<div class="col-sm-6">
-								<label>First Name *</label>
-								<input type="text" class="form-control" id="co-firstname" required>
-							</div><!-- End .col-sm-6 -->
+                        @if (!isLoggedIn)
+                        {
+                            <div class="card card-box card-sm bg-light">
+                                <div class="card-header" id="co-heading-guest">
+                                    <h2 class="card-title">
+                                        <a role="button" data-toggle="collapse" href="#co-collapse-guest" aria-expanded="true" aria-controls="co-collapse-guest">
+                                            @Html.Translate("#Guest Information#")
+                                        </a>
+                                    </h2>
+                                </div>
+                                <div id="co-collapse-guest" class="collapse show" aria-labelledby="co-heading-guest" data-parent="#checkout-accordion">
+                                    <div class="card-body pt-0">
+                                        <p class="small text-muted mb-3">
+                                            @Html.Translate("#Please enter your details to receive order update emails.#")
+                                            @Html.Translate("#To use a saved address, please#") <a href="#" data-toggle="modal" data-target="#signin-modal">@Html.Translate("#Sign in#")</a>.
+                                        </p>
+                                        <label>@Html.Translate("#Email *#")</label>
+                                        <input type="email" class="form-control mb-3" id="co-guest-email" value="@customerEmail" required autocomplete="email" />
+                                        <div class="row">
+                                            <div class="col-sm-6">
+                                                <label>@Html.Translate("#First Name *#")</label>
+                                                <input type="text" class="form-control mb-3" id="co-guest-firstname" required autocomplete="given-name" />
+                                            </div>
+                                            <div class="col-sm-6">
+                                                <label>@Html.Translate("#Last Name *#")</label>
+                                                <input type="text" class="form-control mb-3" id="co-guest-lastname" required autocomplete="family-name" />
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        }
 
-							<div class="col-sm-6">
-								<label>Last Name *</label>
-								<input type="text" class="form-control" id="co-lastname" required>
-							</div><!-- End .col-sm-6 -->
-						</div><!-- End .row -->
+                        <div class="card card-box card-sm bg-light">
+                            <div class="card-header" id="co-heading-address">
+                                <h2 class="card-title">
+                                    <a role="button" data-toggle="collapse" href="#co-collapse-address" aria-expanded="true" aria-controls="co-collapse-address">
+                                        @Html.Translate("#Shipping Address#")
+                                    </a>
+                                </h2>
+                            </div>
+                            <div id="co-collapse-address" class="collapse show" aria-labelledby="co-heading-address" data-parent="#checkout-accordion">
+                                <div class="card-body pt-0">
+                                    <div class="checkout-addr-block">
+                                        <div class="checkout-addr-section-head">
+                                            <span class="checkout-addr-section-title">@Html.Translate("#Shipping Address#")</span>
+                                            <button type="button" class="btn btn-link btn-sm p-0 checkout-link-btn" id="co-btn-add-address">@Html.Translate("#Add Address#")</button>
+                                        </div>
+                                        <div id="co-address-picker" class="checkout-addr-grid"></div>
+                                    </div>
 
-						<label>Company Name (Optional)</label>
-						<input type="text" class="form-control" id="co-company">
+                                    <div class="custom-control custom-checkbox checkout-billing-toggle mt-4">
+                                        <input type="checkbox" class="custom-control-input" id="co-billing-different" />
+                                        <label class="custom-control-label" for="co-billing-different">@Html.Translate("#Use a different billing address#")</label>
+                                    </div>
 
-						<label>Country *</label>
-						<input type="text" class="form-control" id="co-country" required>
+                                    <div id="co-billing-section" class="checkout-addr-block mt-3" style="display:none;">
+                                        <div class="checkout-addr-section-head">
+                                            <span class="checkout-addr-section-title">@Html.Translate("#Billing Address#")</span>
+                                        </div>
+                                        <div id="co-billing-address-picker" class="checkout-addr-grid"></div>
+                                    </div>
 
-						<label>Street address *</label>
-						<input type="text" class="form-control" id="co-street" placeholder="House number and Street name" required>
-						<input type="text" class="form-control" id="co-street2" placeholder="Appartments, suite, unit etc ..." required>
+                                    <div class="checkout-order-note mt-4">
+                                        <label for="co-order-note" class="checkout-addr-section-title d-block mb-2">@Html.Translate("#Order Note#")</label>
+                                        <textarea class="form-control" id="co-order-note" rows="3" placeholder="@Html.Translate("#Enter your note#")"></textarea>
+                                    </div>
 
-						<div class="row">
-							<div class="col-sm-6">
-								<label>Town / City *</label>
-								<input type="text" class="form-control" id="co-city" required>
-							</div><!-- End .col-sm-6 -->
+                                    @if (isLoggedIn)
+                                    {
+                                        <div class="mt-3">
+                                            <label>@Html.Translate("#Email *#")</label>
+                                            <input type="email" class="form-control" id="co-email" value="@customerEmail" required />
+                                        </div>
+                                    }
+                                </div>
+                            </div>
+                        </div>
 
-							<div class="col-sm-6">
-								<label>State / County *</label>
-								<input type="text" class="form-control" id="co-state" required>
-							</div><!-- End .col-sm-6 -->
-						</div><!-- End .row -->
+                        <div class="card card-box card-sm bg-light">
+                            <div class="card-header" id="co-heading-shipping">
+                                <h2 class="card-title">
+                                    <a role="button" data-toggle="collapse" href="#co-collapse-shipping" aria-expanded="true" aria-controls="co-collapse-shipping">
+                                        Kargo Seçimi
+                                    </a>
+                                </h2>
+                            </div>
+                            <div id="co-collapse-shipping" class="collapse show" aria-labelledby="co-heading-shipping" data-parent="#checkout-accordion">
+                                <div class="card-body pt-0">
+                                    <p class="small text-muted mb-3">Teslimat adresinize göre kargo firması ve ücreti hesaplanır.</p>
+                                    <div id="co-carrier-options" class="checkout-carrier-list">
+                                        <p class="text-muted small mb-0">Önce teslimat adresi seçin.</p>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
 
-						<div class="row">
-							<div class="col-sm-6">
-								<label>Postcode / ZIP *</label>
-								<input type="text" class="form-control" id="co-postcode" required>
-							</div><!-- End .col-sm-6 -->
+                        <div class="card card-box card-sm bg-light">
+                            <div class="card-header" id="co-heading-payment">
+                                <h2 class="card-title">
+                                    <a role="button" data-toggle="collapse" href="#co-collapse-payment" aria-expanded="true" aria-controls="co-collapse-payment">
+                                        @Html.Translate("#Payment Options#")
+                                    </a>
+                                </h2>
+                            </div>
+                            <div id="co-collapse-payment" class="collapse show" aria-labelledby="co-heading-payment" data-parent="#checkout-accordion">
+                                <div class="card-body pt-0">
+                                    <div class="checkout-pay-accordion" id="checkout-payment-accordion">
 
-							<div class="col-sm-6">
-								<label>Phone *</label>
-								<input type="tel" class="form-control" id="co-phone" required>
-							</div><!-- End .col-sm-6 -->
-						</div><!-- End .row -->
+                                        <div class="checkout-pay-panel" data-payment="CreditCard">
+                                            <label class="checkout-pay-header collapsed" aria-expanded="false">
+                                                <input type="radio" name="co-payment" value="CreditCard" class="checkout-pay-input" />
+                                                <span class="checkout-pay-radio" aria-hidden="true"></span>
+                                                <span class="checkout-pay-title">@Html.Translate("#Credit / Debit Card#")</span>
+                                                <i class="icon-angle-right checkout-pay-chevron"></i>
+                                            </label>
+                                            <div id="co-pay-card" class="collapse">
+                                                <div class="checkout-pay-body">
+                                                    <div class="row">
+                                                        <div class="col-md-7">
+                                                            <label>@Html.Translate("#Name on card#")</label>
+                                                            <input type="text" class="form-control mb-2" id="co-card-name" placeholder="@Html.Translate("#Full Name#")" autocomplete="cc-name" disabled />
+                                                            <label>@Html.Translate("#Card Number#")</label>
+                                                            <input type="text" class="form-control mb-2" id="co-card-number" placeholder="0000 0000 0000 0000" autocomplete="cc-number" maxlength="19" disabled />
+                                                            <div class="row">
+                                                                <div class="col-4">
+                                                                    <label>@Html.Translate("#Month#")</label>
+                                                                    <select class="form-control mb-2" id="co-card-month" disabled>
+                                                                        <option value="">@Html.Translate("#Month#")</option>
+                                                                        @for (var m = 1; m <= 12; m++) { <option value="@m.ToString("00")">@m.ToString("00")</option> }
+                                                                    </select>
+                                                                </div>
+                                                                <div class="col-4">
+                                                                    <label>@Html.Translate("#Year#")</label>
+                                                                    <select class="form-control mb-2" id="co-card-year" disabled>
+                                                                        <option value="">@Html.Translate("#Year#")</option>
+                                                                        @for (var y = DateTime.Now.Year; y <= DateTime.Now.Year + 12; y++) { <option value="@y">@y</option> }
+                                                                    </select>
+                                                                </div>
+                                                                <div class="col-4">
+                                                                    <label>CVV</label>
+                                                                    <input type="text" class="form-control mb-2" id="co-card-cvv" placeholder="CVV" maxlength="4" disabled />
+                                                                </div>
+                                                            </div>
+                                                            <p class="checkout-pay-secure small mb-0">
+                                                                <strong class="text-success">@Html.Translate("#Secure Shopping:#")</strong>
+                                                                @Html.Translate("#Payment will be processed with 3D Secure for your security.#")
+                                                            </p>
+                                                            <p class="alert alert-light small mt-2 mb-0">@Html.Translate("#Credit card payment will be available soon.#")</p>
+                                                        </div>
+                                                        <div class="col-md-5 d-none d-md-flex align-items-center justify-content-center">
+                                                            <div class="checkout-card-preview" aria-hidden="true">
+                                                                <div class="checkout-card-preview-chip"></div>
+                                                                <div class="checkout-card-preview-number" id="co-card-preview-number">•••• •••• •••• ••••</div>
+                                                                <div class="checkout-card-preview-footer">
+                                                                    <span id="co-card-preview-name">@Html.Translate("#Full Name#").ToString()?.ToUpperInvariant()</span>
+                                                                    <span id="co-card-preview-exp">AA/YY</span>
+                                                                </div>
+                                                            </div>
+                                                        </div>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        </div>
 
-						<label>Email address *</label>
-						<input type="email" class="form-control" id="co-email" required>
+                                        @if (bankTransferEnabled)
+                                        {
+                                        <div class="checkout-pay-panel" data-payment="BankTransfer">
+                                            <label class="checkout-pay-header collapsed" aria-expanded="false">
+                                                <input type="radio" name="co-payment" value="BankTransfer" class="checkout-pay-input" />
+                                                <span class="checkout-pay-radio" aria-hidden="true"></span>
+                                                <span class="checkout-pay-title">@Html.Translate("#Bank Transfer / EFT#")</span>
+                                                <i class="icon-angle-right checkout-pay-chevron"></i>
+                                            </label>
+                                            <div id="co-pay-bank" class="collapse">
+                                                <div class="checkout-pay-body">
+                                                    @if (hasBankInfo)
+                                                    {
+                                                        var firstBank = true;
+                                                        @foreach (var account in bankAccounts)
+                                                        {
+                                                            <label class="checkout-bank-card">
+                                                                <input type="radio" name="co-bank-account" value="@account.ID" @(firstBank ? "checked" : "") />
+                                                                <span class="checkout-bank-card-body">
+                                                                    <strong class="d-block">@account.BankName</strong>
+                                                                    @if (!string.IsNullOrWhiteSpace(account.AccountHolder))
+                                                                    {
+                                                                        <span class="d-block small text-muted">@account.AccountHolder</span>
+                                                                    }
+                                                                    <span class="d-block checkout-bank-iban mt-1">@account.Iban</span>
+                                                                    <button type="button" class="btn btn-outline-secondary mt-2 js-copy-iban checkout-bank-copy-btn" data-iban="@account.Iban">@Html.Translate("#Copy#")</button>
+                                                                </span>
+                                                                @if (!string.IsNullOrWhiteSpace(account.Logo))
+                                                                {
+                                                                    <span class="checkout-bank-card-logo">
+                                                                        <img src="@MediaUrlHelper.Build(account.Logo)" alt="@account.BankName" loading="lazy" />
+                                                                    </span>
+                                                                }
+                                                            </label>
+                                                            firstBank = false;
+                                                        }
+                                                        @if (!string.IsNullOrWhiteSpace(bank?.Instructions))
+                                                        {
+                                                            <p class="small text-muted mb-0 mt-2">@bank.Instructions</p>
+                                                        }
+                                                    }
+                                                    else
+                                                    {
+                                                        <p class="text-muted mb-0">@Html.Translate("#Bank account details are not configured yet.#")</p>
+                                                    }
+                                                    <p class="small text-muted mt-2 mb-0">@Html.Translate("#Please include your order number in the transfer description.#")</p>
+                                                </div>
+                                            </div>
+                                        </div>
+                                        }
 
-						<div class="custom-control custom-checkbox">
-							<input type="checkbox" class="custom-control-input" id="checkout-create-acc">
-							<label class="custom-control-label" for="checkout-create-acc">Create an account?</label>
-						</div><!-- End .custom-checkbox -->
+                                        <div class="checkout-pay-panel is-active" data-payment="CashOnDelivery">
+                                            <label class="checkout-pay-header" aria-expanded="true">
+                                                <input type="radio" name="co-payment" value="CashOnDelivery" class="checkout-pay-input" checked />
+                                                <span class="checkout-pay-radio" aria-hidden="true"></span>
+                                                <span class="checkout-pay-title">@Html.Translate("#Cash on delivery#")</span>
+                                                <i class="icon-angle-right checkout-pay-chevron"></i>
+                                            </label>
+                                            <div id="co-pay-cod" class="collapse show">
+                                                <div class="checkout-pay-body">
+                                                    <p class="mb-0">@Html.Translate("#You can pay with cash or credit card when your order is delivered.#")</p>
+                                                </div>
+                                            </div>
+                                        </div>
 
-						<div class="custom-control custom-checkbox">
-							<input type="checkbox" class="custom-control-input" id="checkout-diff-address">
-							<label class="custom-control-label" for="checkout-diff-address">Ship to a different address?</label>
-						</div><!-- End .custom-checkbox -->
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
 
-						<label>Order notes (optional)</label>
-						<textarea class="form-control" cols="30" rows="4" placeholder="Notes about your order, e.g. special notes for delivery"></textarea>
-					</div><!-- End .col-lg-9 -->
-					<aside class="col-lg-3">
-						<div class="summary">
-							<h3 class="summary-title">Your Order</h3><!-- End .summary-title -->
+                    </div>
+                </div>
 
-							<table class="table table-summary">
-								<thead>
-									<tr>
-										<th>Product</th>
-										<th>Total</th>
-									</tr>
-								</thead>
+                <aside class="col-lg-4">
+                    <div class="summary checkout-order-summary checkout-summary-sticky">
+                        <h3 class="summary-title">@Html.Translate("#Order Summary#")</h3>
 
-								<tbody>
-									<tr>
-										<td><a href="#">Beige knitted elastic runner shoes</a></td>
-										<td>$84.00</td>
-									</tr>
+                        <ul class="checkout-summary-items">
+                            @foreach (var item in Model.CartList)
+                            {
+                                var qty = item.CartQuantity ?? 1;
+                                var lineTotal = (item.Price ?? 0) * qty;
+                                var url = item.Url ?? "#";
+                                if (!url.StartsWith('/')) { url = "/" + url.TrimStart('/'); }
+                                var productName = item.ProductName ?? Html.Translate("#Product#").ToString();
+                                <li class="checkout-summary-item">
+                                    <a href="@url" class="checkout-summary-item-name" title="@productName">@productName</a>
+                                    <span class="checkout-summary-item-qty" title="@($"{Html.Translate("#Qty:#")} {qty}")">@qty</span>
+                                    <span class="checkout-summary-item-price" title="@($"{lineTotal:N2} {item.CurrencyName}")">@lineTotal.ToString("N2") @item.CurrencyName</span>
+                                </li>
+                            }
+                        </ul>
 
-									<tr>
-										<td><a href="#">Blue utility pinafore denimdress</a></td>
-										<td>$76,00</td>
-									</tr>
-									<tr class="summary-subtotal">
-										<td>Subtotal:</td>
-										<td>$160.00</td>
-									</tr><!-- End .summary-subtotal -->
-									<tr>
-										<td>Shipping:</td>
-										<td>Free shipping</td>
-									</tr>
-									<tr class="summary-total">
-										<td>Total:</td>
-										<td>$160.00</td>
-									</tr><!-- End .summary-total -->
-								</tbody>
-							</table><!-- End .table table-summary -->
+                        <table class="table table-summary checkout-summary-totals">
+                            <tbody>
+                                <tr class="summary-subtotal">
+                                    <td>@Html.Translate("#Subtotal:#")</td>
+                                    <td>@Html.Raw(Model.Info.Subtotal)</td>
+                                </tr>
+                                <tr>
+                                    <td>@Html.Translate("#Shipping:#")</td>
+                                    <td id="co-summary-shipping">
+                                        @if (shippingPrice.HasValue)
+                                        {
+                                            @shippingPrice.Value.ToString("N2")@(!string.IsNullOrWhiteSpace(Model.Info.CurrencyName) ? $" {Model.Info.CurrencyName}" : "")
+                                        }
+                                        else
+                                        {
+                                            <span class="text-muted">@Html.Translate("#Calculating#")</span>
+                                        }
+                                        @if (!string.IsNullOrWhiteSpace(carrierName))
+                                        {
+                                            <small class="d-block text-muted">@carrierName</small>
+                                        }
+                                    </td>
+                                </tr>
+                                <tr class="summary-total">
+                                    <td>@Html.Translate("#Total:#")</td>
+                                    <td><strong id="co-summary-grand">@Html.Raw(Model.Info.GrandTotal)</strong></td>
+                                </tr>
+                            </tbody>
+                        </table>
 
-							<div class="accordion-summary" id="accordion-payment">
-								<div class="card">
-									<div class="card-header" id="heading-1">
-										<h2 class="card-title">
-											<a role="button" data-toggle="collapse" href="#collapse-1" aria-expanded="true" aria-controls="collapse-1">
-												Direct bank transfer
-											</a>
-										</h2>
-									</div><!-- End .card-header -->
-									<div id="collapse-1" class="collapse show" aria-labelledby="heading-1" data-parent="#accordion-payment">
-										<div class="card-body">
-											Make your payment directly into our bank account. Please use your Order ID as the payment reference. Your order will not be shipped until the funds have cleared in our account.
-										</div><!-- End .card-body -->
-									</div><!-- End .collapse -->
-								</div><!-- End .card -->
-
-								<div class="card">
-									<div class="card-header" id="heading-2">
-										<h2 class="card-title">
-											<a class="collapsed" role="button" data-toggle="collapse" href="#collapse-2" aria-expanded="false" aria-controls="collapse-2">
-												Check payments
-											</a>
-										</h2>
-									</div><!-- End .card-header -->
-									<div id="collapse-2" class="collapse" aria-labelledby="heading-2" data-parent="#accordion-payment">
-										<div class="card-body">
-											Ipsum dolor sit amet, consectetuer adipiscing elit. Donec odio. Quisque volutpat mattis eros. Nullam malesuada erat ut turpis.
-										</div><!-- End .card-body -->
-									</div><!-- End .collapse -->
-								</div><!-- End .card -->
-
-								<div class="card">
-									<div class="card-header" id="heading-3">
-										<h2 class="card-title">
-											<a class="collapsed" role="button" data-toggle="collapse" href="#collapse-3" aria-expanded="false" aria-controls="collapse-3">
-												Cash on delivery
-											</a>
-										</h2>
-									</div><!-- End .card-header -->
-									<div id="collapse-3" class="collapse" aria-labelledby="heading-3" data-parent="#accordion-payment">
-										<div class="card-body">
-											Quisque volutpat mattis eros. Lorem ipsum dolor sit amet, consectetuer adipiscing elit. Donec odio. Quisque volutpat mattis eros.
-										</div><!-- End .card-body -->
-									</div><!-- End .collapse -->
-								</div><!-- End .card -->
-
-								<div class="card">
-									<div class="card-header" id="heading-4">
-										<h2 class="card-title">
-											<a class="collapsed" role="button" data-toggle="collapse" href="#collapse-4" aria-expanded="false" aria-controls="collapse-4">
-												PayPal <small class="float-right paypal-link">What is PayPal?</small>
-											</a>
-										</h2>
-									</div><!-- End .card-header -->
-									<div id="collapse-4" class="collapse" aria-labelledby="heading-4" data-parent="#accordion-payment">
-										<div class="card-body">
-											Nullam malesuada erat ut turpis. Suspendisse urna nibh, viverra non, semper suscipit, posuere a, pede. Donec nec justo eget felis facilisis fermentum.
-										</div><!-- End .card-body -->
-									</div><!-- End .collapse -->
-								</div><!-- End .card -->
-
-								<div class="card">
-									<div class="card-header" id="heading-5">
-										<h2 class="card-title">
-											<a class="collapsed" role="button" data-toggle="collapse" href="#collapse-5" aria-expanded="false" aria-controls="collapse-5">
-												Credit Card (Stripe)
-												<img src="assets/images/payments-summary.png" alt="payments cards">
-											</a>
-										</h2>
-									</div><!-- End .card-header -->
-									<div id="collapse-5" class="collapse" aria-labelledby="heading-5" data-parent="#accordion-payment">
-										<div class="card-body">
-											Donec nec justo eget felis facilisis fermentum.Lorem ipsum dolor sit amet, consectetuer adipiscing elit. Donec odio. Quisque volutpat mattis eros. Lorem ipsum dolor sit ame.
-										</div><!-- End .card-body -->
-									</div><!-- End .collapse -->
-								</div><!-- End .card -->
-							</div><!-- End .accordion -->
-
-							<button type="submit" class="btn btn-outline-primary-2 btn-order btn-block">
-								<span class="btn-text">Place Order</span>
-								<span class="btn-hover-text">Proceed to Checkout</span>
-							</button>
-						</div><!-- End .summary -->
-					</aside><!-- End .col-lg-3 -->
-				</div><!-- End .row -->
-			</form>
-		</div><!-- End .container -->
-	</div><!-- End .checkout -->
+                        <div class="store-cart-drawer-actions checkout-summary-actions">
+                            <button type="submit" class="btn btn-outline-primary-2 btn-block">
+                                <span>@Html.Translate("#Place Order#")</span>
+                            </button>
+                            <a href="/cart" class="btn btn-primary btn-block store-cart-drawer-view-cart">
+                                <span>@Html.Translate("#Back to cart#")</span>
+                            </a>
+                        </div>
+                    </div>
+                </aside>
+            </div>
+        </form>
+    </div>
 </div>
+
+<partial name="_AddressModals" />
+
+@section Styles {
+    <link rel="stylesheet" href="~/lib/alertifyjs/css/alertify.min.css" asp-append-version="true" />
+    <link rel="stylesheet" href="~/lib/alertifyjs/css/default.min.css" asp-append-version="true" />
+}
+
 @section Scripts {
+    <script src="~/lib/alertifyjs/js/alertify.min.js" asp-append-version="true"></script>
+    <script>
+        if (window.alertify) {
+            alertify.set('notifier', 'position', 'bottom-right');
+            alertify.set('notifier', 'delay', 2.5);
+        }
+    </script>
+    <script>
+        window.checkoutPrefill = {
+            email: @Html.Raw(System.Text.Json.JsonSerializer.Serialize(customerEmail ?? "")),
+            languageCode: @Html.Raw(System.Text.Json.JsonSerializer.Serialize(languageCode)),
+            isLoggedIn: @(isLoggedIn ? "true" : "false"),
+            carrierId: @(carrierId.HasValue ? carrierId.Value.ToString() : "null"),
+            carrierName: @Html.Raw(System.Text.Json.JsonSerializer.Serialize(carrierName ?? "")),
+            shippingPrice: @(shippingPrice.HasValue ? shippingPrice.Value.ToString(System.Globalization.CultureInfo.InvariantCulture) : "null"),
+            subtotal: @subtotalValue.ToString(System.Globalization.CultureInfo.InvariantCulture),
+            cartItems: @Html.Raw(System.Text.Json.JsonSerializer.Serialize(cartItemsJson)),
+            currency: @Html.Raw(System.Text.Json.JsonSerializer.Serialize(Model.Info.CurrencyName ?? "")),
+            bankTransferEnabled: @(bankTransferEnabled ? "true" : "false")
+        };
+        window.checkoutI18n = {
+            pleaseEnterEmail: @Html.Raw(System.Text.Json.JsonSerializer.Serialize(Html.Translate("#Please enter your email address.#").ToString())),
+            pleaseEnterFirstLastName: @Html.Raw(System.Text.Json.JsonSerializer.Serialize(Html.Translate("#Please enter your first and last name.#").ToString())),
+            noAddressYet: @Html.Raw(System.Text.Json.JsonSerializer.Serialize(Html.Translate("#No address added yet.#").ToString())),
+            noAddressYetAdd: @Html.Raw(System.Text.Json.JsonSerializer.Serialize(Html.Translate("#No address yet. Click Add Address to create one.#").ToString())),
+            selectBillingAddress: @Html.Raw(System.Text.Json.JsonSerializer.Serialize(Html.Translate("#Select an address for billing.#").ToString())),
+            noSavedAddress: @Html.Raw(System.Text.Json.JsonSerializer.Serialize(Html.Translate("#No saved addresses. You can add a new one.#").ToString())),
+            deleteAddressConfirm: @Html.Raw(System.Text.Json.JsonSerializer.Serialize(Html.Translate("#Delete this address?#").ToString())),
+            addressDeleteFailed: @Html.Raw(System.Text.Json.JsonSerializer.Serialize(Html.Translate("#Address could not be deleted.#").ToString())),
+            selectOption: @Html.Raw(System.Text.Json.JsonSerializer.Serialize(Html.Translate("#Select#").ToString())),
+            turkey: @Html.Raw(System.Text.Json.JsonSerializer.Serialize(Html.Translate("#Turkey#").ToString())),
+            turkeyMatch: @Html.Raw(System.Text.Json.JsonSerializer.Serialize("türk")),
+            editAddress: @Html.Raw(System.Text.Json.JsonSerializer.Serialize(Html.Translate("#Edit address#").ToString())),
+            addAddress: @Html.Raw(System.Text.Json.JsonSerializer.Serialize(Html.Translate("#Add address#").ToString())),
+            corporateInvoiceRequired: @Html.Raw(System.Text.Json.JsonSerializer.Serialize(Html.Translate("#Tax ID, tax office and company name are required for corporate invoice.#").ToString())),
+            ibanCopied: @Html.Raw(System.Text.Json.JsonSerializer.Serialize(Html.Translate("#IBAN copied.#").ToString())),
+            pleaseSelectAddress: @Html.Raw(System.Text.Json.JsonSerializer.Serialize(Html.Translate("#Please select an address.#").ToString())),
+            addressSaveFailed: @Html.Raw(System.Text.Json.JsonSerializer.Serialize(Html.Translate("#Address could not be saved.#").ToString())),
+            pleaseSelectShipping: @Html.Raw(System.Text.Json.JsonSerializer.Serialize(Html.Translate("#Please select a shipping address.#").ToString())),
+            pleaseSelectBilling: @Html.Raw(System.Text.Json.JsonSerializer.Serialize(Html.Translate("#Please select a billing address.#").ToString())),
+            emailRequired: @Html.Raw(System.Text.Json.JsonSerializer.Serialize(Html.Translate("#Email address is required.#").ToString())),
+            firstLastRequired: @Html.Raw(System.Text.Json.JsonSerializer.Serialize(Html.Translate("#First and last name are required.#").ToString())),
+            creditCardNotAvailable: @Html.Raw(System.Text.Json.JsonSerializer.Serialize(Html.Translate("#Credit card payment is not available yet. Please choose Cash on delivery.#").ToString())),
+            bankTransferNotAvailable: @Html.Raw(System.Text.Json.JsonSerializer.Serialize("Havale / EFT ödemesi şu an aktif değil. Lütfen kapıda ödeme seçin.")),
+            orderFailed: @Html.Raw(System.Text.Json.JsonSerializer.Serialize(Html.Translate("#Order failed.#").ToString())),
+            pleaseSelectCarrier: @Html.Raw(System.Text.Json.JsonSerializer.Serialize("Lütfen kargo firması seçin.")),
+            loadingCarriers: @Html.Raw(System.Text.Json.JsonSerializer.Serialize("Kargo seçenekleri hesaplanıyor...")),
+            carriersLoadFailed: @Html.Raw(System.Text.Json.JsonSerializer.Serialize("Kargo seçenekleri yüklenemedi.")),
+            selectAddressForCarriers: @Html.Raw(System.Text.Json.JsonSerializer.Serialize("Önce teslimat adresi seçin.")),
+            noCarrierOptions: @Html.Raw(System.Text.Json.JsonSerializer.Serialize("Bu adres için kargo seçeneği bulunamadı.")),
+            edit: @Html.Raw(System.Text.Json.JsonSerializer.Serialize(Html.Translate("#Edit#").ToString())),
+            delete: @Html.Raw(System.Text.Json.JsonSerializer.Serialize(Html.Translate("#Delete#").ToString())),
+            corporate: @Html.Raw(System.Text.Json.JsonSerializer.Serialize(Html.Translate("#Corporate#").ToString())),
+            address: @Html.Raw(System.Text.Json.JsonSerializer.Serialize(Html.Translate("#Address#").ToString())),
+            corporatePrefix: @Html.Raw(System.Text.Json.JsonSerializer.Serialize(Html.Translate("#Corporate - #").ToString())),
+            corporateLabelMatch: @Html.Raw(System.Text.Json.JsonSerializer.Serialize("kurumsal"))
+        };
+    </script>
     <script src="~/PageJs/checkout.js"></script>
-}<
+}

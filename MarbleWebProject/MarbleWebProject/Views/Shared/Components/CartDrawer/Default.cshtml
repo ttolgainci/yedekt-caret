@@ -16,9 +16,10 @@
        class="store-cart-drawer"
        aria-hidden="true"
        data-label-total="@Html.Translate("#Total#")"
-       data-label-checkout="@Html.Translate("#Checkout#")"
        data-label-continue="@Html.Translate("#Continue Shopping#")"
        data-label-view-cart="@Html.Translate("#View Cart#")"
+       data-label-checkout="@Html.Translate("#PROCEED TO CHECKOUT#")"
+       data-label-empty-cart="@Html.Translate("#Empty cart#")"
        data-label-remove="@Html.Translate("#Remove#")"
        data-label-empty="@Html.Translate("#Your cart is empty.#")"
        data-label-items-template="@Html.Translate("#Cart items count subtitle#")">
@@ -31,5 +32,10 @@
     <p class="store-cart-drawer-subtitle" id="store-cart-drawer-subtitle">@itemsSubtitle</p>
     <div class="store-cart-drawer-body basket-area-main" id="store-cart-drawer-body">
         @await Html.PartialAsync("_CartBasketInner", Model)
+    </div>
+    <div class="store-cart-drawer-footer@(hasItems ? "" : " is-hidden")" id="store-cart-drawer-footer">
+        <button type="button" class="btn btn-primary btn-block store-cart-drawer-empty-cart js-cart-empty-cart">
+            @Html.Translate("#Empty cart#")
+        </button>
     </div>
 </aside>

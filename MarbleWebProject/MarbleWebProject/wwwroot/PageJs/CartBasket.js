@@ -14,9 +14,10 @@ function getCartDrawerLabels() {
     if (!el) {
         return {
             total: 'Total',
-            checkout: 'Checkout',
             continueShopping: 'Continue Shopping',
             viewCart: 'View Cart',
+            checkout: 'Proceed to checkout',
+            emptyCart: 'Empty cart',
             remove: 'Remove',
             empty: 'Your cart is empty.',
             itemsTemplate: 'Sepetinizde {0} ürün bulunmaktadır'
@@ -24,9 +25,10 @@ function getCartDrawerLabels() {
     }
     return {
         total: el.getAttribute('data-label-total') || 'Total',
-        checkout: el.getAttribute('data-label-checkout') || 'Checkout',
         continueShopping: el.getAttribute('data-label-continue') || 'Continue Shopping',
         viewCart: el.getAttribute('data-label-view-cart') || 'View Cart',
+        checkout: el.getAttribute('data-label-checkout') || 'Proceed to checkout',
+        emptyCart: el.getAttribute('data-label-empty-cart') || 'Empty cart',
         remove: el.getAttribute('data-label-remove') || 'Remove',
         empty: el.getAttribute('data-label-empty') || 'Your cart is empty.',
         itemsTemplate: el.getAttribute('data-label-items-template') || 'Sepetinizde {0} ürün bulunmaktadır'
@@ -60,6 +62,26 @@ function cartItemQty(item) {
     return parseInt(item.quantity || item.Quantity, 10) || 0;
 }
 
+function cartItemCurrency(item) {
+    if (!item) return '';
+    return item.currency
+        || item.Currency
+        || item.currencyName
+        || item.CurrencyName
+        || '';
+}
+
+function formatDrawerTotalHtml(dataTotal) {
+    if (!dataTotal) return '';
+    var priceHtml = dataTotal.totalPrice || dataTotal.TotalPrice || dataTotal.subtotalPrice || dataTotal.SubtotalPrice || '';
+    var currency = dataTotal.currencyName || dataTotal.CurrencyName || '';
+    if (!priceHtml) return '';
+    if (currency && priceHtml.indexOf(currency) === -1) {
+        return priceHtml + ' ' + currency;
+    }
+    return priceHtml;
+}
+
 function mergeCartLines(data) {
     if (!data || !data.length) return [];
     var map = {};
@@ -72,7 +94,7 @@ function mergeCartLines(data) {
                 productID: pid,
                 name: item.name || item.Name || '',
                 price: item.price != null ? item.price : item.Price,
-                currency: item.currency || item.Currency || '',
+                currency: cartItemCurrency(item),
                 image: item.image || item.Image || '',
                 url: item.url || item.Url || '',
                 quantity: 0
@@ -133,14 +155,51 @@ function buildCartDrawerHtml(data, dataTotal) {
     str += "</div>";
     str += "<div class='dropdown-cart-total'>";
     str += "<span>" + labels.total + "</span>";
-    str += "<span class='cart-total-price basket-total-price'>" + (dataTotal && dataTotal.totalPrice ? dataTotal.totalPrice : '') + "</span>";
+    str += "<span class='cart-total-price'>" + formatDrawerTotalHtml(dataTotal) + "</span>";
     str += "</div>";
     str += "<div class='dropdown-cart-action store-cart-drawer-actions'>";
-    str += "<a href='/checkout' class='btn btn-primary btn-block'>" + labels.checkout + "</a>";
+    str += "<a href='/checkout' class='btn btn-outline-primary-2 btn-block store-cart-drawer-checkout'>" + labels.checkout + "</a>";
+    str += "<a href='/cart' class='btn btn-primary btn-block store-cart-drawer-view-cart'>" + labels.viewCart + "</a>";
     str += "<a href='#' class='btn btn-outline-primary-2 btn-block js-cart-drawer-continue'><span>" + labels.continueShopping + "</span></a>";
-    str += "<a href='/cart' class='btn btn-link btn-block store-cart-drawer-view-cart'>" + labels.viewCart + "</a>";
     str += "</div>";
     return str;
+}
+
+function updateCartDrawerFooter(totalQty) {
+    var $footer = $('#store-cart-drawer-footer');
+    if (!$footer.length) return;
+    if (totalQty > 0) {
+        $footer.removeClass('is-hidden');
+    } else {
+        $footer.addClass('is-hidden');
+    }
+}
+
+var cartClearPending = false;
+
+function clearCartDrawer() {
+    if (cartClearPending) return;
+    cartClearPending = true;
+
+    $.ajax({
+        type: 'POST',
+        url: '/Cart/ClearCart',
+        contentType: 'application/x-www-form-urlencoded; charset=UTF-8',
+        success: function (result) {
+            updateCartFromResponse(result);
+        },
+        error: function () {
+            $('#store-cart-drawer-body').html(
+                "<div class='store-cart-drawer-empty'><p>" + getCartDrawerLabels().empty + "</p></div>"
+            );
+            updateCartDrawerFooter(0);
+            updateCartDrawerSubtitle(0);
+            $('.basket-quantity-count').empty().hide();
+        },
+        complete: function () {
+            cartClearPending = false;
+        }
+    });
 }
 
 var cartQtyRequestPending = false;
@@ -161,6 +220,51 @@ function changeCartLineQuantity(productId, url, delta) {
             cartQtyRequestPending = false;
         }
     });
+}
+
+function updateShippingSummary(info) {
+    if (!info) return;
+
+    if (info.subtotalPrice) {
+        $('.cart-summary-subtotal').html(info.subtotalPrice);
+    }
+
+    var currency = info.currencyName || info.CurrencyName || '';
+
+    var $shipCell = $('.cart-summary-shipping');
+    if ($shipCell.length) {
+        if (info.shippingPrice != null && !isNaN(parseFloat(info.shippingPrice))) {
+            var shipText = parseFloat(info.shippingPrice).toFixed(2);
+            if (currency) {
+                shipText += ' ' + currency;
+            }
+            $shipCell.text(shipText);
+        } else {
+            $shipCell.html('<span>—</span>');
+        }
+    }
+
+    var meta = '';
+    if (info.carrierName) {
+        meta = info.carrierName;
+        if (info.totalDesi != null && !isNaN(parseFloat(info.totalDesi))) {
+            meta += ' · ' + parseFloat(info.totalDesi).toFixed(2) + ' desi';
+        }
+    }
+    var $metaRow = $('#cart-summary-shipping-meta-row');
+    if ($metaRow.length) {
+        $('.cart-summary-shipping-meta').text(meta);
+        if (meta) {
+            $metaRow.removeClass('d-none');
+        } else {
+            $metaRow.addClass('d-none');
+        }
+    }
+
+    if (info.totalPrice) {
+        $('.cart-summary-grandtotal').html(info.totalPrice);
+        $('.cart-table-total .basket-total-price').html(info.totalPrice);
+    }
 }
 
 function updateCartFromResponse(result) {
@@ -185,7 +289,8 @@ function updateCartFromResponse(result) {
     }
 
     updateCartDrawerSubtitle(totalQty);
-    $('.cart-table-total .basket-total-price').html(dataTotal.totalPrice || '');
+    updateCartDrawerFooter(totalQty);
+    updateShippingSummary(dataTotal);
 }
 
 function openStoreCartDrawer() {
@@ -318,25 +423,23 @@ $(function () {
         if (!pid) return;
         changeCartLineQuantity(pid, url, -1);
     });
+
+    $(document).on('click', '.js-cart-empty-cart', function (e) {
+        e.preventDefault();
+        clearCartDrawer();
+    });
 });
 
 (function () {
     $('body', document)
         .on('click', '.cartBasketList .icon-plus', function () {
             var mainDivId = $(this).closest('.cartProductItem').attr('id').split("_")[1];
-            var getTotal = $(".basket-total-price").first().text();
             var getHasQty = $('.cart-product-code_' + mainDivId + ' input[type="text"].cart-product-quantity-old').val();
             var getQty = $('.cart-product-code_' + mainDivId + ' input[type="number"].cart-product-quantity-new').val();
-            var getHasPrice = $('.cart-product-code_' + mainDivId + ' .cart-product-price').text();
             var getUrl = $('.cart-product-code_' + mainDivId + ' .cart-product-url').attr("href");
 
             if (parseInt(getQty, 10) > parseInt(getHasQty, 10)) {
-                var newPrice = (parseInt(getQty, 10) - parseInt(getHasQty, 10)) * parseFloat(getHasPrice);
-                $(".cart-table-total .basket-total-price").text(parseFloat(getTotal) + parseFloat(newPrice));
                 $('.cart-product-code_' + mainDivId + ' input[type="text"].cart-product-quantity-old').val(parseInt(getQty, 10));
-                var oldQty = $(".basket-quantity-count").text();
-                $(".basket-quantity-count").text(parseInt(oldQty, 10) + (parseInt(getQty, 10) - parseInt(getHasQty, 10)));
-                $(".basket-total-price").first().text(parseFloat(getTotal) + parseFloat(newPrice));
             }
             $.ajax({
                 type: 'POST',
@@ -350,18 +453,11 @@ $(function () {
         })
         .on('click', '.cartBasketList .icon-minus', function () {
             var mainDivId = $(this).closest('.cartProductItem').attr('id').split("_")[1];
-            var getTotal = $(".basket-total-price").first().text();
             var getHasQty = $('.cart-product-code_' + mainDivId + ' input[type="text"].cart-product-quantity-old').val();
             var getQty = $('.cart-product-code_' + mainDivId + ' input[type="number"].cart-product-quantity-new').val();
-            var getHasPrice = $('.cart-product-code_' + mainDivId + ' .cart-product-price').text();
             var getUrl = $('.cart-product-code_' + mainDivId + ' .cart-product-url').attr("href");
             if (parseInt(getQty, 10) < parseInt(getHasQty, 10)) {
-                var newPrice = (parseInt(getHasQty, 10) - parseInt(getQty, 10)) * parseFloat(getHasPrice);
-                $(".cart-table-total .basket-total-price").text(parseFloat(getTotal) - parseFloat(newPrice));
                 $('.cart-product-code_' + mainDivId + ' input[type="text"].cart-product-quantity-old').val(parseInt(getQty, 10));
-                var oldQty = $(".basket-quantity-count").text();
-                $(".basket-quantity-count").text(parseInt(oldQty, 10) - (parseInt(getHasQty, 10) - parseInt(getQty, 10)));
-                $(".basket-total-price").first().text(parseFloat(getTotal) - parseFloat(newPrice));
             }
             $.ajax({
                 type: 'POST',
@@ -374,3 +470,14 @@ $(function () {
             });
         });
 })();
+
+function reloadCartFromServer() {
+    $.getJSON('/Cart/Snapshot')
+        .done(function (result) {
+            if (result) {
+                updateCartFromResponse(result);
+            }
+        });
+}
+
+window.reloadCartFromServer = reloadCartFromServer;

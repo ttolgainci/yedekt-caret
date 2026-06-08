@@ -18,8 +18,14 @@
     public class CartInfoModel
     {
         public string Total { get; set; }
+        public string Subtotal { get; set; }
+        public string GrandTotal { get; set; }
         public int? TotalQuantity { get; set; }
-
+        public decimal? ShippingPrice { get; set; }
+        public string? CarrierName { get; set; }
+        public decimal? TotalDesi { get; set; }
+        public int? CarrierId { get; set; }
+        public string CurrencyName { get; set; } = string.Empty;
     }
     public class BasketSetModel
     {

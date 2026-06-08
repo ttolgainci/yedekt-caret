@@ -84,4 +84,61 @@ public sealed class StoreApiClient : IStoreApiClient
             throw new InvalidOperationException($"Empty API response for GET {relative}.");
         return data;
     }
+
+    public async Task<T> PutAsync<T>(string path, object? body, string? bearerToken = null, CancellationToken cancellationToken = default, IReadOnlyDictionary<string, string>? extraHeaders = null)
+    {
+        var relative = (path ?? "").Trim();
+        if (!relative.StartsWith('/'))
+            relative = "/" + relative;
+
+        using var request = new HttpRequestMessage(HttpMethod.Put, relative);
+        if (!string.IsNullOrWhiteSpace(bearerToken))
+            request.Headers.Authorization = new AuthenticationHeaderValue("Bearer", bearerToken);
+
+        if (extraHeaders != null)
+        {
+            foreach (var h in extraHeaders)
+                request.Headers.TryAddWithoutValidation(h.Key, h.Value);
+        }
+
+        if (body != null)
+            request.Content = JsonContent.Create(body, options: JsonOptions);
+
+        using var response = await _http.SendAsync(request, cancellationToken);
+        if (!response.IsSuccessStatusCode)
+        {
+            var errorBody = await response.Content.ReadAsStringAsync(cancellationToken);
+            throw new HttpRequestException(
+                $"API {(int)response.StatusCode} {response.ReasonPhrase} for PUT {relative}. Body: {errorBody}");
+        }
+
+        var data = await response.Content.ReadFromJsonAsync<T>(JsonOptions, cancellationToken);
+        if (data == null)
+            throw new InvalidOperationException($"Empty API response for PUT {relative}.");
+        return data;
+    }
+
+    public async Task<T> DeleteAsync<T>(string path, string? bearerToken = null, CancellationToken cancellationToken = default)
+    {
+        var relative = (path ?? "").Trim();
+        if (!relative.StartsWith('/'))
+            relative = "/" + relative;
+
+        using var request = new HttpRequestMessage(HttpMethod.Delete, relative);
+        if (!string.IsNullOrWhiteSpace(bearerToken))
+            request.Headers.Authorization = new AuthenticationHeaderValue("Bearer", bearerToken);
+
+        using var response = await _http.SendAsync(request, cancellationToken);
+        if (!response.IsSuccessStatusCode)
+        {
+            var errorBody = await response.Content.ReadAsStringAsync(cancellationToken);
+            throw new HttpRequestException(
+                $"API {(int)response.StatusCode} {response.ReasonPhrase} for DELETE {relative}. Body: {errorBody}");
+        }
+
+        var data = await response.Content.ReadFromJsonAsync<T>(JsonOptions, cancellationToken);
+        if (data == null)
+            throw new InvalidOperationException($"Empty API response for DELETE {relative}.");
+        return data;
+    }
 }

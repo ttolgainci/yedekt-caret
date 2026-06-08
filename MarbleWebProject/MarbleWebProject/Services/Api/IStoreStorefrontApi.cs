@@ -9,5 +9,6 @@ public interface IStoreStorefrontApi
     Task<BaseResponse<StorefrontPublishedLayoutModel>> GetPublishedLayoutAsync(CancellationToken cancellationToken = default);
     Task<BaseResponse<List<CampaignActiveModel>>> GetActiveCampaignsAsync(CancellationToken cancellationToken = default);
     Task<BaseResponse<List<ProductList>>> GetHomeListedProductsAsync(int limit = 12, CancellationToken cancellationToken = default);
+    Task<BaseResponse<List<ProductList>>> GetTopSellingProductsAsync(int limit = 12, CancellationToken cancellationToken = default);
     Task<BaseResponse<PlaceOrderApiResponse>> PlaceGuestOrderAsync(PlaceGuestOrderApiRequest request, string checkoutKey, CancellationToken cancellationToken = default);
 }

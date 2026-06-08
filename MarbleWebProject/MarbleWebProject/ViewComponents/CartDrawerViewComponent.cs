@@ -10,18 +10,20 @@ public class CartDrawerViewComponent : ViewComponent
 {
     private readonly IStoreBasketApi _basket;
     private readonly IStoreAuthService _auth;
+    private readonly IBasketUserIdProvider _basketUserId;
 
-    public CartDrawerViewComponent(IStoreBasketApi basket, IStoreAuthService auth)
+    public CartDrawerViewComponent(IStoreBasketApi basket, IStoreAuthService auth, IBasketUserIdProvider basketUserId)
     {
         _basket = basket;
         _auth = auth;
+        _basketUserId = basketUserId;
     }
 
     public async Task<IViewComponentResult> InvokeAsync(CancellationToken cancellationToken = default)
     {
-        var userGuid = HttpContext.Request.Cookies["UserIDForBasket"] ?? "";
-        await _auth.GetSessionAsync(cancellationToken);
-        var routeResponse = await _basket.GetBasketAllAsync(new BasketAllRequest { UserID = userGuid }, cancellationToken);
+        var userGuid = await _basketUserId.ResolveBasketUserIdAsync(cancellationToken);
+        var session = await _auth.GetSessionAsync(cancellationToken);
+        var routeResponse = await _basket.GetBasketAllAsync(new BasketAllRequest { UserID = userGuid, LanguageCode = session.LanguageCode }, cancellationToken);
 
         var model = routeResponse.Status && routeResponse.Data != null
             ? CartBasketMergeHelper.BuildBasketSetModel(routeResponse.Data)

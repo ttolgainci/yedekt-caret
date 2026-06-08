@@ -1,0 +1,38 @@
+@{
+    ViewData["Title"] = "Siparişlerim";
+    var recipient = ViewBag.AccountDisplayName as string ?? "";
+}
+
+<div class="store-account-panel store-account-orders-panel">
+    <div class="store-account-orders-header">
+        <h2 class="store-account-panel-title mb-0">Siparişlerim</h2>
+        <div class="store-account-orders-search">
+            <input type="search" class="form-control" id="orders-search" placeholder="Ürün veya marka adına göre ara" />
+        </div>
+    </div>
+
+    <ul class="nav store-account-order-tabs" id="orders-tabs" role="tablist">
+        <li class="nav-item">
+            <button type="button" class="nav-link active" data-filter="all">Tümü</button>
+        </li>
+        <li class="nav-item">
+            <button type="button" class="nav-link" data-filter="ongoing">Devam Edenler</button>
+        </li>
+        <li class="nav-item">
+            <button type="button" class="nav-link" data-filter="cancelled">İptaller</button>
+        </li>
+        <li class="nav-item">
+            <button type="button" class="nav-link" data-filter="returns">İadeler</button>
+        </li>
+    </ul>
+
+    <div id="orders-list" data-recipient="@recipient"></div>
+
+    <div id="order-detail" class="d-none">
+        <div id="order-detail-body"></div>
+    </div>
+</div>
+
+@section Scripts {
+    <script src="~/PageJs/CustomerOrders.js"></script>
+}

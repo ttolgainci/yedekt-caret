@@ -17,18 +17,19 @@
                                 <a class="nav-link" id="register-tab" data-toggle="tab" href="#register" role="tab" aria-controls="register" aria-selected="false">@Html.Translate("#Register#")</a>
                             </li>
                         </ul>
+                        <div id="customer-auth-alert" class="alert alert-danger d-none mt-2" role="alert"></div>
                         <div class="tab-content" id="tab-content-5">
                             <div class="tab-pane fade show active" id="signin" role="tabpanel" aria-labelledby="signin-tab">
-                                <form action="#">
+                                <form id="customer-login-form" class="js-customer-login-form" action="#" method="post">
                                     <div class="form-group">
                                         <label for="singin-email">@Html.Translate("#Email Address#") *</label>
-                                        <input type="text" class="form-control" id="singin-email" name="singin-email" required>
-                                    </div><!-- End .form-group -->
+                                        <input type="email" class="form-control" id="singin-email" name="email" required autocomplete="username">
+                                    </div>
 
                                     <div class="form-group">
                                         <label for="singin-password">@Html.Translate("#Password#") *</label>
-                                        <input type="password" class="form-control" id="singin-password" name="singin-password" required>
-                                    </div><!-- End .form-group -->
+                                        <input type="password" class="form-control" id="singin-password" name="password" required autocomplete="current-password">
+                                    </div>
 
                                     <div class="form-footer">
                                         <button type="submit" class="btn btn-outline-primary-2">
@@ -39,83 +40,50 @@
                                         <div class="custom-control custom-checkbox">
                                             <input type="checkbox" class="custom-control-input" id="signin-remember">
                                             <label class="custom-control-label" for="signin-remember">@Html.Translate("#Remember Me#")</label>
-                                        </div><!-- End .custom-checkbox -->
-                                        <a href="#" class="forgot-link">@Html.Translate("#Forgot Your Password#")?</a>
-                                    </div><!-- End .form-footer -->
+                                        </div>
+                                    </div>
                                 </form>
-                               @*  <div class="form-choice">
-                                    <p class="text-center">or sign in with</p>
-                                    <div class="row">
-                                        <div class="col-sm-6">
-                                            <a href="#" class="btn btn-login btn-g">
-                                                <i class="icon-google"></i>
-                                                Login With Google
-                                            </a>
-                                        </div><!-- End .col-6 -->
-                                        <div class="col-sm-6">
-                                            <a href="#" class="btn btn-login btn-f">
-                                                <i class="icon-facebook-f"></i>
-                                                Login With Facebook
-                                            </a>
-                                        </div><!-- End .col-6 -->
-                                    </div><!-- End .row -->
-                                </div><!-- End .form-choice --> *@
-                            </div><!-- .End .tab-pane -->
+                            </div>
                             <div class="tab-pane fade" id="register" role="tabpanel" aria-labelledby="register-tab">
-                                <form action="#">
+                                <form id="customer-register-form" class="js-customer-register-form" action="#" method="post">
                                     <div class="form-group">
-                                        <label for="register-email">@Html.Translate("#Name#") *</label>
-                                        <input type="email" class="form-control" id="register-email" name="register-email" required>
-                                    </div><!-- End .form-group -->
+                                        <label for="register-firstname">@Html.Translate("#Name#") *</label>
+                                        <input type="text" class="form-control" id="register-firstname" name="firstName" required autocomplete="given-name">
+                                    </div>
                                     <div class="form-group">
-                                        <label for="register-email">@Html.Translate("#Surname#") *</label>
-                                        <input type="email" class="form-control" id="register-email" name="register-email" required>
-                                    </div><!-- End .form-group -->
+                                        <label for="register-lastname">@Html.Translate("#Surname#") *</label>
+                                        <input type="text" class="form-control" id="register-lastname" name="lastName" required autocomplete="family-name">
+                                    </div>
                                     <div class="form-group">
                                         <label for="register-email">@Html.Translate("#Email Address#") *</label>
-                                        <input type="email" class="form-control" id="register-email" name="register-email" required>
-                                    </div><!-- End .form-group -->
-
+                                        <input type="email" class="form-control" id="register-email" name="email" required autocomplete="email">
+                                    </div>
+                                    <div class="form-group">
+                                        <label for="register-phone">@Html.Translate("#Phone#")</label>
+                                        <input type="text" class="form-control" id="register-phone" name="phone" autocomplete="tel">
+                                    </div>
                                     <div class="form-group">
                                         <label for="register-password">@Html.Translate("#Password#") *</label>
-                                        <input type="password" class="form-control" id="register-password" name="register-password" required>
-                                    </div><!-- End .form-group -->
+                                        <input type="password" class="form-control" id="register-password" name="password" required autocomplete="new-password">
+                                    </div>
                                     <div class="form-group">
-                                        <label for="register-password">@Html.Translate("#Again Password#") *</label>
-                                        <input type="password" class="form-control" id="register-password" name="register-password" required>
-                                    </div><!-- End .form-group -->
+                                        <label for="register-password-confirm">@Html.Translate("#Again Password#") *</label>
+                                        <input type="password" class="form-control" id="register-password-confirm" name="passwordConfirm" required autocomplete="new-password">
+                                    </div>
                                     <div class="form-footer">
                                         <button type="submit" class="btn btn-outline-primary-2">
                                             <span>@Html.Translate("#Register#")</span>
                                             <i class="icon-long-arrow-right"></i>
                                         </button>
                                         <br />
-                                        <a href="#" class="forgot-link">@Html.Translate("#I already have an account#")</a>
-
-                                    </div><!-- End .form-footer -->
+                                        <a href="#signin" class="forgot-link" data-toggle="tab">@Html.Translate("#I already have an account#")</a>
+                                    </div>
                                 </form>
-                                @* <div class="form-choice">
-                                    <p class="text-center">or sign in with</p>
-                                    <div class="row">
-                                        <div class="col-sm-6">
-                                            <a href="#" class="btn btn-login btn-g">
-                                                <i class="icon-google"></i>
-                                                Login With Google
-                                            </a>
-                                        </div><!-- End .col-6 -->
-                                        <div class="col-sm-6">
-                                            <a href="#" class="btn btn-login  btn-f">
-                                                <i class="icon-facebook-f"></i>
-                                                Login With Facebook
-                                            </a>
-                                        </div><!-- End .col-6 -->
-                                    </div><!-- End .row -->
-                                </div><!-- End .form-choice --> *@
-                            </div><!-- .End .tab-pane -->
-                        </div><!-- End .tab-content -->
-                    </div><!-- End .form-tab -->
-                </div><!-- End .form-box -->
-            </div><!-- End .modal-body -->
-        </div><!-- End .modal-content -->
-    </div><!-- End .modal-dialog -->
-</div><!-- End .modal -->
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
