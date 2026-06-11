@@ -1,16 +1,14 @@
+@using MarbleWebProject.Helpers
 @model ProductResultSearchViewModel
 @{
     Layout = "~/Views/Shared/_Layout.cshtml";
     var showing = Model.Products.Count;
     var total = Model.TotalCount;
     var showFilters = Model.Mode is ProductSearchMode.Vehicle or ProductSearchMode.Category;
+    var searchLayout = StorefrontSearchLayoutKeys.Normalize(Model.SearchResultLayout);
 }
 
-<div class="page-header text-center" style="background-image: url('/assets/images/page-header-bg.jpg')">
-    <div class="container">
-        <h1 class="page-title">@Model.Title<span>@Html.Translate("#Shop#")</span></h1>
-    </div>
-</div>
+@await Html.PartialAsync("_PageHeader", Model)
 
 <nav aria-label="breadcrumb" class="breadcrumb-nav mb-2">
     <div class="container">
@@ -48,15 +46,7 @@
                         </h3>
                         <div class="collapse show" id="widget-search-categories">
                             <div class="widget-body">
-                                @if (!string.IsNullOrWhiteSpace(Model.Summary))
-                                {
-                                    <p class="mb-2 small text-muted">@Model.Summary</p>
-                                }
-                                @if (Model.FilterCategories.Count == 0)
-                                {
-                                    <p class="mb-0 small text-muted">Kategori bulunamadı.</p>
-                                }
-                                else
+                                @if (Model.FilterCategories.Count > 0)
                                 {
                                     <div class="filter-items filter-items-count product-result-filter-scroll">
                                         @foreach (var cat in Model.FilterCategories)
@@ -116,8 +106,8 @@
 
                     @if (Model.PriceRange is { HasRange: true } pr)
                     {
-                        var sliderMin = Model.MinPrice ?? pr.RangeMin;
-                        var sliderMax = Model.MaxPrice ?? pr.RangeMax;
+                        var sliderMin = Math.Max(pr.RangeMin, Math.Min(Model.MinPrice ?? pr.RangeMin, pr.RangeMax));
+                        var sliderMax = Math.Max(sliderMin, Math.Min(Model.MaxPrice ?? pr.RangeMax, pr.RangeMax));
                         <div class="widget widget-collapsible">
                             <h3 class="widget-title">
                                 <button type="button" class="btn btn-link widget-collapse-btn" data-toggle="collapse" data-target="#widget-search-price" aria-expanded="true" aria-controls="widget-search-price">
@@ -165,17 +155,49 @@
                             </div>
                         </div>
                         <div class="toolbox-layout">
-                            <span class="btn-layout active" title="4 columns">
-                                <svg width="22" height="10">
-                                    <rect x="0" y="0" width="4" height="4" />
-                                    <rect x="6" y="0" width="4" height="4" />
-                                    <rect x="12" y="0" width="4" height="4" />
-                                    <rect x="18" y="0" width="4" height="4" />
-                                    <rect x="0" y="6" width="4" height="4" />
-                                    <rect x="6" y="6" width="4" height="4" />
-                                    <rect x="12" y="6" width="4" height="4" />
-                                    <rect x="18" y="6" width="4" height="4" />
-                                </svg>
+                            <span class="btn-layout active" title="@searchLayout">
+                                @if (searchLayout == StorefrontSearchLayoutKeys.Grid1)
+                                {
+                                    <svg width="16" height="10">
+                                        <rect x="0" y="0" width="4" height="4" />
+                                        <rect x="6" y="0" width="10" height="4" />
+                                        <rect x="0" y="6" width="4" height="4" />
+                                        <rect x="6" y="6" width="10" height="4" />
+                                    </svg>
+                                }
+                                else if (searchLayout == StorefrontSearchLayoutKeys.Grid2)
+                                {
+                                    <svg width="10" height="10">
+                                        <rect x="0" y="0" width="4" height="4" />
+                                        <rect x="6" y="0" width="4" height="4" />
+                                        <rect x="0" y="6" width="4" height="4" />
+                                        <rect x="6" y="6" width="4" height="4" />
+                                    </svg>
+                                }
+                                else if (searchLayout == StorefrontSearchLayoutKeys.Grid3)
+                                {
+                                    <svg width="16" height="10">
+                                        <rect x="0" y="0" width="4" height="4" />
+                                        <rect x="6" y="0" width="4" height="4" />
+                                        <rect x="12" y="0" width="4" height="4" />
+                                        <rect x="0" y="6" width="4" height="4" />
+                                        <rect x="6" y="6" width="4" height="4" />
+                                        <rect x="12" y="6" width="4" height="4" />
+                                    </svg>
+                                }
+                                else
+                                {
+                                    <svg width="22" height="10">
+                                        <rect x="0" y="0" width="4" height="4" />
+                                        <rect x="6" y="0" width="4" height="4" />
+                                        <rect x="12" y="0" width="4" height="4" />
+                                        <rect x="18" y="0" width="4" height="4" />
+                                        <rect x="0" y="6" width="4" height="4" />
+                                        <rect x="6" y="6" width="4" height="4" />
+                                        <rect x="12" y="6" width="4" height="4" />
+                                        <rect x="18" y="6" width="4" height="4" />
+                                    </svg>
+                                }
                             </span>
                         </div>
                     </div>

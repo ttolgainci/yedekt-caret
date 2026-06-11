@@ -267,7 +267,7 @@ public class Cart : Controller
                 price = c.Price,
                 currency = c.CurrencyName,
                 currencyName = c.CurrencyName,
-                image = c.MainImage,
+                image = MediaUrlHelper.BuildProductImage(c.MainImage),
                 url = c.Url,
                 quantity = c.CartQuantity ?? 0
             }),

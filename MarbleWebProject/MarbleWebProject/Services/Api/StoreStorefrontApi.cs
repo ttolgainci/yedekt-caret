@@ -33,6 +33,9 @@ public sealed class StoreStorefrontApi : IStoreStorefrontApi
         return _api.GetAsync<BaseResponse<StorefrontPublishedLayoutModel>>(path, null, cancellationToken);
     }
 
+    public Task<BaseResponse<StoreGeneralSettingsModel>> GetGeneralSettingsAsync(CancellationToken cancellationToken = default)
+        => _api.GetAsync<BaseResponse<StoreGeneralSettingsModel>>("/api/storefront/settings/general", null, cancellationToken);
+
     public async Task<BaseResponse<List<CampaignActiveModel>>> GetActiveCampaignsAsync(CancellationToken cancellationToken = default)
     {
         var session = await _auth.GetSessionAsync(cancellationToken);

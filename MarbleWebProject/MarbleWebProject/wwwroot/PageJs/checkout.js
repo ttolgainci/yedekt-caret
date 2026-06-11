@@ -952,6 +952,26 @@ $(function () {
             return;
         }
 
+        var legalConsents = [];
+        var legalValid = true;
+        $('.co-legal-consent').each(function () {
+            var $cb = $(this);
+            if (!$cb.is(':checked')) {
+                legalValid = false;
+                return false;
+            }
+            legalConsents.push({
+                informationId: parseInt($cb.data('information-id'), 10),
+                revisionId: parseInt($cb.data('revision-id'), 10),
+                pageCode: ($cb.data('page-code') || '').toString(),
+                contentHash: ($cb.data('content-hash') || '').toString()
+            });
+        });
+        if ($('.co-legal-consent').length > 0 && !legalValid) {
+            alert(tx('legalConsentRequired') || 'Lütfen tüm yasal metinleri onaylayın.');
+            return;
+        }
+
         var addressId = selectedAddress.id;
         var customerAddressId = (addressId && !isLocalAddressId(addressId))
             ? (parseInt(addressId, 10) || null)
@@ -995,7 +1015,8 @@ $(function () {
             taxNumber: $('#co-tax-number').val() || '',
             taxOffice: $('#co-tax-office').val() || '',
             companyName: $('#co-company-name').val() || '',
-            isEInvoice: $('#co-e-invoice').val() === 'true'
+            isEInvoice: $('#co-e-invoice').val() === 'true',
+            legalConsents: legalConsents.length > 0 ? legalConsents : null
         };
 
         var $btn = $form.find('button[type="submit"]');

@@ -51,7 +51,8 @@
                 <div class="product-cat">
                   @*   <a href="#">Women</a> *@
                 </div><!-- End .product-cat -->
-                <h3 class="product-title"><a href="/@item.Url">@item.ProductName</a></h3><!-- End .product-title -->
+                @{ ViewData["ProductUrl"] = "/" + (item.Url ?? "").TrimStart('/'); }
+                @await Html.PartialAsync("_ProductListTitlePartial", item)
                 <div class="product-price">
                    @item.Price @item.CurrencyName
                 </div><!-- End .product-price -->

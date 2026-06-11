@@ -49,4 +49,22 @@ public sealed class StoreContentApi : IStoreContentApi
         var token = await _auth.GetTokenAsync(cancellationToken);
         return await _api.PostAsync<BaseResponse<List<InformationRouteModel>>>("/Information/GetInformationForRoute", new { }, token, cancellationToken);
     }
+
+    public Task<BaseResponse<StorefrontFooterLinksModel>> GetFooterLinksAsync(string languageCode, CancellationToken cancellationToken = default)
+    {
+        var lang = string.IsNullOrWhiteSpace(languageCode) ? "tr" : languageCode.Trim();
+        return _api.GetAsync<BaseResponse<StorefrontFooterLinksModel>>(
+            $"/api/storefront/content/footer-links?languageCode={Uri.EscapeDataString(lang)}",
+            null,
+            cancellationToken);
+    }
+
+    public Task<BaseResponse<StorefrontCheckoutLegalModel>> GetCheckoutLegalAsync(string languageCode, CancellationToken cancellationToken = default)
+    {
+        var lang = string.IsNullOrWhiteSpace(languageCode) ? "tr" : languageCode.Trim();
+        return _api.GetAsync<BaseResponse<StorefrontCheckoutLegalModel>>(
+            $"/api/storefront/content/checkout-legal?languageCode={Uri.EscapeDataString(lang)}",
+            null,
+            cancellationToken);
+    }
 }

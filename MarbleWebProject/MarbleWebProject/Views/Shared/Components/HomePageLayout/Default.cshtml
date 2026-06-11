@@ -1,5 +1,7 @@
 @model MarbleWebProject.Models.StorefrontPageLayoutModel
+<div class="home-product-widgets">
 @foreach (var slot in Model.Widgets.Where(w => w.Enabled && !string.IsNullOrWhiteSpace(w.ViewComponentName)).OrderBy(w => w.Order))
 {
     @await Component.InvokeAsync(slot.ViewComponentName)
 }
+</div>

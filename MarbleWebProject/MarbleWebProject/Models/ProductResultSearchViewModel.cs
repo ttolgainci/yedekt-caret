@@ -10,6 +10,18 @@ public class ProductResultSearchViewModel
     public string? Summary { get; set; }
 
     public string? CategorySlug { get; set; }
+    public string? CategoryPicture { get; set; }
+
+    public string? VehicleMakeName { get; set; }
+    public string? VehicleModelName { get; set; }
+    public string? VehicleGenerationName { get; set; }
+    public string? VehicleEngineCode { get; set; }
+    public int? VehicleGenerationStartYear { get; set; }
+    public int? VehicleGenerationEndYear { get; set; }
+    public int? VehiclePowerHp { get; set; }
+    public string? VehicleFuelType { get; set; }
+    public string? VehiclePicture { get; set; }
+    public IReadOnlyList<VehicleMakeListItem> VehicleMakes { get; set; } = Array.Empty<VehicleMakeListItem>();
     public string? VehicleMakeSlug { get; set; }
     public string? VehicleModelSlug { get; set; }
     public string? VehicleGenerationSlug { get; set; }
@@ -32,6 +44,7 @@ public class ProductResultSearchViewModel
     public decimal? MaxPrice { get; set; }
     public string CurrencySymbol { get; set; } = "₺";
     public VehicleSearchPriceRangeModel? PriceRange { get; set; }
+    public string SearchResultLayout { get; set; } = StorefrontSearchLayoutKeys.Default;
     public IReadOnlyList<ProductList> Products { get; set; } = Array.Empty<ProductList>();
     public IReadOnlyList<VehicleSearchCategoryListItem> FilterCategories { get; set; } = Array.Empty<VehicleSearchCategoryListItem>();
     public IReadOnlyList<VehicleSearchBrandListItem> FilterBrands { get; set; } = Array.Empty<VehicleSearchBrandListItem>();
@@ -116,5 +129,31 @@ public class ProductResultSearchViewModel
             return string.Empty;
         var sym = string.IsNullOrWhiteSpace(currencySymbol) ? CurrencySymbol : currencySymbol;
         return $"{FormatPrice(price)} {sym}".Trim();
+    }
+
+    public string VehicleContextTitle
+    {
+        get
+        {
+            var parts = new[] { VehicleMakeName, VehicleModelName, VehicleEngineCode }
+                .Where(p => !string.IsNullOrWhiteSpace(p))
+                .Select(p => p!.Trim())
+                .ToList();
+            if (parts.Count == 0)
+                return Title;
+            return string.Join(" ", parts) + " Uyumlu Yedek Parçalar";
+        }
+    }
+
+    public string? VehicleYearRangeLabel
+    {
+        get
+        {
+            if (VehicleGenerationStartYear is > 0 && VehicleGenerationEndYear is > 0)
+                return $"{VehicleGenerationStartYear} - {VehicleGenerationEndYear}";
+            if (VehicleGenerationStartYear is > 0)
+                return $"{VehicleGenerationStartYear}+";
+            return null;
+        }
     }
 }

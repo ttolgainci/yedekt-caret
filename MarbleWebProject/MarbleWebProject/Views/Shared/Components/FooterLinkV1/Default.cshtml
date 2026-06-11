@@ -1,42 +1,36 @@
-<div class="col-sm-4 col-lg-2">
-    <div class="widget">
-        <h4 class="widget-title">Information</h4><!-- End .widget-title -->
+@model MarbleWebProject.Models.StorefrontFooterLinksModel
+@using MarbleWebProject.Helper
+@{
+    var groups = Model?.Groups ?? new List<MarbleWebProject.Models.StorefrontFooterLinkGroupModel>();
+}
 
-        <ul class="widget-list">
-            <li><a href="about.html">About Molla</a></li>
-            <li><a href="#">How to shop on Molla</a></li>
-            <li><a href="#">FAQ</a></li>
-            <li><a href="contact.html">Contact us</a></li>
-            <li><a href="login.html">Log in</a></li>
-        </ul><!-- End .widget-list -->
-    </div><!-- End .widget -->
-</div><!-- End .col-sm-4 col-lg-3 -->
+@foreach (var group in groups)
+{
+    if (group.Links == null || group.Links.Count == 0)
+    {
+        continue;
+    }
 
-<div class="col-sm-4 col-lg-2">
-    <div class="widget">
-        <h4 class="widget-title">Customer Service</h4><!-- End .widget-title -->
-
-        <ul class="widget-list">
-            <li><a href="#">Payment Methods</a></li>
-            <li><a href="#">Money-back guarantee!</a></li>
-            <li><a href="#">Returns</a></li>
-            <li><a href="#">Shipping</a></li>
-            <li><a href="#">Terms and conditions</a></li>
-            <li><a href="#">Privacy Policy</a></li>
-        </ul><!-- End .widget-list -->
-    </div><!-- End .widget -->
-</div><!-- End .col-sm-4 col-lg-3 -->
+    <div class="col-sm-4 col-lg-2">
+        <div class="widget">
+            <h4 class="widget-title">@group.Title</h4>
+            <ul class="widget-list">
+                @foreach (var link in group.Links)
+                {
+                    <li><a href="@link.Url">@link.Title</a></li>
+                }
+            </ul>
+        </div>
+    </div>
+}
 
 <div class="col-sm-4 col-lg-2">
     <div class="widget">
-        <h4 class="widget-title">My Account</h4><!-- End .widget-title -->
-
+        <h4 class="widget-title">@Html.Translate("#My Account#")</h4>
         <ul class="widget-list">
-            <li><a href="#">Sign In</a></li>
-            <li><a href="cart.html">View Cart</a></li>
-            <li><a href="#">My Wishlist</a></li>
-            <li><a href="#">Track My Order</a></li>
-            <li><a href="#">Help</a></li>
-        </ul><!-- End .widget-list -->
-    </div><!-- End .widget -->
-</div><!-- End .col-sm-64 col-lg-3 -->
+            <li><a href="/account/profile">@Html.Translate("#My Account#")</a></li>
+            <li><a href="/cart">@Html.Translate("#View Cart#")</a></li>
+            <li><a href="/account/orders">@Html.Translate("#Track My Order#")</a></li>
+        </ul>
+    </div>
+</div>

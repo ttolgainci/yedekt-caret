@@ -4,7 +4,9 @@ using MarbleWebProject.Models;
 using MarbleWebProject.Models.Options;
 using MarbleWebProject.Services;
 using MarbleWebProject.Services.Api;
+using MarbleWebProject.Services.Cache;
 using MarbleWebProject.Services.CheckoutDraft;
+using StackExchange.Redis;
 using MarbleWebProject.Services.Storefront;
 using Microsoft.ApplicationInsights;
 using Microsoft.AspNetCore.Server.Kestrel.Core;
@@ -32,6 +34,7 @@ AppConfig.CDNServices = new CDNServices
     ContentUploads = NormalizeLocalDevServiceUrl(configuration.GetValue<string>("CDNServices:ContentUploads") ?? ""),
     ExtraContentPhotos = configuration.GetValue<string>("CDNServices:ExtraContentPhotos") ?? "",
     Favicon = configuration.GetValue<string>("CDNServices:Favicon") ?? "",
+    Logo = configuration.GetValue<string>("CDNServices:Logo") ?? "",
 };
 AppConfig.ProjectService = ProjectServiceSettings.FromConfiguration(configuration);
 
@@ -48,6 +51,7 @@ builder.Services.Configure<StoreAuthOptions>(options =>
         options.Password = configuration.GetValue<string>("CMSService:Password") ?? "";
     if (string.IsNullOrWhiteSpace(options.CustomName))
         options.CustomName = configuration.GetValue<string>("CMSService:CustomName") ?? "";
+    options.Theme = StoreThemeHelper.Resolve(options.Theme);
 });
 
 builder.Services.AddHttpClient<IStoreApiClient, StoreApiClient>()
@@ -71,6 +75,7 @@ builder.Services.AddScoped<IBasketUserIdProvider, BasketUserIdProvider>();
 builder.Services.AddScoped<IStoreCatalogApi, StoreCatalogApi>();
 builder.Services.AddScoped<IProductSearchUrlResolver, ProductSearchUrlResolver>();
 builder.Services.AddScoped<IStoreBasketApi, StoreBasketApi>();
+builder.Services.AddScoped<IStoreWishlistApi, StoreWishlistApi>();
 builder.Services.AddScoped<IStoreShippingApi, StoreShippingApi>();
 builder.Services.AddScoped<IStoreContentApi, StoreContentApi>();
 builder.Services.AddScoped<IStoreRouteBootstrap, StoreRouteBootstrap>();
@@ -80,7 +85,28 @@ builder.Services.AddSingleton<ICheckoutDraftStore, CheckoutDraftStore>();
 
 builder.Services.AddScoped<TelemetryClient>();
 builder.Services.AddHttpContextAccessor();
-builder.Services.AddDistributedMemoryCache();
+var redisConnection = configuration.GetConnectionString("Redis") ?? configuration["Redis:ConnectionString"];
+if (!string.IsNullOrWhiteSpace(redisConnection))
+{
+    builder.Services.AddSingleton<IConnectionMultiplexer>(_ => ConnectionMultiplexer.Connect(redisConnection));
+    builder.Services.AddStackExchangeRedisCache(options =>
+    {
+        options.Configuration = redisConnection;
+        options.InstanceName = "MarbleWeb:";
+    });
+}
+else
+{
+    builder.Services.AddDistributedMemoryCache();
+}
+
+builder.Services.AddSingleton<IGlobalCatalogCacheVersion, GlobalCatalogCacheVersion>();
+builder.Services.AddSingleton<IGlobalInstagramCacheVersion, GlobalInstagramCacheVersion>();
+builder.Services.AddSingleton<IGlobalContentCacheVersion, GlobalContentCacheVersion>();
+builder.Services.AddSingleton<IWebCatalogCache, WebCatalogCache>();
+builder.Services.AddSingleton<IWebInstagramCache, WebInstagramCache>();
+builder.Services.AddSingleton<IWebContentCache, WebContentCache>();
+builder.Services.AddScoped<IStoreInstagramApi, StoreInstagramApi>();
 builder.Services.Configure<CookiePolicyOptions>(options =>
 {
     options.MinimumSameSitePolicy = SameSiteMode.Strict;

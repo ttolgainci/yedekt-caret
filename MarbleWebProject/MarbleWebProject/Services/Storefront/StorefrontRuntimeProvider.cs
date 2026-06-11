@@ -1,38 +1,41 @@
 using MarbleWebProject.Helper;
 using MarbleWebProject.Models;
 using MarbleWebProject.Services.Api;
-using Microsoft.Extensions.Caching.Memory;
 
 namespace MarbleWebProject.Services.Storefront;
 
 public sealed class StorefrontRuntimeProvider : IStorefrontRuntimeProvider
 {
-    private static readonly TimeSpan CacheTtl = TimeSpan.FromSeconds(20);
-    private readonly IMemoryCache _cache;
+    private const string HttpContextItemKey = "marble:storefront:runtime";
+
     private readonly IStoreStorefrontApi _storefront;
+    private readonly IHttpContextAccessor _httpContextAccessor;
     private readonly ILogger<StorefrontRuntimeProvider> _logger;
 
     public StorefrontRuntimeProvider(
-        IMemoryCache cache,
         IStoreStorefrontApi storefront,
+        IHttpContextAccessor httpContextAccessor,
         ILogger<StorefrontRuntimeProvider> logger)
     {
-        _cache = cache;
         _storefront = storefront;
+        _httpContextAccessor = httpContextAccessor;
         _logger = logger;
     }
 
     public async Task<StorefrontRuntimeConfig> GetAsync(CancellationToken cancellationToken = default)
     {
-        var tenant = AppConfig.ProjectName;
-        var sector = AppConfig.ProjectService.SectorCode;
-        var cacheKey = $"storefront:published:{tenant}:{sector}";
-
-        if (_cache.TryGetValue(cacheKey, out StorefrontRuntimeConfig? cached) && cached != null)
-            return SyncAppConfig(cached);
+        var http = _httpContextAccessor.HttpContext;
+        if (http?.Items.TryGetValue(HttpContextItemKey, out var cached) == true
+            && cached is StorefrontRuntimeConfig cachedRuntime)
+        {
+            return SyncAppConfig(cachedRuntime);
+        }
 
         var runtime = await StorefrontBootstrap.LoadAsync(_storefront, _logger, cancellationToken);
-        _cache.Set(cacheKey, runtime, CacheTtl);
+
+        if (http != null)
+            http.Items[HttpContextItemKey] = runtime;
+
         return SyncAppConfig(runtime);
     }
 

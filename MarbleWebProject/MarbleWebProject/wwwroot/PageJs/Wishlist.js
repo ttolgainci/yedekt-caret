@@ -1,0 +1,94 @@
+(function ($) {
+    'use strict';
+
+    var wishlistProductIds = [];
+
+    function updateWishlistBadges(count) {
+        var safeCount = parseInt(count, 10);
+        if (isNaN(safeCount) || safeCount < 0) safeCount = 0;
+        $('.wishlist-count').text(safeCount);
+        if (safeCount > 0) {
+            $('.wishlist-count').show();
+        } else {
+            $('.wishlist-count').hide();
+        }
+    }
+
+    function setWishlistButtonState($btn, isActive) {
+        if (!$btn || !$btn.length) return;
+        var addLabel = $btn.data('add-label') || $btn.attr('data-add-label') || 'Add to Wishlist';
+        var removeLabel = $btn.data('remove-label') || $btn.attr('data-remove-label') || 'Remove from Wishlist';
+        $btn.toggleClass('is-in-wishlist', !!isActive);
+        $btn.attr('title', isActive ? removeLabel : addLabel);
+        $btn.find('span').text(isActive ? removeLabel : addLabel);
+    }
+
+    function syncWishlistButtons() {
+        $('.js-toggle-wishlist').each(function () {
+            var pid = parseInt($(this).data('pid'), 10);
+            setWishlistButtonState($(this), wishlistProductIds.indexOf(pid) >= 0);
+        });
+    }
+
+    function applySnapshot(data) {
+        wishlistProductIds = (data && data.productIds) ? data.productIds.slice() : [];
+        updateWishlistBadges(data ? data.totalCount : 0);
+        syncWishlistButtons();
+    }
+
+    function loadWishlistSnapshot() {
+        return $.getJSON('/Wishlist/Snapshot').then(function (data) {
+            applySnapshot(data);
+            return data;
+        }).catch(function () {
+            applySnapshot({ totalCount: 0, productIds: [] });
+        });
+    }
+
+    window.toggleWishlist = function (el) {
+        var $btn = $(el);
+        var pid = parseInt($btn.data('pid'), 10);
+        var purl = ($btn.data('purl') || '').toString();
+        if (!pid) return false;
+
+        $btn.addClass('is-loading');
+        $.ajax({
+            type: 'POST',
+            url: '/Wishlist/Toggle',
+            data: { productId: pid, url: purl }
+        }).done(function (res) {
+            wishlistProductIds = (res.productIds || []).slice();
+            updateWishlistBadges(res.totalCount);
+            setWishlistButtonState($btn, !!res.isInWishlist);
+            syncWishlistButtons();
+        }).always(function () {
+            $btn.removeClass('is-loading');
+        });
+
+        return false;
+    };
+
+    window.refreshWishlistSnapshot = loadWishlistSnapshot;
+
+    $(function () {
+        loadWishlistSnapshot();
+
+        $(document).on('click', '.js-wishlist-remove', function (e) {
+            e.preventDefault();
+            var pid = parseInt($(this).data('pid'), 10);
+            if (!pid) return;
+
+            var $row = $(this).closest('.wishlist-product-item');
+            $.post('/Wishlist/Remove', { productId: pid }).done(function (res) {
+                wishlistProductIds = (res.productIds || []).slice();
+                updateWishlistBadges(res.totalCount);
+                $row.remove();
+                syncWishlistButtons();
+                if (!res.totalCount) {
+                    $('#wishlist-empty-state').show();
+                    $('#wishlist-products').hide();
+                }
+            });
+        });
+    });
+})(jQuery);

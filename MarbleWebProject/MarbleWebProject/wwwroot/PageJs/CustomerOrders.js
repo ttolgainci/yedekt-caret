@@ -118,7 +118,7 @@ $(function () {
                 '<article class="store-od-product">' +
                     '<div class="store-od-product-media">' + renderProductImage(linePicture(line), name) + '</div>' +
                     '<div class="store-od-product-body">' +
-                        '<h4 class="store-od-product-title">' + escapeHtml(name) + '</h4>' +
+                        '<h4 class="store-od-product-title" title="' + escapeAttr(name) + '">' + escapeHtml(name) + '</h4>' +
                         '<p class="store-od-product-meta">' + escapeHtml(meta.join(' · ')) + '</p>' +
                         '<p class="store-od-product-price">' + formatMoney(line.lineTotal || line.LineTotal, data) + '</p>' +
                     '</div>' +

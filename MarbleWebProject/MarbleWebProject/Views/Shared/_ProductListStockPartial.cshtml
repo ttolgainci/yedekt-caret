@@ -1,5 +1,5 @@
 @model ProductList
 @if (!string.IsNullOrWhiteSpace(Model.StockStatus))
 {
-    <span class="product-label product-label-stock" style="background-color:@(string.IsNullOrWhiteSpace(Model.StockStatusColor) ? "#a6c76c" : Model.StockStatusColor)">@Model.StockStatus</span>
+    <span class="product-label product-label-stock@(string.IsNullOrWhiteSpace(Model.StockStatusColor) ? " product-label-stock--brand" : null)"@(string.IsNullOrWhiteSpace(Model.StockStatusColor) ? null : Html.Raw($" style=\"background-color:{Model.StockStatusColor}\""))>@Model.StockStatus</span>
 }

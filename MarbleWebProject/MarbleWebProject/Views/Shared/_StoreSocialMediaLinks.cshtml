@@ -1,0 +1,20 @@
+@{
+    var general = AppConfig.Storefront?.General;
+    var links = new (string? Url, string CssClass, string Title, string Icon)[]
+    {
+        (general?.FacebookUrl, "social-facebook", "Facebook", "icon-facebook-f"),
+        (general?.TwitterUrl, "social-twitter", "Twitter", "icon-twitter"),
+        (general?.InstagramUrl, "social-instagram", "Instagram", "icon-instagram"),
+        (general?.YoutubeUrl, "social-youtube", "Youtube", "icon-youtube")
+    }.Where(x => !string.IsNullOrWhiteSpace(x.Url)).ToList();
+}
+@if (links.Count > 0)
+{
+    <div class="social-icons social-icons-color">
+        <span class="social-label">Social Media</span>
+        @foreach (var link in links)
+        {
+            <a href="@link.Url" class="social-icon @link.CssClass" title="@link.Title" target="_blank" rel="noopener noreferrer"><i class="@link.Icon"></i></a>
+        }
+    </div>
+}

@@ -1,0 +1,14 @@
+@model ProductList
+@{
+    var productName = Model?.ProductName ?? string.Empty;
+    var productUrl = (ViewData["ProductUrl"] as string ?? Model?.Url ?? "#").Trim();
+    if (!productUrl.StartsWith('/'))
+    {
+        productUrl = "/" + productUrl.TrimStart('/');
+    }
+    var extraClass = (ViewData["ProductTitleLinkClass"] as string ?? string.Empty).Trim();
+    var linkClass = string.IsNullOrEmpty(extraClass) ? "store-product-name" : $"store-product-name {extraClass}";
+}
+<h3 class="product-title">
+    <a href="@productUrl" class="@linkClass" title="@productName">@productName</a>
+</h3>

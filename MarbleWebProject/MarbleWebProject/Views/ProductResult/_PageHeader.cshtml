@@ -1,0 +1,61 @@
+@model ProductResultSearchViewModel
+
+@if (Model.Mode == ProductSearchMode.Vehicle)
+{
+    var vehicleImage = MediaUrlHelper.Build(Model.VehiclePicture);
+    <div class="product-result-hero product-result-hero--vehicle">
+        <div class="container">
+            @await Html.PartialAsync("_CompactVehicleSearchPanel", Model)
+            <div class="vehicle-result-context">
+                @if (!string.IsNullOrWhiteSpace(vehicleImage))
+                {
+                    <div class="vehicle-result-context__media">
+                        <img src="@vehicleImage" alt="@Model.VehicleContextTitle" loading="lazy" />
+                    </div>
+                }
+                <div class="vehicle-result-context__body">
+                    <h1 class="vehicle-result-context__title">@Model.VehicleContextTitle</h1>
+                    <div class="vehicle-result-context__badges">
+                        @if (!string.IsNullOrWhiteSpace(Model.VehicleYearRangeLabel))
+                        {
+                            <span class="vehicle-result-context__badge">@Model.VehicleYearRangeLabel</span>
+                        }
+                        @if (Model.VehiclePowerHp is > 0)
+                        {
+                            <span class="vehicle-result-context__badge">@Model.VehiclePowerHp HP</span>
+                        }
+                        @if (!string.IsNullOrWhiteSpace(Model.VehicleFuelType))
+                        {
+                            <span class="vehicle-result-context__badge">@Model.VehicleFuelType</span>
+                        }
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+}
+else if (Model.Mode == ProductSearchMode.Category)
+{
+    var categoryImage = MediaUrlHelper.Build(Model.CategoryPicture);
+    <div class="product-result-hero product-result-hero--category">
+        <div class="container">
+            <div class="category-result-context">
+                @if (!string.IsNullOrWhiteSpace(categoryImage))
+                {
+                    <div class="category-result-context__media">
+                        <img src="@categoryImage" alt="@Model.Title" loading="lazy" />
+                    </div>
+                }
+                <h1 class="category-result-context__title">@Model.Title</h1>
+            </div>
+        </div>
+    </div>
+}
+else
+{
+    <div class="page-header text-center" style="background-image: url('/assets/images/page-header-bg.jpg')">
+        <div class="container">
+            <h1 class="page-title">@Model.Title</h1>
+        </div>
+    </div>
+}

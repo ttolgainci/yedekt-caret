@@ -15,6 +15,7 @@
     var bank = ViewBag.BankInfo as StoreBankTransferInfoModel;
     var bankAccounts = bank?.Accounts?.Where(x => x.IsActive).OrderBy(x => x.SortOrder).ThenBy(x => x.ID).ToList() ?? new List<StoreBankAccountItemModel>();
     var hasBankInfo = bankAccounts.Count > 0;
+    var checkoutLegalItems = ViewBag.CheckoutLegalItems as List<StorefrontCheckoutLegalItemModel> ?? new List<StorefrontCheckoutLegalItemModel>();
 }
 
 <nav aria-label="breadcrumb" class="breadcrumb-nav">
@@ -333,6 +334,28 @@
                             </tbody>
                         </table>
 
+                        @if (checkoutLegalItems.Count > 0)
+                        {
+                            <div class="checkout-legal-consents mb-3" id="co-legal-consents">
+                                @foreach (var legal in checkoutLegalItems)
+                                {
+                                    <div class="custom-control custom-checkbox mb-2">
+                                        <input type="checkbox"
+                                               class="custom-control-input co-legal-consent"
+                                               id="co-legal-@legal.InformationId"
+                                               data-information-id="@legal.InformationId"
+                                               data-revision-id="@legal.RevisionId"
+                                               data-page-code="@legal.PageCode"
+                                               data-content-hash="@legal.ContentHash"
+                                               required />
+                                        <label class="custom-control-label" for="co-legal-@legal.InformationId">
+                                            <a href="@legal.Url" target="_blank" rel="noopener">@legal.Title</a> metnini okudum ve kabul ediyorum.
+                                        </label>
+                                    </div>
+                                }
+                            </div>
+                        }
+
                         <div class="store-cart-drawer-actions checkout-summary-actions">
                             <button type="submit" class="btn btn-outline-primary-2 btn-block">
                                 <span>@Html.Translate("#Place Order#")</span>
@@ -406,6 +429,7 @@
             carriersLoadFailed: @Html.Raw(System.Text.Json.JsonSerializer.Serialize("Kargo seçenekleri yüklenemedi.")),
             selectAddressForCarriers: @Html.Raw(System.Text.Json.JsonSerializer.Serialize("Önce teslimat adresi seçin.")),
             noCarrierOptions: @Html.Raw(System.Text.Json.JsonSerializer.Serialize("Bu adres için kargo seçeneği bulunamadı.")),
+            legalConsentRequired: @Html.Raw(System.Text.Json.JsonSerializer.Serialize("Lütfen tüm yasal metinleri onaylayın.")),
             edit: @Html.Raw(System.Text.Json.JsonSerializer.Serialize(Html.Translate("#Edit#").ToString())),
             delete: @Html.Raw(System.Text.Json.JsonSerializer.Serialize(Html.Translate("#Delete#").ToString())),
             corporate: @Html.Raw(System.Text.Json.JsonSerializer.Serialize(Html.Translate("#Corporate#").ToString())),

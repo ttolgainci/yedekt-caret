@@ -21,6 +21,7 @@ public class CheckoutController : Controller
     private readonly IStoreShippingApi _shipping;
     private readonly IConfiguration _configuration;
     private readonly ICheckoutDraftStore _checkoutDraft;
+    private readonly IStoreContentApi _content;
 
     public CheckoutController(
         IStoreStorefrontApi storefront,
@@ -33,7 +34,8 @@ public class CheckoutController : Controller
         IStoreAuthService auth,
         IStoreShippingApi shipping,
         IConfiguration configuration,
-        ICheckoutDraftStore checkoutDraft)
+        ICheckoutDraftStore checkoutDraft,
+        IStoreContentApi content)
     {
         _storefront = storefront;
         _customerSession = customerSession;
@@ -46,6 +48,7 @@ public class CheckoutController : Controller
         _shipping = shipping;
         _configuration = configuration;
         _checkoutDraft = checkoutDraft;
+        _content = content;
     }
 
     [Route("checkout")]
@@ -62,11 +65,24 @@ public class CheckoutController : Controller
 
         await ApplyShippingQuoteAsync(model, cancellationToken);
 
-        ViewBag.LanguageCode = session.LanguageCode ?? "tr";
+        var languageCode = session.LanguageCode ?? "tr";
+        ViewBag.LanguageCode = languageCode;
         ViewBag.IsCustomerLoggedIn = _customerSession.IsLoggedIn();
         ViewBag.CarrierId = model.Info.CarrierId;
         ViewBag.CarrierName = model.Info.CarrierName;
         ViewBag.BankTransferEnabled = IsBankTransferEnabled();
+
+        try
+        {
+            var legalResp = await _content.GetCheckoutLegalAsync(languageCode, cancellationToken);
+            ViewBag.CheckoutLegalItems = legalResp.Status && legalResp.Data?.Items != null
+                ? legalResp.Data.Items
+                : new List<StorefrontCheckoutLegalItemModel>();
+        }
+        catch
+        {
+            ViewBag.CheckoutLegalItems = new List<StorefrontCheckoutLegalItemModel>();
+        }
 
         if (_customerSession.IsLoggedIn())
         {
@@ -327,7 +343,17 @@ public class CheckoutController : Controller
                 PaymentMethod = paymentMethod,
                 BankAccountId = string.Equals(paymentMethod, "BankTransfer", StringComparison.OrdinalIgnoreCase)
                     ? form.BankAccountId
-                    : null
+                    : null,
+                LegalConsents = form.LegalConsents?
+                    .Select(x => new PlaceOrderLegalConsentApiItem
+                    {
+                        InformationId = x.InformationId,
+                        RevisionId = x.RevisionId,
+                        PageCode = x.PageCode ?? "",
+                        ContentHash = x.ContentHash ?? "",
+                    })
+                    .ToList(),
+                ClientIpAddress = HttpContext.Connection.RemoteIpAddress?.ToString(),
             }
         };
 
@@ -643,6 +669,15 @@ public sealed class CheckoutPlaceOrderForm
     public string? TaxNumber { get; set; }
     public string? CompanyName { get; set; }
     public bool IsEInvoice { get; set; }
+    public List<CheckoutLegalConsentFormItem>? LegalConsents { get; set; }
+}
+
+public sealed class CheckoutLegalConsentFormItem
+{
+    public int InformationId { get; set; }
+    public int RevisionId { get; set; }
+    public string? PageCode { get; set; }
+    public string? ContentHash { get; set; }
 }
 
 internal static class CheckoutConfirmationSession

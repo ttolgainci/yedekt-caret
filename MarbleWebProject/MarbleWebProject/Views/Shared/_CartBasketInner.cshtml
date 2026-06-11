@@ -30,10 +30,10 @@ else
                  data-url="@productUrl"
                  data-qty="@qty">
                 <a href="@productUrl" class="store-cart-line-image">
-                    <img src="@MediaUrlHelper.Build(item.MainImage)" alt="@item.ProductName">
+                    <img src="@MediaUrlHelper.BuildProductImage(item.MainImage)" alt="@item.ProductName">
                 </a>
                 <div class="store-cart-line-info">
-                    <a href="@productUrl" class="store-cart-line-title">@item.ProductName</a>
+                    <a href="@productUrl" class="store-cart-line-title store-product-name" title="@item.ProductName">@item.ProductName</a>
                     <div class="store-cart-line-unit">
                         <span class="cartProductPrice basket-product-price">@unitPrice.ToString("N2")</span> @item.CurrencyName
                     </div>

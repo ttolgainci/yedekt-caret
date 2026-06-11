@@ -110,7 +110,7 @@
                         @foreach (var line in order.Lines)
                         {
                             <li>
-                                <span class="checkout-confirmation-line-name">@line.ProductNameSnapshot</span>
+                                <span class="checkout-confirmation-line-name" title="@line.ProductNameSnapshot">@line.ProductNameSnapshot</span>
                                 <span class="checkout-confirmation-line-qty">@(line.Quantity) adet</span>
                                 <span class="checkout-confirmation-line-price">@line.LineTotal.ToString("N2") @CurrencyDisplayHelper.GetLabel(order.CurrencySymbol, order.CurrencyCode)</span>
                             </li>

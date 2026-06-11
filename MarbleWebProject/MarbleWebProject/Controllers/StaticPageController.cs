@@ -17,12 +17,18 @@ public class StaticPageController : Controller
 
     public async Task<IActionResult> Index(string id, CancellationToken cancellationToken = default)
     {
+        var route = Request.Path.Value;
+        var routeList = route?.Split("/", StringSplitOptions.RemoveEmptyEntries) ?? Array.Empty<string>();
+        if (routeList.Length < 2 || !string.Equals(routeList[0], "pages", StringComparison.OrdinalIgnoreCase))
+            return NotFound();
+
+        var slug = routeList[1];
         var session = await _auth.GetSessionAsync(cancellationToken);
         var contentRequest = new InfoPageRequest
         {
             Type = "INFORMATION",
             LanguageCode = session.LanguageCode,
-            Url = id
+            Url = slug
         };
         var routeResponse = await _content.GetInfoByUrlAsync(contentRequest, cancellationToken);
 

@@ -24,6 +24,33 @@ public static class MediaUrlHelper
 
 
 
+    /// <summary>Ürün görseli; boşsa CDNServices.ExtraContentPhotos varsayılanı.</summary>
+    public static string BuildProductImage(string? relativePath)
+    {
+        if (!string.IsNullOrWhiteSpace(relativePath))
+            return Build(relativePath);
+
+        return ResolveDefaultProductImage();
+    }
+
+    /// <summary>Logo / favicon gibi marka varlıkları (CMS CDNServices.Logo / Favicon tabanı).</summary>
+    public static string BuildBrandAsset(string? dedicatedBase, string? relativePath)
+    {
+        if (string.IsNullOrWhiteSpace(relativePath))
+            return string.Empty;
+
+        var path = relativePath.Trim().Replace('\\', '/');
+        if (path.StartsWith("http://", StringComparison.OrdinalIgnoreCase)
+            || path.StartsWith("https://", StringComparison.OrdinalIgnoreCase))
+            return NormalizeLocalDevUrl(path);
+
+        var baseUrl = ResolveDedicatedBase(dedicatedBase);
+        if (string.IsNullOrEmpty(baseUrl))
+            return path.StartsWith('/') ? path : "/" + path.TrimStart('/');
+
+        return NormalizeLocalDevUrl(baseUrl + path.TrimStart('/'));
+    }
+
     public static string Build(string? relativePath)
 
     {
@@ -95,6 +122,32 @@ public static class MediaUrlHelper
     }
 
 
+
+    private static string ResolveDefaultProductImage()
+    {
+        var fallback = AppConfig.CDNServices?.ExtraContentPhotos?.Trim() ?? "";
+        if (string.IsNullOrEmpty(fallback))
+            return string.Empty;
+
+        if (fallback.StartsWith("http://", StringComparison.OrdinalIgnoreCase)
+            || fallback.StartsWith("https://", StringComparison.OrdinalIgnoreCase))
+            return NormalizeLocalDevUrl(fallback);
+
+        if (fallback.StartsWith('/'))
+            return fallback;
+
+        return Build(fallback);
+    }
+
+    private static string ResolveDedicatedBase(string? dedicated)
+    {
+        var raw = string.IsNullOrWhiteSpace(dedicated)
+            ? AppConfig.CDNServices?.ContentUploads?.Trim() ?? ""
+            : dedicated.Trim();
+        if (string.IsNullOrEmpty(raw))
+            return string.Empty;
+        return raw.EndsWith('/') ? raw : raw + "/";
+    }
 
     private static string ResolveUploadsBase()
 

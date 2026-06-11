@@ -28,4 +28,5 @@ public class CDNServices
     public string ContentUploads { get; set; } = "";
     public string ExtraContentPhotos { get; set; } = "";
     public string Favicon { get; set; } = "";
+    public string Logo { get; set; } = "";
 }

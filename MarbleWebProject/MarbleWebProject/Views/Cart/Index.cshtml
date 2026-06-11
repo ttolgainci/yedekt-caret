@@ -16,7 +16,7 @@
 </nav><!-- End .breadcrumb-nav -->
 
 <div class="page-content">
-	<div class="cart">
+	<div class="cart store-cart-page">
 		<div class="container">
 			<div class="row">
 				<div class="col-lg-9">
@@ -38,13 +38,17 @@
 										<div class="product">
 											<figure class="product-media">
 												<a href="@item.Url">
-													<img src="@AppConfig.CDNServices.ContentUploads@item.MainImage" alt="Product image">
+													<img src="@MediaUrlHelper.BuildProductImage(item.MainImage)" alt="Product image">
 												</a>
 											</figure>
 
-											<h3 class="product-title">
-												<a href="@item.Url" class="cart-product-url">@item.ProductName</a>
-											</h3><!-- End .product-title -->
+											@{ ViewData["ProductUrl"] = item.Url; ViewData["ProductTitleLinkClass"] = "cart-product-url"; }
+											@await Html.PartialAsync("_ProductListTitlePartial", new ProductList
+											{
+												ProductID = item.ProductID,
+												ProductName = item.ProductName,
+												Url = item.Url
+											})
 										</div><!-- End .product -->
 										<input type="text" class="form-control cart-product-quantity-old" id="cartproductqty_@item.ProductID" value="@item.CartQuantity" hidden="hidden">
 									</td>

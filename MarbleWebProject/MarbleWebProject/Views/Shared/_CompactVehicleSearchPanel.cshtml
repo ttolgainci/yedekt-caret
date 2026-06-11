@@ -1,0 +1,39 @@
+@model ProductResultSearchViewModel
+@{
+    var makes = Model.VehicleMakes ?? Array.Empty<VehicleMakeListItem>();
+}
+<div class="home-vehicle-search-panel compact-vehicle-search-panel"
+     data-vehicle-search-panel
+     data-selected-make-id="@(Model.VehicleMakeId ?? 0)"
+     data-selected-model-id="@(Model.VehicleModelId ?? 0)"
+     data-selected-generation-id="@(Model.VehicleGenerationId ?? 0)"
+     data-selected-engine-id="@(Model.VehicleEngineId ?? 0)">
+    <div class="compact-vehicle-search-panel__fields">
+        <select class="form-control" data-vehicle-make aria-label="@Html.Translate("#Make#")">
+            <option value="">@Html.Translate("#Make#")</option>
+            @foreach (var make in makes.OrderBy(x => x.Name))
+            {
+                if (Model.VehicleMakeId == make.Id)
+                {
+                    <option value="@make.Id" selected>@make.Name</option>
+                }
+                else
+                {
+                    <option value="@make.Id">@make.Name</option>
+                }
+            }
+        </select>
+        <select class="form-control" data-vehicle-model disabled aria-label="@Html.Translate("#Model#")">
+            <option value="">@Html.Translate("#Model#")</option>
+        </select>
+        <select class="form-control" data-vehicle-generation disabled aria-label="@Html.Translate("#Generation#")">
+            <option value="">@Html.Translate("#Generation#")</option>
+        </select>
+        <select class="form-control" data-vehicle-engine disabled aria-label="@Html.Translate("#Engine#")">
+            <option value="">@Html.Translate("#Engine#")</option>
+        </select>
+        <button type="button" class="btn btn-vehicle-search compact-vehicle-search-panel__btn" data-vehicle-search-btn disabled>
+            @Html.Translate("#Search#")
+        </button>
+    </div>
+</div>

@@ -1,38 +1,31 @@
 @using MarbleWebProject.Helper
+@using MarbleWebProject.Services.Api
+@inject IStoreCustomerSession StoreCustomerSession
 @model MarbleWebProject.Models.HeaderNavigationModel
 @{
     var header = AppConfig.Storefront.Header;
+    var isCustomerLoggedIn = StoreCustomerSession.IsLoggedIn();
 }
 <header class="header header-2 header-intro-clearance">
-    <div class="header-top">
+    <div class="header-top store-header-top">
         <div class="container">
-            <div class="header-left">
-                <p>@Html.Translate("#Special collection already available.#")</p>
-            </div>
-            <div class="header-right">
-                <ul class="top-menu">
-                    <li>
-                        <a href="#">@Html.Translate("#Links#")</a>
-                        <ul>
-                            @if (StorefrontFlagHelper.IsActive(header, "HeaderLanguageV1"))
-                            {
-                                <li>@await Component.InvokeAsync("HeaderLanguageV1")</li>
-                            }
-                            else @if (StorefrontFlagHelper.IsActive(header, "HeaderLanguageV2"))
-                            {
-                                <li>@await Component.InvokeAsync("HeaderLanguageV2")</li>
-                            }
-                            @if (StorefrontFlagHelper.IsActive(header, "HeaderSignInV1"))
-                            {
-                                <li>@await Component.InvokeAsync("HeaderSignInV1")</li>
-                            }
-                            else @if (StorefrontFlagHelper.IsActive(header, "HeaderSignInV2"))
-                            {
-                                <li>@await Component.InvokeAsync("HeaderSignInV2")</li>
-                            }
-                        </ul>
-                    </li>
-                </ul>
+            <div class="store-header-top-bar">
+                @if (StorefrontFlagHelper.IsActive(header, "HeaderLanguageV1"))
+                {
+                    <div class="store-header-top-lang">@await Component.InvokeAsync("HeaderLanguageV1")</div>
+                }
+                else if (StorefrontFlagHelper.IsActive(header, "HeaderLanguageV2"))
+                {
+                    <div class="store-header-top-lang">@await Component.InvokeAsync("HeaderLanguageV2")</div>
+                }
+                @if (StorefrontFlagHelper.IsActive(header, "HeaderSignInV1"))
+                {
+                    <div class="store-header-top-auth js-customer-guest-only@(isCustomerLoggedIn ? " d-none" : "")">@await Component.InvokeAsync("HeaderSignInV1")</div>
+                }
+                else if (StorefrontFlagHelper.IsActive(header, "HeaderSignInV2"))
+                {
+                    <div class="store-header-top-auth js-customer-guest-only@(isCustomerLoggedIn ? " d-none" : "")">@await Component.InvokeAsync("HeaderSignInV2")</div>
+                }
             </div>
         </div>
     </div>
@@ -45,7 +38,7 @@
                     <i class="icon-bars"></i>
                 </button>
                 <a href="/" class="logo">
-                    <img src="~/assets/images/demos/demo-2/logo.png" alt="Logo" width="105" height="25">
+                    <img src="@StoreBrandingHelper.GetLogoUrl()" alt="@StoreBrandingHelper.GetStoreName()" width="105" height="25">
                 </a>
             </div>
 

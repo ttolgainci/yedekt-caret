@@ -1,0 +1,155 @@
+/* Mağaza temaları — appsettings StoreAuth:Theme body sınıfı ile seçilir
+ *
+ * store-theme-green    #a6c76c   store-theme-brown    #cc9966   store-theme-purple   #7c6ccc
+ * store-theme-blue     #3c6dc1   store-theme-red      #eb394c   store-theme-grass    #3dae2b
+ * store-theme-crimson  #e1111e   store-theme-navy     #2e3092   store-theme-burgundy #900049
+ * store-theme-gold     #ba8850   store-theme-sky      #0d95fa   store-theme-magenta  #800260
+ * store-theme-yellow   #fec646   store-theme-orange   #ef7a00   store-theme-teal     #2dc4b7
+ * store-theme-mint     #4faa9f
+ */
+
+:root,
+body.store-theme-green {
+    --store-brand: #a6c76c;
+    --store-brand-dark: #8fb356;
+    --store-brand-light: #f4f8ed;
+    --store-brand-shadow: rgba(166, 199, 108, 0.2);
+    --store-brand-muted-text: #4a6b28;
+    --store-brand-muted-border: #d7e8bf;
+}
+
+body.store-theme-brown {
+    --store-brand: #cc9966;
+    --store-brand-dark: #bf8040;
+    --store-brand-light: #faf3ed;
+    --store-brand-shadow: rgba(204, 153, 102, 0.2);
+    --store-brand-muted-text: #6b4a28;
+    --store-brand-muted-border: #e8d4bf;
+}
+
+body.store-theme-purple {
+    --store-brand: #7c6ccc;
+    --store-brand-dark: #6558b8;
+    --store-brand-light: #f3f0fa;
+    --store-brand-shadow: rgba(124, 108, 204, 0.2);
+    --store-brand-muted-text: #443a6b;
+    --store-brand-muted-border: #d8d0ef;
+}
+
+/* Ek temalar */
+body.store-theme-blue {
+    --store-brand: #3c6dc1;
+    --store-brand-dark: #335da5;
+    --store-brand-light: #ebf0f8;
+    --store-brand-shadow: rgba(60, 109, 193, 0.2);
+    --store-brand-muted-text: #182b4d;
+    --store-brand-muted-border: #d8e1f2;
+}
+
+body.store-theme-red {
+    --store-brand: #eb394c;
+    --store-brand-dark: #ca3141;
+    --store-brand-light: #fdebed;
+    --store-brand-shadow: rgba(235, 57, 76, 0.2);
+    --store-brand-muted-text: #5e161e;
+    --store-brand-muted-border: #fbd7db;
+}
+
+body.store-theme-grass {
+    --store-brand: #3dae2b;
+    --store-brand-dark: #349524;
+    --store-brand-light: #ebf6e9;
+    --store-brand-shadow: rgba(61, 174, 43, 0.2);
+    --store-brand-muted-text: #184511;
+    --store-brand-muted-border: #d8eed4;
+}
+
+body.store-theme-crimson {
+    --store-brand: #e1111e;
+    --store-brand-dark: #c10e19;
+    --store-brand-light: #fce7e8;
+    --store-brand-shadow: rgba(225, 17, 30, 0.2);
+    --store-brand-muted-text: #5a060c;
+    --store-brand-muted-border: #f9cfd2;
+}
+
+body.store-theme-navy {
+    --store-brand: #2e3092;
+    --store-brand-dark: #27297d;
+    --store-brand-light: #eaeaf4;
+    --store-brand-shadow: rgba(46, 48, 146, 0.2);
+    --store-brand-muted-text: #12133a;
+    --store-brand-muted-border: #d5d5e9;
+}
+
+body.store-theme-burgundy {
+    --store-brand: #900049;
+    --store-brand-dark: #7b003e;
+    --store-brand-light: #f3e5ec;
+    --store-brand-shadow: rgba(144, 0, 73, 0.2);
+    --store-brand-muted-text: #39001d;
+    --store-brand-muted-border: #e8ccda;
+}
+
+body.store-theme-gold {
+    --store-brand: #ba8850;
+    --store-brand-dark: #9f7444;
+    --store-brand-light: #f8f3ed;
+    --store-brand-shadow: rgba(186, 136, 80, 0.2);
+    --store-brand-muted-text: #4a3620;
+    --store-brand-muted-border: #f1e7dc;
+}
+
+body.store-theme-sky {
+    --store-brand: #0d95fa;
+    --store-brand-dark: #0b80d7;
+    --store-brand-light: #e6f4fe;
+    --store-brand-shadow: rgba(13, 149, 250, 0.2);
+    --store-brand-muted-text: #053b64;
+    --store-brand-muted-border: #cee9fe;
+}
+
+body.store-theme-magenta {
+    --store-brand: #800260;
+    --store-brand-dark: #6e0152;
+    --store-brand-light: #f2e5ef;
+    --store-brand-shadow: rgba(128, 2, 96, 0.2);
+    --store-brand-muted-text: #330026;
+    --store-brand-muted-border: #e5ccdf;
+}
+
+body.store-theme-yellow {
+    --store-brand: #fec646;
+    --store-brand-dark: #daaa3c;
+    --store-brand-light: #fef9ec;
+    --store-brand-shadow: rgba(254, 198, 70, 0.2);
+    --store-brand-muted-text: #654f1c;
+    --store-brand-muted-border: #fef3da;
+}
+
+body.store-theme-orange {
+    --store-brand: #ef7a00;
+    --store-brand-dark: #cd6800;
+    --store-brand-light: #fdf1e5;
+    --store-brand-shadow: rgba(239, 122, 0, 0.2);
+    --store-brand-muted-text: #5f3000;
+    --store-brand-muted-border: #fbe4cc;
+}
+
+body.store-theme-teal {
+    --store-brand: #2dc4b7;
+    --store-brand-dark: #26a89d;
+    --store-brand-light: #eaf9f7;
+    --store-brand-shadow: rgba(45, 196, 183, 0.2);
+    --store-brand-muted-text: #124e49;
+    --store-brand-muted-border: #d5f3f0;
+}
+
+body.store-theme-mint {
+    --store-brand: #4faa9f;
+    --store-brand-dark: #439288;
+    --store-brand-light: #edf6f5;
+    --store-brand-shadow: rgba(79, 170, 159, 0.2);
+    --store-brand-muted-text: #1f443f;
+    --store-brand-muted-border: #dbeeeb;
+}

@@ -18,14 +18,18 @@
         $sel.prop('disabled', true).val('');
     }
 
-    function fillSelect($sel, items, getValue, getLabel) {
+    function fillSelect($sel, items, getValue, getLabel, selectedId) {
         var placeholder = $sel.data('placeholder') || $sel.find('option:first').text();
         $sel.empty().append($('<option>', { value: '', text: placeholder }));
         items.forEach(function (item) {
             var val = getValue(item);
             var label = getLabel(item);
             if (val != null && val !== '' && label) {
-                $sel.append($('<option>', { value: String(val), text: label }));
+                var $opt = $('<option>', { value: String(val), text: label });
+                if (selectedId && String(selectedId) === String(val)) {
+                    $opt.prop('selected', true);
+                }
+                $sel.append($opt);
             }
         });
         $sel.prop('disabled', items.length === 0);
@@ -47,6 +51,41 @@
         if (fuel) parts.push(fuel);
         if (hp) parts.push(hp + ' HP');
         return parts.filter(Boolean).join(' · ');
+    }
+
+    function readSelectedId($panel, key) {
+        var raw = $panel.data(key);
+        var num = parseInt(raw, 10);
+        return !isNaN(num) && num > 0 ? num : null;
+    }
+
+    function preloadSelection($panel, $make, $model, $gen, $engine, updateSearchBtn) {
+        var makeId = readSelectedId($panel, 'selectedMakeId');
+        var modelId = readSelectedId($panel, 'selectedModelId');
+        var genId = readSelectedId($panel, 'selectedGenerationId');
+        var engineId = readSelectedId($panel, 'selectedEngineId');
+
+        if (!makeId) return $.when();
+
+        $make.val(String(makeId));
+
+        return fetchCatalog('/vehicle-catalog/makes/' + makeId + '/models')
+            .then(function (models) {
+                fillSelect($model, models, idOf, nameOf, modelId);
+                if (!modelId) return;
+                return fetchCatalog('/vehicle-catalog/models/' + modelId + '/generations');
+            })
+            .then(function (gens) {
+                if (!gens) return;
+                fillSelect($gen, gens, idOf, generationLabel, genId);
+                if (!genId) return;
+                return fetchCatalog('/vehicle-catalog/generations/' + genId + '/engines');
+            })
+            .then(function (engines) {
+                if (!engines) return;
+                fillSelect($engine, engines, idOf, engineLabel, engineId);
+                updateSearchBtn();
+            });
     }
 
     function initPanel($panel) {
@@ -102,6 +141,13 @@
 
         $engine.on('change', updateSearchBtn);
 
+        function navigateToVehicleSearch(url) {
+            if (window.showStorePageLoading) {
+                window.showStorePageLoading();
+            }
+            window.location.href = url;
+        }
+
         $btn.on('click', function () {
             var engineId = $engine.val();
             var makeId = $make.val();
@@ -116,33 +162,31 @@
                 engineId: engineId
             });
 
+            var fallbackUrl = '/arama?vehicleEngineId=' + encodeURIComponent(engineId)
+                + '&vehicleMakeId=' + encodeURIComponent(makeId)
+                + '&vehicleModelId=' + encodeURIComponent(modelId)
+                + '&vehicleGenerationId=' + encodeURIComponent(genId);
+
             $btn.prop('disabled', true);
             fetch('/vehicle-catalog/search-url?' + query.toString())
                 .then(function (res) { return res.json(); })
                 .then(function (res) {
                     if (res && res.status && res.url) {
-                        window.location.href = res.url;
+                        navigateToVehicleSearch(res.url);
                         return;
                     }
-                    window.location.href = '/arama?vehicleEngineId=' + encodeURIComponent(engineId)
-                        + '&vehicleMakeId=' + encodeURIComponent(makeId)
-                        + '&vehicleModelId=' + encodeURIComponent(modelId)
-                        + '&vehicleGenerationId=' + encodeURIComponent(genId);
+                    navigateToVehicleSearch(fallbackUrl);
                 })
                 .catch(function () {
-                    window.location.href = '/arama?vehicleEngineId=' + encodeURIComponent(engineId)
-                        + '&vehicleMakeId=' + encodeURIComponent(makeId)
-                        + '&vehicleModelId=' + encodeURIComponent(modelId)
-                        + '&vehicleGenerationId=' + encodeURIComponent(genId);
-                })
-                .finally(function () {
-                    $btn.prop('disabled', !$engine.val());
+                    navigateToVehicleSearch(fallbackUrl);
                 });
         });
+
+        preloadSelection($panel, $make, $model, $gen, $engine, updateSearchBtn).always(updateSearchBtn);
     }
 
     $(function () {
-        $('[data-home-vehicle-search]').each(function () {
+        $('[data-vehicle-search-panel]').each(function () {
             initPanel($(this));
         });
     });

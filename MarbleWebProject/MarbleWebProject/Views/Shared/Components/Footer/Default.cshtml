@@ -72,7 +72,7 @@
             <div class="row">
                 <div class="col-sm-12 col-lg-6">
                     <div class="widget widget-about">
-                        <img src="~/assets/images/demos/demo-2/logo.png" class="footer-logo" alt="Footer Logo" width="105" height="25">
+                        <img src="@StoreBrandingHelper.GetLogoUrl()" class="footer-logo" alt="@StoreBrandingHelper.GetStoreName()" width="105" height="25">
                         @if (StorefrontFlagHelper.IsActive(footer, "FooterInfoTopV1"))
                         {
                             @await Component.InvokeAsync("FooterInfoTopV1")

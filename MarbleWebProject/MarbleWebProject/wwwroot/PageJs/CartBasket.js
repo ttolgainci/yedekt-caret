@@ -1,10 +1,17 @@
 function resolveMediaUrl(path) {
-    if (!path) return '';
+    if (!path || !String(path).trim()) {
+        path = (window.MarbleStore && window.MarbleStore.defaultProductImage) || '';
+        if (!path) return '';
+    }
+    path = String(path).trim();
     if (path.indexOf('http://') === 0 || path.indexOf('https://') === 0) {
         return path.replace(/^https:\/\/(localhost|127\.0\.0\.1)/i, 'http://$1');
     }
+    if (path.charAt(0) === '/') {
+        return path;
+    }
     var base = (window.MarbleStore && window.MarbleStore.mediaBase) || '';
-    if (!base) return path.charAt(0) === '/' ? path : '/' + path;
+    if (!base) return '/' + path.replace(/^\/+/, '');
     if (base.charAt(base.length - 1) !== '/') base += '/';
     return base + path.replace(/^\/+/, '');
 }
@@ -141,7 +148,9 @@ function buildCartDrawerHtml(data, dataTotal) {
         str += "<img src='" + resolveMediaUrl(item.image) + "' alt=''>";
         str += "</a>";
         str += "<div class='store-cart-line-info'>";
-        str += "<a href='" + url + "' class='store-cart-line-title'>" + item.name + "</a>";
+        var lineName = item.name || '';
+        var lineNameAttr = lineName.replace(/&/g, '&amp;').replace(/"/g, '&quot;').replace(/'/g, '&#39;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
+        str += "<a href='" + url + "' class='store-cart-line-title store-product-name' title='" + lineNameAttr + "'>" + lineName + "</a>";
         str += "<div class='store-cart-line-unit'><span class='cartProductPrice basket-product-price'>" + formatLineMoney(unitPrice) + "</span> " + (item.currency || '') + "</div>";
         str += "<div class='store-cart-line-qty'>";
         str += "<button type='button' class='store-cart-qty-btn js-cart-qty-minus' aria-label='-'>−</button>";

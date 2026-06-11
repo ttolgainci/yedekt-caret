@@ -2,6 +2,7 @@ using MarbleWebProject.Helpers;
 using MarbleWebProject.Models;
 using MarbleWebProject.Services;
 using MarbleWebProject.Services.Api;
+using MarbleWebProject.Services.Storefront;
 using Microsoft.AspNetCore.Mvc;
 
 namespace MarbleWebProject.Controllers;
@@ -11,15 +12,18 @@ public class ProductResultController : Controller
     private readonly IStoreCatalogApi _catalog;
     private readonly IStoreAuthService _auth;
     private readonly IProductSearchUrlResolver _urlResolver;
+    private readonly IStorefrontRuntimeProvider _storefront;
 
     public ProductResultController(
         IStoreCatalogApi catalog,
         IStoreAuthService auth,
-        IProductSearchUrlResolver urlResolver)
+        IProductSearchUrlResolver urlResolver,
+        IStorefrontRuntimeProvider storefront)
     {
         _catalog = catalog;
         _auth = auth;
         _urlResolver = urlResolver;
+        _storefront = storefront;
     }
 
     public Task<IActionResult> Category(
@@ -117,6 +121,8 @@ public class ProductResultController : Controller
             PageSize = pageSize,
         };
 
+        await ApplySearchResultLayoutAsync(model, cancellationToken);
+
         TempData["Title"] = model.Title;
         TempData["Description"] = model.Summary;
         return View(model);
@@ -160,12 +166,12 @@ public class ProductResultController : Controller
         VehicleSearchPriceRangeModel? priceRange = null;
 
         var catFilterResponse = await _catalog.GetSubcategoriesByCategoryAsync(
-            categoryId, session.LanguageCode, brandId, cancellationToken);
+            categoryId, session.LanguageCode, brandId: null, cancellationToken);
         if (catFilterResponse.Status && catFilterResponse.Data != null)
             filterCategories = catFilterResponse.Data;
 
         var brandFilterResponse = await _catalog.GetBrandsByCategoryAsync(
-            categoryId, session.LanguageCode, brandId, cancellationToken);
+            categoryId, session.LanguageCode, brandId: null, cancellationToken);
         if (brandFilterResponse.Status && brandFilterResponse.Data != null)
             filterBrands = brandFilterResponse.Data;
 
@@ -190,7 +196,7 @@ public class ProductResultController : Controller
         }
 
         var priceRangeResponse = await _catalog.GetPriceRangeByCategoryAsync(
-            categoryId, session.LanguageCode, brandId, minPrice, maxPrice, cancellationToken);
+            categoryId, session.LanguageCode, brandId: null, minPrice, maxPrice, cancellationToken);
         if (priceRangeResponse.Status && priceRangeResponse.Data != null && priceRangeResponse.Data.HasRange)
         {
             priceRange = priceRangeResponse.Data;
@@ -235,6 +241,8 @@ public class ProductResultController : Controller
             return RedirectPermanent(AppendFilterQuery(canonicalPath, null, brandId, minPrice, maxPrice, pageNumber));
         }
 
+        var categoryPicture = await ResolveCategoryPictureAsync(categoryId, session.LanguageCode, cancellationToken);
+
         var model = new ProductResultSearchViewModel
         {
             Mode = ProductSearchMode.Category,
@@ -242,6 +250,7 @@ public class ProductResultController : Controller
             Summary = BuildCategorySummary(products.Count, totalCount),
             CategorySlug = categorySlugPart,
             CategoryId = categoryId,
+            CategoryPicture = categoryPicture,
             BrandId = brandId,
             MinPrice = minPrice,
             MaxPrice = maxPrice,
@@ -255,6 +264,8 @@ public class ProductResultController : Controller
             FilterCategories = filterCategories,
             FilterBrands = filterBrands,
         };
+
+        await ApplySearchResultLayoutAsync(model, cancellationToken);
 
         TempData["Title"] = model.Title;
         TempData["Description"] = metaDesc ?? model.Summary ?? model.Title;
@@ -341,12 +352,12 @@ public class ProductResultController : Controller
         VehicleSearchPriceRangeModel? priceRange = null;
 
         var catResponse = await _catalog.GetCategoriesByVehicleEngineAsync(
-            vehicle.EngineId, session.LanguageCode, brandId, cancellationToken);
+            vehicle.EngineId, session.LanguageCode, brandId: null, cancellationToken);
         if (catResponse.Status && catResponse.Data != null)
             filterCategories = catResponse.Data;
 
         var brandResponse = await _catalog.GetBrandsByVehicleEngineAsync(
-            vehicle.EngineId, session.LanguageCode, categoryId, cancellationToken);
+            vehicle.EngineId, session.LanguageCode, categoryId: null, cancellationToken);
         if (brandResponse.Status && brandResponse.Data != null)
             filterBrands = brandResponse.Data;
 
@@ -374,8 +385,8 @@ public class ProductResultController : Controller
         var priceRangeResponse = await _catalog.GetPriceRangeByVehicleEngineAsync(
             vehicle.EngineId,
             session.LanguageCode,
-            categoryId,
-            brandId,
+            categoryId: null,
+            brandId: null,
             minPrice,
             maxPrice,
             cancellationToken);
@@ -386,6 +397,11 @@ public class ProductResultController : Controller
             if (!string.IsNullOrWhiteSpace(priceRange.CurrencySymbol))
                 currencySymbol = priceRange.CurrencySymbol.Trim();
         }
+
+        var vehicleMakes = new List<VehicleMakeListItem>();
+        var makesResponse = await _catalog.GetVehicleMakesAsync(cancellationToken);
+        if (makesResponse.Status && makesResponse.Data != null)
+            vehicleMakes = makesResponse.Data;
 
         var model = new ProductResultSearchViewModel
         {
@@ -400,6 +416,16 @@ public class ProductResultController : Controller
             VehicleModelSlug = vehicle.ModelSlug,
             VehicleGenerationSlug = vehicle.GenerationSlug,
             VehicleEngineSlug = vehicle.EngineSlug,
+            VehicleMakeName = vehicle.MakeName,
+            VehicleModelName = vehicle.ModelName,
+            VehicleGenerationName = vehicle.GenerationName,
+            VehicleEngineCode = vehicle.EngineCode,
+            VehicleGenerationStartYear = vehicle.GenerationStartYear,
+            VehicleGenerationEndYear = vehicle.GenerationEndYear,
+            VehiclePowerHp = vehicle.PowerHp,
+            VehicleFuelType = vehicle.FuelType,
+            VehiclePicture = vehicle.MakePicture,
+            VehicleMakes = vehicleMakes,
             CategoryId = categoryId,
             BrandId = brandId,
             MinPrice = minPrice,
@@ -415,10 +441,18 @@ public class ProductResultController : Controller
             FilterBrands = filterBrands,
         };
 
+        await ApplySearchResultLayoutAsync(model, cancellationToken);
+
         TempData["Title"] = model.Title;
         TempData["Description"] = model.Summary ?? model.Title;
 
         return View("Index", model);
+    }
+
+    private async Task ApplySearchResultLayoutAsync(ProductResultSearchViewModel model, CancellationToken cancellationToken)
+    {
+        var runtime = await _storefront.GetAsync(cancellationToken);
+        model.SearchResultLayout = StorefrontSearchLayoutKeys.Normalize(runtime.SearchResultLayout);
     }
 
     private static string BuildVehicleRedirectUrl(
@@ -457,6 +491,39 @@ public class ProductResultController : Controller
         if (pageNumber > 1) parts.Add($"pageNumber={pageNumber}");
 
         return parts.Count == 0 ? url : url + "?" + string.Join("&", parts);
+    }
+
+    private async Task<string?> ResolveCategoryPictureAsync(
+        int categoryId,
+        string languageCode,
+        CancellationToken cancellationToken)
+    {
+        var tree = await _catalog.GetCategoriesAsync(
+            new CategoryRequest { languageCode = languageCode },
+            cancellationToken);
+        if (!tree.Status || tree.Data == null)
+            return null;
+
+        return FindCategoryPicture(tree.Data, categoryId);
+    }
+
+    private static string? FindCategoryPicture(IEnumerable<CategoryListModel> nodes, int categoryId)
+    {
+        foreach (var node in nodes)
+        {
+            var id = node.CategoryID > 0 ? node.CategoryID : node.ID;
+            if (id == categoryId && !string.IsNullOrWhiteSpace(node.Picture))
+                return node.Picture;
+
+            if (node.SubCat is { Count: > 0 })
+            {
+                var found = FindCategoryPicture(node.SubCat, categoryId);
+                if (!string.IsNullOrWhiteSpace(found))
+                    return found;
+            }
+        }
+
+        return null;
     }
 
     private static string BuildCategorySummary(int showing, int total)

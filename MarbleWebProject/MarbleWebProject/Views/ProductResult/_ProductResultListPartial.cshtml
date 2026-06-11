@@ -1,48 +1,231 @@
 @using MarbleWebProject.Helpers
+
 @model ProductResultSearchViewModel
 
-<div class="products mb-3 product-result-grid">
-    <div class="row justify-content-center">
-        @foreach (var item in Model.Products)
+
+
+@{
+
+    var layout = Model.SearchResultLayout;
+
+    var isList = StorefrontSearchLayoutHelper.IsListLayout(layout);
+
+    var containerClass = StorefrontSearchLayoutHelper.GetContainerClass(layout);
+
+    var columnClass = StorefrontSearchLayoutHelper.GetColumnClass(layout);
+
+    var productClass = StorefrontSearchLayoutHelper.GetProductClass(layout);
+
+}
+
+
+
+@if (!Model.Products.Any())
+{
+    <div class="product-result-empty text-center">
+        <div class="product-result-empty__icon" aria-hidden="true">
+            <i class="icon-search"></i>
+        </div>
+        <h2 class="product-result-empty__title">@Html.Translate("#No products found.#")</h2>
+        @if (!string.IsNullOrWhiteSpace(Model.Summary))
         {
-            var img = MediaUrlHelper.Build(item.MainImage);
-            var productUrl = "/" + (item.Url ?? "").TrimStart('/');
-            <div class="col-6 col-md-4 col-lg-4 col-xl-3">
-                <div class="product product-7 text-center">
-                    <figure class="product-media">
-                        @await Html.PartialAsync("_ProductListStockPartial", item)
-                        <a href="@productUrl">
-                            <img src="@img" alt="@item.ProductName" class="product-image">
-                        </a>
-                        <div class="product-action">
-                            @{ ViewData["ProductUrl"] = productUrl; }
-                            @await Html.PartialAsync("_ProductListAddToCartPartial", item)
-                        </div>
-                    </figure>
-                    <div class="product-body">
-                        @if (!string.IsNullOrWhiteSpace(item.CategoryName))
-                        {
-                            <div class="product-cat">
-                                <span>@item.CategoryName</span>
-                            </div>
-                        }
-                        <h3 class="product-title"><a href="@productUrl">@item.ProductName</a></h3>
-                        @if (item.Price.HasValue)
-                        {
-                            var currency = !string.IsNullOrWhiteSpace(item.CurrencyName) ? item.CurrencyName : Model.CurrencySymbol;
-                            <div class="product-price">
-                                @Model.FormatPriceWithCurrency(item.Price, currency)
-                            </div>
-                        }
-                        @await Html.PartialAsync("_ProductListQuantityPartial", item)
-                    </div>
-                </div>
-            </div>
+            <p class="product-result-empty__lead">@Model.Summary</p>
         }
     </div>
-</div>
-
-@if (Model.Products.Count == 0)
-{
-    <p class="text-center py-5">@Html.Translate("#No products found.#")</p>
 }
+else
+{
+<div class="@containerClass">
+
+    @if (isList)
+
+    {
+
+        @foreach (var item in Model.Products)
+
+        {
+
+            var img = MediaUrlHelper.BuildProductImage(item.MainImage);
+
+            var productUrl = "/" + (item.Url ?? "").TrimStart('/');
+
+            <div class="@productClass">
+
+                <div class="row">
+
+                    <div class="col-6 col-lg-3">
+
+                        <figure class="product-media">
+
+                            @await Html.PartialAsync("_ProductListStockPartial", item)
+
+                            <a href="@productUrl">
+
+                                <img src="@img" alt="@item.ProductName" class="product-image">
+
+                            </a>
+
+                        </figure>
+
+                    </div>
+
+                    <div class="col-6 col-lg-3 order-lg-last">
+
+                        <div class="product-list-action">
+
+                            @if (item.Price.HasValue)
+
+                            {
+
+                                var currency = !string.IsNullOrWhiteSpace(item.CurrencyName) ? item.CurrencyName : Model.CurrencySymbol;
+
+                                <div class="product-price">
+
+                                    @Model.FormatPriceWithCurrency(item.Price, currency)
+
+                                </div>
+
+                            }
+
+                            <div class="product-action">
+
+                                @{ ViewData["ProductUrl"] = productUrl; }
+
+                                @await Html.PartialAsync("_ProductListAddToCartPartial", item)
+
+                            </div>
+
+                        </div>
+
+                    </div>
+
+                    <div class="col-lg-6">
+
+                        <div class="product-body product-action-inner">
+
+                            @{ ViewData["ProductUrl"] = productUrl; ViewData["WishlistButtonStyle"] = "list"; }
+
+                            @await Html.PartialAsync("_ProductListWishlistPartial", item)
+
+                            @if (!string.IsNullOrWhiteSpace(item.CategoryName))
+
+                            {
+
+                                <div class="product-cat">
+
+                                    <span>@item.CategoryName</span>
+
+                                </div>
+
+                            }
+
+                            @{ ViewData["ProductUrl"] = productUrl; }
+                            @await Html.PartialAsync("_ProductListTitlePartial", item)
+
+                            @await Html.PartialAsync("_ProductListQuantityPartial", item)
+
+                        </div>
+
+                    </div>
+
+                </div>
+
+            </div>
+
+        }
+
+    }
+
+    else
+
+    {
+
+        <div class="row justify-content-center">
+
+            @foreach (var item in Model.Products)
+
+            {
+
+                var img = MediaUrlHelper.BuildProductImage(item.MainImage);
+
+                var productUrl = "/" + (item.Url ?? "").TrimStart('/');
+
+                <div class="@columnClass">
+
+                    <div class="@productClass">
+
+                        <figure class="product-media">
+
+                            @await Html.PartialAsync("_ProductListStockPartial", item)
+
+                            <a href="@productUrl">
+
+                                <img src="@img" alt="@item.ProductName" class="product-image">
+
+                            </a>
+
+                            <div class="product-action-vertical">
+
+                                @{ ViewData["ProductUrl"] = productUrl; }
+
+                                @await Html.PartialAsync("_ProductListWishlistPartial", item)
+
+                            </div>
+
+                            <div class="product-action">
+
+                                @await Html.PartialAsync("_ProductListAddToCartPartial", item)
+
+                            </div>
+
+                        </figure>
+
+                        <div class="product-body">
+
+                            @if (!string.IsNullOrWhiteSpace(item.CategoryName))
+
+                            {
+
+                                <div class="product-cat">
+
+                                    <span>@item.CategoryName</span>
+
+                                </div>
+
+                            }
+
+                            @{ ViewData["ProductUrl"] = productUrl; }
+                            @await Html.PartialAsync("_ProductListTitlePartial", item)
+
+                            @if (item.Price.HasValue)
+
+                            {
+
+                                var currency = !string.IsNullOrWhiteSpace(item.CurrencyName) ? item.CurrencyName : Model.CurrencySymbol;
+
+                                <div class="product-price">
+
+                                    @Model.FormatPriceWithCurrency(item.Price, currency)
+
+                                </div>
+
+                            }
+
+                            @await Html.PartialAsync("_ProductListQuantityPartial", item)
+
+                        </div>
+
+                    </div>
+
+                </div>
+
+            }
+
+        </div>
+
+    }
+
+</div>
+}
+
+

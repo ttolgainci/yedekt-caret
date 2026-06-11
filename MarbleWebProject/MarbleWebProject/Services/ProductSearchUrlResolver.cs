@@ -13,7 +13,16 @@ public sealed record VehicleSearchPath(
     string MakeSlug,
     string ModelSlug,
     string GenerationSlug,
-    string EngineSlug);
+    string EngineSlug,
+    string MakeName,
+    string ModelName,
+    string GenerationName,
+    string EngineCode,
+    int? GenerationStartYear,
+    int? GenerationEndYear,
+    int? PowerHp,
+    string? FuelType,
+    string? MakePicture);
 
 public interface IProductSearchUrlResolver
 {
@@ -234,7 +243,16 @@ public sealed class ProductSearchUrlResolver : IProductSearchUrlResolver
             UrlSlugHelper.NameSegment(make.Name),
             UrlSlugHelper.NameSegment(model.Name),
             UrlSlugHelper.GenerationSegment(generation.Name),
-            UrlSlugHelper.EngineSegment(engine.EngineCode));
+            UrlSlugHelper.EngineSegment(engine.EngineCode),
+            make.Name.Trim(),
+            model.Name.Trim(),
+            generation.Name.Trim(),
+            engine.EngineCode.Trim(),
+            generation.StartYear,
+            generation.EndYear,
+            engine.PowerHp,
+            engine.FuelType,
+            make.Picture);
 
     private static int? FindCategoryIdInTree(IEnumerable<CategoryListModel> nodes, string target)
     {

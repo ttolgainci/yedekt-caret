@@ -14,13 +14,11 @@
             $('.store-account-menu-user .js-customer-display-name').text(displayName);
         }
         $('.js-customer-guest-only').addClass('d-none');
-        $('.js-customer-guest-only').closest('li').addClass('d-none');
         $('.js-customer-logged-only').removeClass('d-none');
     }
 
     function setCustomerLoggedOut() {
         $('.js-customer-guest-only').removeClass('d-none');
-        $('.js-customer-guest-only').closest('li').removeClass('d-none');
         $('.js-customer-logged-only').addClass('d-none');
         $('.store-account-menu-user .js-customer-display-name').text('');
     }
@@ -29,11 +27,13 @@
         return $.ajax({
             type: 'GET',
             url: '/account/me'
-        }).then(function (result) {
-            if (result && result.displayName) {
+        }).done(function (result) {
+            if (result && result.loggedIn && result.displayName) {
                 setCustomerLoggedIn(result.displayName);
+            } else {
+                setCustomerLoggedOut();
             }
-        }).catch(function () {
+        }).fail(function () {
             setCustomerLoggedOut();
         });
     }
@@ -100,20 +100,6 @@
                 var msg = (xhr.responseJSON && xhr.responseJSON.message) ? xhr.responseJSON.message : 'Kayıt başarısız.';
                 showAuthError(msg);
             }
-        });
-    });
-
-    $(document).on('click', '.js-customer-logout', function (e) {
-        e.preventDefault();
-        $.ajax({
-            type: 'POST',
-            url: '/account/logout'
-        }).always(function () {
-            setCustomerLoggedOut();
-            if (typeof window.reloadCartFromServer === 'function') {
-                window.reloadCartFromServer();
-            }
-            window.location.href = '/';
         });
     });
 

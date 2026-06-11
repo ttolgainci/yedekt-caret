@@ -734,11 +734,27 @@ public class AccountController : Controller
 
 
 
-    [HttpPost]
+    [HttpGet]
 
     [Route("account/logout")]
 
     public async Task<IActionResult> Logout(CancellationToken cancellationToken)
+
+    {
+
+        await _customerSession.ClearAsync(cancellationToken);
+
+        return Redirect("/");
+
+    }
+
+
+
+    [HttpPost]
+
+    [Route("account/logout")]
+
+    public async Task<IActionResult> LogoutApi(CancellationToken cancellationToken)
 
     {
 
@@ -762,13 +778,15 @@ public class AccountController : Controller
 
         if (auth?.Customer == null)
 
-            return Unauthorized();
+            return Ok(new { loggedIn = false });
 
 
 
         return Ok(new
 
         {
+
+            loggedIn = true,
 
             customer = auth.Customer,
 

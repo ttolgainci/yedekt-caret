@@ -1,21 +1,39 @@
+@using Microsoft.Extensions.Options
+@using MarbleWebProject.Models.Options
+@inject IOptions<StoreAuthOptions> StoreAuthConfig
+@{
+    var storeThemeClass = StoreThemeHelper.Resolve(StoreAuthConfig.Value.Theme);
+    var isHomePage = string.Equals(ViewContext.RouteData.Values["controller"]?.ToString(), "Home", StringComparison.OrdinalIgnoreCase)
+        && string.Equals(ViewContext.RouteData.Values["action"]?.ToString(), "Index", StringComparison.OrdinalIgnoreCase);
+    var seo = StoreSeoHelper.Resolve(ViewContext, isHomePage);
+    var faviconUrl = StoreBrandingHelper.GetFaviconUrl();
+}
 <!DOCTYPE html>
 <html lang="tr">
 <head>
     <meta charset="UTF-8">
     <meta http-equiv="X-UA-Compatible" content="IE=edge">
     <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
-    <title>@(TempData["Title"] ?? ViewData["Title"] ?? "Mağaza")</title>
-    @if (TempData["Keywords"] != null)
+    <title>@seo.Title</title>
+    @if (!string.IsNullOrWhiteSpace(seo.Keywords))
     {
-        <meta name="keywords" content="@TempData["Keywords"]" />
+        <meta name="keywords" content="@seo.Keywords" />
     }
-    @if (TempData["Description"] != null)
+    @if (!string.IsNullOrWhiteSpace(seo.Description))
     {
-        <meta name="description" content="@TempData["Description"]" />
+        <meta name="description" content="@seo.Description" />
     }
-    <link rel="apple-touch-icon" sizes="180x180" href="~/assets/images/icons/apple-touch-icon.png">
-    <link rel="icon" type="image/png" sizes="32x32" href="~/assets/images/icons/favicon-32x32.png">
-    <link rel="shortcut icon" href="~/assets/images/icons/favicon.ico">
+    @if (!string.IsNullOrWhiteSpace(faviconUrl))
+    {
+        <link rel="icon" href="@faviconUrl">
+        <link rel="shortcut icon" href="@faviconUrl">
+    }
+    else
+    {
+        <link rel="apple-touch-icon" sizes="180x180" href="~/assets/images/icons/apple-touch-icon.png">
+        <link rel="icon" type="image/png" sizes="32x32" href="~/assets/images/icons/favicon-32x32.png">
+        <link rel="shortcut icon" href="~/assets/images/icons/favicon.ico">
+    }
     <link rel="stylesheet" href="~/assets/vendor/line-awesome/line-awesome/line-awesome/css/line-awesome.min.css">
     <link rel="stylesheet" href="~/assets/css/bootstrap.min.css">
     <link rel="stylesheet" href="~/assets/css/plugins/owl-carousel/owl.carousel.css">
@@ -24,10 +42,12 @@
     <link rel="stylesheet" href="~/assets/css/style.css">
     <link rel="stylesheet" href="~/assets/css/skins/skin-demo-2.css">
     <link rel="stylesheet" href="~/assets/css/demos/demo-2.css">
-    <link rel="stylesheet" href="~/css/store-custom.css">
+    <link rel="stylesheet" href="~/css/store-themes.css" asp-append-version="true">
+    <link rel="stylesheet" href="~/css/store-custom.css" asp-append-version="true">
+    <link rel="stylesheet" href="~/css/store-molla-theme.css" asp-append-version="true">
     @await RenderSectionAsync("Styles", required: false)
 </head>
-<body>
+<body class="@storeThemeClass">
     <div class="page-wrapper">
         @await Component.InvokeAsync("Header")
         <main class="main">
@@ -57,12 +77,14 @@
     <script>
         window.MarbleStore = {
             mediaBase: '@MediaUrlHelper.GetUploadsBaseUrl()',
+            defaultProductImage: @Html.Raw(System.Text.Json.JsonSerializer.Serialize(MediaUrlHelper.BuildProductImage(null))),
             apiBase: '@AppConfig.CMSService.EndPoint.TrimEnd('/')'
         };
     </script>
     <script src="~/PageJs/Master.js"></script>
     <script src="~/PageJs/PageLoading.js" asp-append-version="true"></script>
     <script src="~/PageJs/CartBasket.js" asp-append-version="true"></script>
+    <script src="~/PageJs/Wishlist.js" asp-append-version="true"></script>
     <script src="~/PageJs/CustomerAuth.js" asp-append-version="true"></script>
     <script src="~/PageJs/Function.js"></script>
     <script src="~/PageJs/home-vehicle-search.js" asp-append-version="true"></script>

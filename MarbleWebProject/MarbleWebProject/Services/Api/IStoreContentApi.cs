@@ -11,4 +11,6 @@ public interface IStoreContentApi
     Task<BaseResponse<List<AllBannerResponse>>> GetBannerAllAsync(BannerAllRequest request, CancellationToken cancellationToken = default);
     Task<BaseResponse<AllInfoResponse>> GetInfoByUrlAsync(InfoPageRequest request, CancellationToken cancellationToken = default);
     Task<BaseResponse<List<InformationRouteModel>>> GetInformationForRouteAsync(CancellationToken cancellationToken = default);
+    Task<BaseResponse<StorefrontFooterLinksModel>> GetFooterLinksAsync(string languageCode, CancellationToken cancellationToken = default);
+    Task<BaseResponse<StorefrontCheckoutLegalModel>> GetCheckoutLegalAsync(string languageCode, CancellationToken cancellationToken = default);
 }

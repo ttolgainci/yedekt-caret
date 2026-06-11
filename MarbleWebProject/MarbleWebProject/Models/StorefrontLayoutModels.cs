@@ -65,6 +65,8 @@ public sealed class PlaceOrderApiRequest
     public int? CustomerId { get; set; }
     public string? PaymentMethod { get; set; }
     public int? BankAccountId { get; set; }
+    public List<PlaceOrderLegalConsentApiItem>? LegalConsents { get; set; }
+    public string? ClientIpAddress { get; set; }
 }
 
 public sealed class PlaceOrderApiResponse

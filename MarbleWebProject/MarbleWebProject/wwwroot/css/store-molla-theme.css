@@ -1,0 +1,189 @@
+/* Molla skin-demo-2 / demo-2 — sabit #a6c76c kurallarını tema değişkenlerine bağlar */
+
+body[class*="store-theme-"] ::-moz-selection {
+    background-color: var(--store-brand);
+}
+
+body[class*="store-theme-"] ::selection {
+    background-color: var(--store-brand);
+}
+
+body[class*="store-theme-"] .bg-primary {
+    background-color: var(--store-brand) !important;
+}
+
+body[class*="store-theme-"] .text-primary {
+    color: var(--store-brand) !important;
+}
+
+/* skin-demo-2 sabit link rengi — ürün başlığı ayrıca #333 ile korunur */
+body[class*="store-theme-"] a {
+    color: var(--store-brand);
+}
+
+body[class*="store-theme-"] a:hover,
+body[class*="store-theme-"] a:focus {
+    color: var(--store-brand-dark);
+}
+
+body[class*="store-theme-"] .btn-link {
+    color: var(--store-brand);
+}
+
+body[class*="store-theme-"] .btn-link:hover,
+body[class*="store-theme-"] .btn-link:focus {
+    color: var(--store-brand-dark);
+}
+
+body[class*="store-theme-"] .btn-primary {
+    color: #fff;
+    background-color: var(--store-brand);
+    border-color: var(--store-brand);
+}
+
+body[class*="store-theme-"] .btn-primary:hover,
+body[class*="store-theme-"] .btn-primary:focus {
+    color: #fff;
+    background-color: var(--store-brand-dark);
+    border-color: var(--store-brand-dark);
+}
+
+body[class*="store-theme-"] .btn-outline-primary {
+    color: var(--store-brand);
+    border-color: var(--store-brand);
+}
+
+body[class*="store-theme-"] .btn-outline-primary:hover,
+body[class*="store-theme-"] .btn-outline-primary:focus {
+    color: #fff;
+    background-color: var(--store-brand);
+    border-color: var(--store-brand);
+}
+
+body[class*="store-theme-"] .btn-outline-primary-2 {
+    color: var(--store-brand);
+    border-color: var(--store-brand);
+}
+
+body[class*="store-theme-"] .btn-outline-primary-2:hover,
+body[class*="store-theme-"] .btn-outline-primary-2:focus {
+    color: #fff;
+    background-color: var(--store-brand);
+    border-color: var(--store-brand);
+}
+
+body[class*="store-theme-"] .breadcrumb-item a:hover,
+body[class*="store-theme-"] .breadcrumb-item a:focus {
+    color: var(--store-brand);
+}
+
+/* Ürün fiyatları — sabit #1b1c1e (store-custom.css) */
+
+/* Ürün adları — koyu sabit (tema rengi olmamalı) */
+body[class*="store-theme-"] .product-title,
+body[class*="store-theme-"] .product-title a,
+body[class*="store-theme-"] .product-title a:hover,
+body[class*="store-theme-"] .product-title a:focus {
+    color: #333 !important;
+}
+
+body[class*="store-theme-"] .product-action-vertical .btn-product-icon:hover,
+body[class*="store-theme-"] .product-action-vertical .btn-product-icon:focus {
+    color: var(--store-brand);
+}
+
+body[class*="store-theme-"] .intro-slide .btn-primary:hover,
+body[class*="store-theme-"] .intro-slide .btn-primary:focus {
+    background-color: var(--store-brand);
+    border-color: var(--store-brand);
+}
+
+body[class*="store-theme-"] .custom-control-input:checked ~ .custom-control-label::before {
+    border-color: var(--store-brand);
+    background-color: var(--store-brand);
+}
+
+body[class*="store-theme-"] .custom-control.custom-radio .custom-control-input:checked ~ .custom-control-label::after {
+    background-color: var(--store-brand);
+}
+
+body[class*="store-theme-"] .product-body .btn-wishlist:hover,
+body[class*="store-theme-"] .product-body .btn-wishlist:focus {
+    color: var(--store-brand);
+}
+
+body[class*="store-theme-"] #scroll-top {
+    background-color: var(--store-brand);
+}
+
+body[class*="store-theme-"] #scroll-top:hover,
+body[class*="store-theme-"] #scroll-top:focus {
+    background-color: var(--store-brand-dark);
+}
+
+/* Header — wishlist / sepet */
+body[class*="store-theme-"] .header-intro-clearance .header-middle .header-right .wishlist .icon,
+body[class*="store-theme-"] .header-intro-clearance .header-middle .header-right .cart-dropdown .icon {
+    color: var(--store-brand) !important;
+}
+
+body[class*="store-theme-"] .header-intro-clearance .wishlist > a:hover,
+body[class*="store-theme-"] .header-intro-clearance .wishlist > a:focus,
+body[class*="store-theme-"] .header-intro-clearance .cart-dropdown:hover > a,
+body[class*="store-theme-"] .header-intro-clearance .cart-dropdown.show > a {
+    color: #333;
+}
+
+body[class*="store-theme-"] .header-intro-clearance .wishlist .wishlist-count,
+body[class*="store-theme-"] .header-intro-clearance .cart-dropdown .cart-count {
+    background-color: var(--store-brand) !important;
+    color: #fff !important;
+}
+
+body[class*="store-theme-"] .cart-dropdown:hover .dropdown-toggle,
+body[class*="store-theme-"] .cart-dropdown.show .dropdown-toggle,
+body[class*="store-theme-"] .compare-dropdown:hover .dropdown-toggle,
+body[class*="store-theme-"] .compare-dropdown.show .dropdown-toggle {
+    color: var(--store-brand) !important;
+}
+
+/* Sepet / checkout fiyatları — sabit #1b1c1e (store-custom.css) */
+
+/* Checkout accordion ok — skin .card-title a:before / :after */
+body[class*="store-theme-"] .checkout-accordion .card-title a::before,
+body[class*="store-theme-"] .accordion-summary .card-title a::before {
+    color: var(--store-brand) !important;
+    border-color: var(--store-brand) !important;
+}
+
+body[class*="store-theme-"] .checkout-accordion .card-title a::after,
+body[class*="store-theme-"] .accordion-summary .card-title a::after {
+    background-color: var(--store-brand) !important;
+}
+
+body[class*="store-theme-"] .checkout-accordion .card-title a.collapsed::before {
+    border-color: #dadada;
+}
+
+body[class*="store-theme-"] .checkout-page .checkout-accordion .card-title a:not(.collapsed) {
+    color: var(--store-brand) !important;
+}
+
+/* product-7 — sepete ekle (wishlist, arama grid) */
+body[class*="store-theme-"] .product.product-7 .btn-product.btn-cart,
+body[class*="store-theme-"] .product.product-7 .btn-product.btn-cart span {
+    color: var(--store-brand) !important;
+}
+
+body[class*="store-theme-"] .product.product-7 .btn-product.btn-cart:hover,
+body[class*="store-theme-"] .product.product-7 .btn-product.btn-cart:focus {
+    color: #fff !important;
+    background-color: var(--store-brand) !important;
+    border-color: var(--store-brand) !important;
+    border-bottom-color: var(--store-brand) !important;
+}
+
+body[class*="store-theme-"] .product.product-7 .btn-product.btn-cart:hover span,
+body[class*="store-theme-"] .product.product-7 .btn-product.btn-cart:focus span {
+    color: #fff !important;
+}

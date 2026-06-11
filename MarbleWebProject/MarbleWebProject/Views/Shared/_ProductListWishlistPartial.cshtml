@@ -1,0 +1,25 @@
+@using MarbleWebProject.Helper
+@model ProductList
+@{
+    var productUrl = (ViewData["ProductUrl"] as string ?? Model.Url ?? "#").Trim();
+    if (!productUrl.StartsWith('/'))
+    {
+        productUrl = "/" + productUrl.TrimStart('/');
+    }
+    var addLabel = Html.Translate("#Add to Wishlist#");
+    var removeLabel = Html.Translate("#Remove from Wishlist#");
+    var wishlistStyle = (ViewData["WishlistButtonStyle"] as string ?? "icon").Trim().ToLowerInvariant();
+    var btnClass = wishlistStyle == "list"
+        ? "btn-product btn-wishlist js-toggle-wishlist"
+        : "btn-product-icon btn-wishlist btn-expandable js-toggle-wishlist";
+}
+<a href="#"
+   class="@btnClass"
+   data-pid="@Model.ProductID"
+   data-purl="@productUrl"
+   data-add-label="@addLabel"
+   data-remove-label="@removeLabel"
+   title="@addLabel"
+   onclick="toggleWishlist(this); return false;">
+    <span>@addLabel</span>
+</a>
