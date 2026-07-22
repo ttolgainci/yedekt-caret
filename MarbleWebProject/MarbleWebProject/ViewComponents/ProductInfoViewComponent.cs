@@ -1,15 +1,16 @@
-﻿using MarbleWebProject.Models;
+using MarbleWebProject.Models;
 using Microsoft.AspNetCore.Mvc;
 
 namespace MarbleWebProject.ViewComponents
 {
-
     [ViewComponent]
     public class ProductInfoViewComponent : ViewComponent
     {
-        public async Task<IViewComponentResult> InvokeAsync(ProductInfo model)
+        public Task<IViewComponentResult> InvokeAsync(ProductInfoPageModel model)
         {
-            return View(model);
+            model ??= new ProductInfoPageModel();
+            model.Product ??= new ProductInfo();
+            return Task.FromResult<IViewComponentResult>(View(model));
         }
     }
 }

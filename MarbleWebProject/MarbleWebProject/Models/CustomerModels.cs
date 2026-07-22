@@ -11,6 +11,8 @@ public sealed class CustomerRegisterForm
     public string? CompanyName { get; set; }
     public string? TaxOffice { get; set; }
     public string? TaxNumber { get; set; }
+    public bool AcceptKvkk { get; set; } = true;
+    public bool MarketingConsent { get; set; }
 }
 
 public sealed class CustomerLoginForm
@@ -38,6 +40,8 @@ public sealed class CustomerProfileModel
 public sealed class CustomerAuthResult
 {
     public string Token { get; set; } = "";
+    public string? RefreshToken { get; set; }
+    public DateTime? RefreshTokenExpiresAt { get; set; }
     public string? LanguageCode { get; set; }
     public string? LanguageName { get; set; }
     public string? LanguageCulture { get; set; }

@@ -1,4 +1,4 @@
-﻿@using MarbleWebProject.Helper
+@using MarbleWebProject.Helper
 @model WishlistSetModel
 @{
     Layout = "~/Views/Shared/_Layout.cshtml";
@@ -75,7 +75,7 @@
                                 })
                                 @if (item.Price.HasValue)
                                 {
-                                    <div class="product-price">@item.Price @item.CurrencyName</div>
+                                    <div class="product-price">@CurrencyDisplayHelper.FormatAmount(item.Price, item.CurrencyName)</div>
                                 }
                             </div>
                         </div>

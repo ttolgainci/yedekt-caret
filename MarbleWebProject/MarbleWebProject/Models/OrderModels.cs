@@ -47,6 +47,9 @@ public sealed class ShopOrderLineModel
     public int Quantity { get; set; }
     public decimal UnitPrice { get; set; }
     public decimal LineTotal { get; set; }
+    public decimal VatRate { get; set; }
+    public decimal VatAmount { get; set; }
+    public decimal TotalAmount { get; set; }
     public string ProductNameSnapshot { get; set; } = "";
     public string? SkuSnapshot { get; set; }
     public string? Picture { get; set; }
@@ -54,12 +57,31 @@ public sealed class ShopOrderLineModel
 
 public sealed class ShopOrderShipmentSnapshotModel
 {
+    public string? ShipmentNumber { get; set; }
     public string? TrackingNumber { get; set; }
+    public string? TrackingUrl { get; set; }
     public string? CarrierName { get; set; }
     public string Status { get; set; } = "";
     public string StatusText { get; set; } = "";
     public decimal ShippingPrice { get; set; }
     public DateTime? EstimatedDeliveryDate { get; set; }
+    public DateTime? LastTrackedAtUtc { get; set; }
+    public List<ShopOrderShipmentTrackingEventModel> TrackingEvents { get; set; } = new();
+}
+
+public sealed class ShopOrderShipmentTrackingEventModel
+{
+    public DateTimeOffset AtUtc { get; set; }
+    public string Code { get; set; } = "";
+    public string Description { get; set; } = "";
+}
+
+public sealed class ShipmentTrackingResultModel
+{
+    public string? TrackingNumber { get; set; }
+    public string Status { get; set; } = "";
+    public DateTimeOffset CheckedAtUtc { get; set; }
+    public List<ShopOrderShipmentTrackingEventModel> Events { get; set; } = new();
 }
 
 public sealed class OrderAddressSnapshotModel
@@ -99,4 +121,11 @@ public sealed class MergeCartForm
 {
     public string? GuestUserId { get; set; }
     public string? LanguageCode { get; set; }
+}
+
+public sealed class CheckoutPaymentProviderModel
+{
+    public string Code { get; set; } = "";
+    public string Name { get; set; } = "";
+    public bool IsDefault { get; set; }
 }

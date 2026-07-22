@@ -8,6 +8,14 @@ public sealed class StoreSeoHead
     public string Title { get; init; } = "";
     public string? Keywords { get; init; }
     public string? Description { get; init; }
+    public string? CanonicalUrl { get; init; }
+    public IReadOnlyList<StoreSeoAlternate>? Alternates { get; init; }
+}
+
+public sealed class StoreSeoAlternate
+{
+    public string Hreflang { get; init; } = "";
+    public string Href { get; init; } = "";
 }
 
 /// <summary>CMS general SEO — tek noktadan title / meta çözümleme.</summary>
@@ -63,11 +71,39 @@ public static class StoreSeoHelper
         else
             keywords = null;
 
+        string? canonical = null;
+        if (viewContext.ViewData["CanonicalUrl"] is string canonicalPath && !string.IsNullOrWhiteSpace(canonicalPath))
+        {
+            var request = viewContext.HttpContext.Request;
+            var path = canonicalPath.StartsWith('/') ? canonicalPath : "/" + canonicalPath;
+            canonical = $"{request.Scheme}://{request.Host}{path}";
+        }
+
+        IReadOnlyList<StoreSeoAlternate>? alternates = null;
+        if (viewContext.ViewData["HreflangAlternates"] is IEnumerable<ProductAlternateUrlModel> altModels)
+        {
+            var request = viewContext.HttpContext.Request;
+            alternates = altModels
+                .Where(a => !string.IsNullOrWhiteSpace(a.LanguageCode) && !string.IsNullOrWhiteSpace(a.Path))
+                .Select(a =>
+                {
+                    var path = a.Path.StartsWith('/') ? a.Path : "/" + a.Path;
+                    return new StoreSeoAlternate
+                    {
+                        Hreflang = a.LanguageCode.Trim().ToLowerInvariant(),
+                        Href = $"{request.Scheme}://{request.Host}{path}"
+                    };
+                })
+                .ToList();
+        }
+
         return new StoreSeoHead
         {
             Title = title,
             Keywords = keywords,
-            Description = description
+            Description = description,
+            CanonicalUrl = canonical,
+            Alternates = alternates
         };
     }
 

@@ -23,7 +23,7 @@ public class HomeFeaturedProductsV2ViewComponent : ViewComponent
     public async Task<IViewComponentResult> InvokeAsync(List<CategoryListModel>? models = null, CancellationToken cancellationToken = default)
     {
         var cacheHelper = new CacheHelper(_cache);
-        var key = "CategoryListHeader" + AppConfig.CMSService.CustomName + AppConfig.CMSService.MarketCode + AppConfig.CMSService.LanguageCode;
+        var key = "CategoryListHeader" + AppConfig.Storefront.StoreAuth.CustomName + AppConfig.Storefront.StoreAuth.MarketCode + AppConfig.Storefront.StoreAuth.LanguageCode;
 
         if (!cacheHelper.IfCache(key))
         {

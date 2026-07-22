@@ -38,6 +38,16 @@ public sealed class CustomerAddressForm
 
     public string? DeliveryInstructions { get; set; }
 
+    public string InvoiceType { get; set; } = "Individual";
+
+    public string? TaxNumber { get; set; }
+
+    public string? TaxOffice { get; set; }
+
+    public string? CompanyName { get; set; }
+
+    public bool IsEInvoice { get; set; }
+
 }
 
 
@@ -87,6 +97,16 @@ public sealed class CustomerAddressModel
     public string? DeliveryInstructions { get; set; }
 
     public string DisplayLine { get; set; } = "";
+
+    public string InvoiceType { get; set; } = "Individual";
+
+    public string? TaxNumber { get; set; }
+
+    public string? TaxOffice { get; set; }
+
+    public string? CompanyName { get; set; }
+
+    public bool IsEInvoice { get; set; }
 
 }
 

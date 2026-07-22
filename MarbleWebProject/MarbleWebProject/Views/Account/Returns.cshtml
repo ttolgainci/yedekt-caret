@@ -1,0 +1,17 @@
+@{
+    ViewData["Title"] = "İade Taleplerim";
+}
+
+<div class="store-account-panel store-account-returns-panel">
+    <h2 class="store-account-panel-title">İade Taleplerim</h2>
+    <p class="text-muted small">Kargoya verilmiş veya teslim edilmiş siparişleriniz için iade talebi oluşturabilirsiniz.</p>
+    <div id="returns-list"></div>
+    <div id="return-detail" class="d-none mt-4">
+        <button type="button" class="btn btn-link px-0 mb-2" id="return-back">&larr; Listeye dön</button>
+        <div id="return-detail-body"></div>
+    </div>
+</div>
+
+@section Scripts {
+    <script src="~/PageJs/CustomerReturns.js"></script>
+}

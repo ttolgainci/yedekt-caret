@@ -2,8 +2,12 @@ using MarbleWebProject.Models;
 
 namespace MarbleWebProject.Helpers;
 
+/// <summary>Sepet/checkout toplamları — gösterilen ürün fiyatları KDV dahildir.</summary>
 public static class CartBasketMergeHelper
 {
+    public static decimal ComputeGrossSubtotal(IEnumerable<CartModel> lines) =>
+        lines.Sum(line => (line.Price ?? 0) * (line.CartQuantity ?? 0));
+
     public static List<OrderBasket> MergeLines(IEnumerable<OrderBasket>? items)
     {
         if (items == null)
@@ -45,7 +49,8 @@ public static class CartBasketMergeHelper
             Url = x.Url ?? "#",
             Price = x.Price,
             CurrencyName = x.Currency ?? string.Empty,
-            CartQuantity = x.quantity
+            CartQuantity = x.quantity,
+            TaxPercent = x.Tax
         }).ToList();
     }
 
@@ -58,17 +63,15 @@ public static class CartBasketMergeHelper
 
         model.CartList = ToCartModels(merged);
         var currency = merged.FirstOrDefault()?.Currency ?? string.Empty;
-        var total = merged.Sum(c => (c.Price ?? 0) * (c.quantity ?? 0));
+        var total = ComputeGrossSubtotal(model.CartList);
         model.Info.CurrencyName = currency;
-        model.Info.Total = "<span class='basket-total-price'>" + total.ToString("N2") + "</span> " + currency;
+        model.Info.Total = "<span class='basket-total-price'>" + CurrencyDisplayHelper.FormatAmount(total, currency) + "</span>";
         model.Info.TotalQuantity = merged.Sum(c => c.quantity ?? 0);
         return model;
     }
 
-    public static BasketReturnModel BuildReturnInfo(IEnumerable<OrderBasket>? items)
-    {
-        return BuildReturnInfo(BuildBasketSetModel(items));
-    }
+    public static BasketReturnModel BuildReturnInfo(IEnumerable<OrderBasket>? items) =>
+        BuildReturnInfo(BuildBasketSetModel(items));
 
     public static BasketReturnModel BuildReturnInfo(BasketSetModel model)
     {
@@ -78,6 +81,7 @@ public static class CartBasketMergeHelper
 
         var currency = model.Info.CurrencyName ?? string.Empty;
         info.SubtotalPrice = AppendCurrencyIfMissing(model.Info.Subtotal, currency);
+        info.DrawerTotalPrice = AppendCurrencyIfMissing(model.Info.Total, currency);
         info.TotalPrice = AppendCurrencyIfMissing(model.Info.GrandTotal ?? model.Info.Total, currency);
         info.TotalQuantity = model.Info.TotalQuantity;
         info.ShippingPrice = model.Info.ShippingPrice;

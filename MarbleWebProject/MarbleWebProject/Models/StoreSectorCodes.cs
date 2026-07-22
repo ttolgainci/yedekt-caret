@@ -1,6 +1,6 @@
 namespace MarbleWebProject.Models;
 
-/// <summary>Sektör string sabitleri. Kurulum: appsettings ProjectService:SectorCode.</summary>
+/// <summary>Sektör string sabitleri. Kurulum: appsettings StoreAuth:SectorCode.</summary>
 public static class StoreSectorCodes
 {
     public const string Apparel = "APPAREL";

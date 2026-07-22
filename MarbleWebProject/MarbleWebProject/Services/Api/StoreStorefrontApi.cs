@@ -20,7 +20,7 @@ public sealed class StoreStorefrontApi : IStoreStorefrontApi
     public Task<BaseResponse<StorefrontPageLayoutModel>> GetHomeLayoutAsync(CancellationToken cancellationToken = default)
     {
         var tenant = AppConfig.ProjectName;
-        var sector = AppConfig.ProjectService.SectorCode;
+        var sector = AppConfig.Storefront.StoreAuth.SectorCode;
         var path = $"/api/storefront/layout/home?customName={Uri.EscapeDataString(tenant)}&sectorCode={Uri.EscapeDataString(sector)}";
         return _api.GetAsync<BaseResponse<StorefrontPageLayoutModel>>(path, null, cancellationToken);
     }
@@ -28,13 +28,16 @@ public sealed class StoreStorefrontApi : IStoreStorefrontApi
     public Task<BaseResponse<StorefrontPublishedLayoutModel>> GetPublishedLayoutAsync(CancellationToken cancellationToken = default)
     {
         var tenant = AppConfig.ProjectName;
-        var sector = AppConfig.ProjectService.SectorCode;
+        var sector = AppConfig.Storefront.StoreAuth.SectorCode;
         var path = $"/api/storefront/layout/published?customName={Uri.EscapeDataString(tenant)}&sectorCode={Uri.EscapeDataString(sector)}";
         return _api.GetAsync<BaseResponse<StorefrontPublishedLayoutModel>>(path, null, cancellationToken);
     }
 
     public Task<BaseResponse<StoreGeneralSettingsModel>> GetGeneralSettingsAsync(CancellationToken cancellationToken = default)
         => _api.GetAsync<BaseResponse<StoreGeneralSettingsModel>>("/api/storefront/settings/general", null, cancellationToken);
+
+    public Task<BaseResponse<List<StoreCurrencyModel>>> GetCurrenciesAsync(CancellationToken cancellationToken = default)
+        => _api.GetAsync<BaseResponse<List<StoreCurrencyModel>>>("/api/storefront/currencies", null, cancellationToken);
 
     public async Task<BaseResponse<List<CampaignActiveModel>>> GetActiveCampaignsAsync(CancellationToken cancellationToken = default)
     {

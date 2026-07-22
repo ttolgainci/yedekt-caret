@@ -67,6 +67,9 @@ public sealed class PlaceOrderApiRequest
     public int? BankAccountId { get; set; }
     public List<PlaceOrderLegalConsentApiItem>? LegalConsents { get; set; }
     public string? ClientIpAddress { get; set; }
+    public string? ClientUserAgent { get; set; }
+    public string? SalesChannel { get; set; }
+    public string? CustomerNote { get; set; }
 }
 
 public sealed class PlaceOrderApiResponse
@@ -77,9 +80,18 @@ public sealed class PlaceOrderApiResponse
     public string CurrencyCode { get; set; } = "";
     public string CurrencySymbol { get; set; } = "";
     public decimal CampaignDiscount { get; set; }
+    public decimal ShippingTotal { get; set; }
+    public List<PlaceOrderLineApiResponse> Lines { get; set; } = new();
     public DateTime? PaymentDueAt { get; set; }
     public int? BankAccountId { get; set; }
     public string? BankName { get; set; }
     public string? BankAccountHolder { get; set; }
     public string? BankIban { get; set; }
+}
+
+public sealed class PlaceOrderLineApiResponse
+{
+    public string ProductName { get; set; } = "";
+    public int Quantity { get; set; }
+    public decimal LineTotal { get; set; }
 }

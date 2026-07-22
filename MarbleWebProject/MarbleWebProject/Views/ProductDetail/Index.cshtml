@@ -1,4 +1,4 @@
-﻿@{
+@{
 
     Layout = "~/Views/Shared/_Layout.cshtml";
 }
@@ -15,11 +15,21 @@
                 <div class="row">
                     @await Component.InvokeAsync("ProductDetailImage", Model.ProductImages)
 
-                    @await Component.InvokeAsync("ProductInfo", Model.ProductDetails)
+                    @await Component.InvokeAsync("ProductInfo", new ProductInfoPageModel
+                    {
+                        Product = Model.ProductDetails,
+                        HasVehicleFitment = Model.VehicleFitments != null && Model.VehicleFitments.Any(x => !string.IsNullOrWhiteSpace(x.Label))
+                    })
 
                 </div><!-- End .row -->
             </div><!-- End .product-details-top -->
-            @await Component.InvokeAsync("ProductAttributeDetail", Model.ProductAttributes)
+            @await Component.InvokeAsync("ProductAttributeDetail", new ProductDetailTabsViewModel
+            {
+                Description = Model.ProductDetails?.Description,
+                Product = Model.ProductDetails,
+                Attributes = Model.ProductAttributes ?? new List<ProductAttributeList>(),
+                VehicleFitments = Model.VehicleFitments ?? new List<ProductVehicleFitmentItem>()
+            })
 
 
             @await Component.InvokeAsync("ProductDetailSimilar", Model.ProductSimilarData)
@@ -30,51 +40,29 @@
 {
     <script type="text/javascript">
         $(document).ready(function () {
-            // var mySwiper = new Swiper('#product-zoom-gallery', {
-            //     direction: 'vertical',
-            //     effect: 'slide',
-            //     slidesPerView: 4,
-            //     // loop: true,
-            //     // autoplay: {
-            //     //     delay: 2000,
-            //     //     reverseDirection: true,
-            //     //     disableOnInteraction: false,
-            //     // },
-            // })
-            var sliderThumbs = new Swiper('.swiper-container', { // ищем слайдер превью по селектору
-                direction: 'vertical',
-                slidesPerView: 4,
-                spaceBetween: 30,
-                loop: true,
-                breakpoints: {
-                    320: {
-                        slidesPerView: 1,
-                        spaceBetweenSlides: 25
-                    },
-                    600: {
-                        slidesPerView: 2,
-                        spaceBetweenSlides: 25
-                    },
-                    991: {
-                        slidesPerView: 3,
-                        spaceBetweenSlides: 25
-                    },
-                    1240: {
-                        slidesPerView: 3,
-                        spaceBetweenSlides: 25
-                    },
-                    1600: {
-                        slidesPerView: 4,
-                        spaceBetweenSlides: 25
-                    }
-                },
-                navigation: {
-                    nextEl: '.swiper-button-next',
-                    prevEl: '.swiper-button-prev',
-                },
+            $('#fitment-link').on('click', function (e) {
+                e.preventDefault();
 
+                var $tabLink = $('#product-fitment-link');
+                var $tabPane = $('#product-fitment-tab');
+                if (!$tabLink.length || !$tabPane.length) {
+                    return;
+                }
+
+                var $tabs = $('.product-details-tab');
+                if ($tabs.length) {
+                    var scrolloffset = ($(window).width() >= 992)
+                        ? ($tabs.offset().top - 72)
+                        : ($tabs.offset().top - 10);
+                    $('html, body').animate({ scrollTop: scrolloffset }, 600);
+                }
+
+                $tabs.find('.nav-link').removeClass('active').attr('aria-selected', 'false');
+                $tabs.find('.tab-pane').removeClass('show active');
+                $tabLink.addClass('active').attr('aria-selected', 'true');
+                $tabPane.addClass('show active');
+                $tabLink.tab('show');
             });
-
         });
     </script>
     <script src="~/PageJs/ProductDetail.js"></script>

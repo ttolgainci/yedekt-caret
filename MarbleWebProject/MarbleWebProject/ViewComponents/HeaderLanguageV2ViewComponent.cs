@@ -23,7 +23,7 @@ public class HeaderLanguageV2ViewComponent : ViewComponent
     public async Task<IViewComponentResult> InvokeAsync(CancellationToken cancellationToken = default)
     {
         var cacheHelper = new CacheHelper(_cache);
-        var key = "LanguageMenuV2" + AppConfig.CMSService.CustomName + AppConfig.CMSService.LanguageCode;
+        var key = "LanguageMenuV2" + AppConfig.Storefront.StoreAuth.CustomName + AppConfig.Storefront.StoreAuth.LanguageCode;
 
         if (cacheHelper.IfCache(key))
         {

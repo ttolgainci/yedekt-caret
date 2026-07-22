@@ -1,4 +1,4 @@
-﻿using MarbleWebProject.Helper;
+using MarbleWebProject.Helper;
 using MarbleWebProject.Models;
 using Newtonsoft.Json.Linq;
 using System.Net.Http;
@@ -50,9 +50,9 @@ namespace MarbleWebProject.Services
         //    }
         //    else
         //    {
-        //        loginRequest.UserName =AppConfig.CMSService.UserName;
-        //        loginRequest.Password = AppConfig.CMSService.Password;
-        //        loginRequest.CustomName = AppConfig.CMSService.CustomName;
+        //        loginRequest.UserName =AppConfig.Storefront.StoreAuth.UserName;
+        //        loginRequest.Password = AppConfig.Storefront.StoreAuth.Password;
+        //        loginRequest.CustomName = AppConfig.Storefront.StoreAuth.CustomName;
         //        var asd = Login(_httpClient, loginRequest);
         //        loginResponse = asd.Result.Data;
         //    }

@@ -14,21 +14,18 @@ using Microsoft.AspNetCore.Server.Kestrel.Core;
 var builder = WebApplication.CreateBuilder(args);
 var configuration = builder.Configuration;
 
-var apiBaseUrl = NormalizeLocalDevServiceUrl(
-    (configuration.GetValue<string>("ApiService:BaseUrl")
-        ?? configuration.GetValue<string>("CMSService:EndPoint")
-        ?? "http://localhost:5206").Trim().TrimEnd('/'));
+// Mağaza entegrasyonları yalnızca API üzerinden — IntegrationClientConventions (Faz 0).
 
-AppConfig.CMSService = new CMSService
-{
-    EndPoint = apiBaseUrl,
-    CustomName = configuration.GetValue<string>("StoreAuth:CustomName")
-        ?? configuration.GetValue<string>("CMSService:CustomName") ?? "",
-    Password = configuration.GetValue<string>("StoreAuth:Password")
-        ?? configuration.GetValue<string>("CMSService:Password") ?? "",
-    UserName = configuration.GetValue<string>("StoreAuth:UserName")
-        ?? configuration.GetValue<string>("CMSService:UserName") ?? "",
-};
+var apiBaseUrl = NormalizeLocalDevServiceUrl(
+    (configuration.GetValue<string>("ApiService:BaseUrl") ?? "http://localhost:5206").Trim().TrimEnd('/'));
+
+var storeAuth = configuration.GetSection(StoreAuthOptions.SectionName).Get<StoreAuthOptions>()
+    ?? new StoreAuthOptions();
+storeAuth.EndPoint = apiBaseUrl;
+storeAuth.Theme = StoreThemeHelper.Resolve(storeAuth.Theme);
+ProjectSector.ApplyConfigurationDefaults(storeAuth);
+
+AppConfig.Storefront.StoreAuth = storeAuth;
 AppConfig.CDNServices = new CDNServices
 {
     ContentUploads = NormalizeLocalDevServiceUrl(configuration.GetValue<string>("CDNServices:ContentUploads") ?? ""),
@@ -36,23 +33,23 @@ AppConfig.CDNServices = new CDNServices
     Favicon = configuration.GetValue<string>("CDNServices:Favicon") ?? "",
     Logo = configuration.GetValue<string>("CDNServices:Logo") ?? "",
 };
-AppConfig.ProjectService = ProjectServiceSettings.FromConfiguration(configuration);
 
 builder.Services.Configure<ApiServiceOptions>(configuration.GetSection(ApiServiceOptions.SectionName));
-builder.Services.AddOptions<ProjectServiceSettings>()
-    .BindConfiguration(ProjectServiceSettings.SectionName)
-    .PostConfigure(ProjectSector.ApplyConfigurationDefaults);
-builder.Services.Configure<StoreAuthOptions>(options =>
-{
-    configuration.GetSection(StoreAuthOptions.SectionName).Bind(options);
-    if (string.IsNullOrWhiteSpace(options.UserName))
-        options.UserName = configuration.GetValue<string>("CMSService:UserName") ?? "";
-    if (string.IsNullOrWhiteSpace(options.Password))
-        options.Password = configuration.GetValue<string>("CMSService:Password") ?? "";
-    if (string.IsNullOrWhiteSpace(options.CustomName))
-        options.CustomName = configuration.GetValue<string>("CMSService:CustomName") ?? "";
-    options.Theme = StoreThemeHelper.Resolve(options.Theme);
-});
+builder.Services.AddOptions<StoreAuthOptions>()
+    .BindConfiguration(StoreAuthOptions.SectionName)
+    .PostConfigure(options =>
+    {
+        options.UserName = storeAuth.UserName;
+        options.Password = storeAuth.Password;
+        options.CustomName = storeAuth.CustomName;
+        options.Theme = storeAuth.Theme;
+        options.StoreSectorType = storeAuth.StoreSectorType;
+        options.SectorCode = storeAuth.SectorCode;
+        options.ProjectName = storeAuth.ProjectName;
+        options.HeaderNavMaxVisibleCategories = storeAuth.HeaderNavMaxVisibleCategories;
+        options.EndPoint = storeAuth.EndPoint;
+        ProjectSector.ApplyConfigurationDefaults(options);
+    });
 
 builder.Services.AddHttpClient<IStoreApiClient, StoreApiClient>()
     .ConfigurePrimaryHttpMessageHandler(() =>
@@ -71,6 +68,8 @@ builder.Services.AddScoped<IStoreCustomerSession, StoreCustomerSession>();
 builder.Services.AddScoped<IStoreCustomerAddressApi, StoreCustomerAddressApi>();
 builder.Services.AddScoped<IStoreLocationApi, StoreLocationApi>();
 builder.Services.AddScoped<IStoreOrderApi, StoreOrderApi>();
+builder.Services.AddScoped<IStoreInvoiceApi, StoreInvoiceApi>();
+builder.Services.AddScoped<IStoreReturnApi, StoreReturnApi>();
 builder.Services.AddScoped<IBasketUserIdProvider, BasketUserIdProvider>();
 builder.Services.AddScoped<IStoreCatalogApi, StoreCatalogApi>();
 builder.Services.AddScoped<IProductSearchUrlResolver, ProductSearchUrlResolver>();
@@ -81,6 +80,7 @@ builder.Services.AddScoped<IStoreContentApi, StoreContentApi>();
 builder.Services.AddScoped<IStoreRouteBootstrap, StoreRouteBootstrap>();
 builder.Services.AddScoped<IStoreStorefrontApi, StoreStorefrontApi>();
 builder.Services.AddScoped<IStorefrontRuntimeProvider, StorefrontRuntimeProvider>();
+builder.Services.AddScoped<IStoreCurrencyFormatter, StoreCurrencyFormatter>();
 builder.Services.AddSingleton<ICheckoutDraftStore, CheckoutDraftStore>();
 
 builder.Services.AddScoped<TelemetryClient>();
@@ -210,6 +210,16 @@ var routeDefinitions = routeList.Count > 0
 app.MapControllers();
 
 app.MapControllerRoute(
+    name: "account-invoice-preview",
+    pattern: "account/invoices/{id:int}/preview",
+    defaults: new { controller = "Account", action = "InvoicePreview" });
+
+app.MapControllerRoute(
+    name: "account-invoice-pdf",
+    pattern: "account/invoices/{id:int}/pdf",
+    defaults: new { controller = "Account", action = "InvoicePdf" });
+
+app.MapControllerRoute(
     name: "product-result-category",
     pattern: "category/{categorySlug}",
     defaults: new { controller = "ProductResult", action = "Category" });
@@ -228,6 +238,12 @@ app.MapControllerRoute(
     name: "product-result-search",
     pattern: "arama",
     defaults: new { controller = "ProductResult", action = "Index" });
+
+app.MapControllerRoute(
+    name: "product-seo-canonical",
+    pattern: "{brandSlug}/{productSegment}",
+    defaults: new { controller = "ProductDetail", action = "Index" },
+    constraints: new { productSegment = @".+-p-\d+$" });
 
 foreach (var routeDefinition in routeDefinitions.GenerateRoute)
 {

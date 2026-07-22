@@ -11,13 +11,16 @@ public static class TranslateHelper
     public static async Task<string> TranslateAsync(IHtmlHelper htmlHelper, string key, CancellationToken cancellationToken = default)
     {
         var translateAllList = FilterParametersHelper.TranslateFullList;
+        var lang = AppConfig.Storefront.StoreAuth.LanguageCode;
+        if (string.IsNullOrWhiteSpace(lang))
+            lang = "tr";
+
         if (translateAllList.Count > 0)
         {
             var hasTranslate = translateAllList.FirstOrDefault(c =>
-                c.Key.Equals(key, StringComparison.OrdinalIgnoreCase)
-                && c.AgencyGroupID == AppConfig.CMSService.MarketCode.GetValueOrDefault()
-                && c.RetLang == AppConfig.CMSService.LanguageCode);
-            if (hasTranslate != null)
+                string.Equals(c.Key, key, StringComparison.OrdinalIgnoreCase)
+                && string.Equals(c.RetLang, lang, StringComparison.OrdinalIgnoreCase));
+            if (hasTranslate != null && !string.IsNullOrWhiteSpace(hasTranslate.Translation))
                 return hasTranslate.Translation;
         }
 
@@ -28,14 +31,16 @@ public static class TranslateHelper
         var translateResponse = await content.GetTranslateAsync(new TranslateRequest
         {
             Text = key,
-            Language = session.LanguageCode
+            Language = string.IsNullOrWhiteSpace(session.LanguageCode) ? lang : session.LanguageCode
         }, cancellationToken);
 
-        if (!translateResponse.Status)
+        if (!translateResponse.Status || translateResponse.Data == null)
             return key;
 
-        FilterParametersHelper.TranslateFullList = translateResponse.Data.GetFullList;
-        return translateResponse.Data.Text;
+        if (translateResponse.Data.GetFullList is { Count: > 0 } fullList)
+            FilterParametersHelper.TranslateFullList = fullList;
+
+        return string.IsNullOrWhiteSpace(translateResponse.Data.Text) ? key : translateResponse.Data.Text;
     }
 
     public static string Translate(this IHtmlHelper htmlHelper, string key)

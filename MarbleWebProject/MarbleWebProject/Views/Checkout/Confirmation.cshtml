@@ -5,9 +5,9 @@
     var order = ViewBag.Order as ShopOrderDetailModel;
     var orderNumber = !string.IsNullOrWhiteSpace(snapshot?.OrderNumber)
         ? snapshot!.OrderNumber
-        : (order?.OrderNumber ?? Context.Request.Query["orderNumber"].ToString());
-    var orderId = snapshot?.OrderId ?? order?.Id ?? (int.TryParse(Context.Request.Query["orderId"], out var qid) ? qid : 0);
-    var paymentMethod = snapshot?.PaymentMethod ?? order?.PaymentMethod ?? Context.Request.Query["payment"].ToString();
+        : order?.OrderNumber;
+    var orderId = snapshot?.OrderId ?? order?.Id ?? 0;
+    var paymentMethod = snapshot?.PaymentMethod ?? order?.PaymentMethod ?? "";
     var isCashOnDelivery = string.Equals(paymentMethod, "CashOnDelivery", StringComparison.OrdinalIgnoreCase)
         || string.IsNullOrWhiteSpace(paymentMethod);
     var isBankTransfer = string.Equals(paymentMethod, "BankTransfer", StringComparison.OrdinalIgnoreCase);
@@ -18,8 +18,27 @@
     var bankInstructions = snapshot?.BankInstructions;
     var receiptUploaded = order?.BankTransfer?.ReceiptUploadedAt != null || order?.Payment?.ReceiptUploadedAt != null;
     var grandTotal = order?.GrandTotal ?? snapshot?.GrandTotal ?? 0;
+    var shippingTotal = order?.ShippingTotal ?? snapshot?.ShippingTotal ?? 0m;
     var currencyCode = order?.CurrencyCode ?? snapshot?.CurrencyCode ?? "";
     var currency = CurrencyDisplayHelper.GetLabel(order?.CurrencySymbol ?? snapshot?.CurrencySymbol, currencyCode);
+    var summaryLines = new List<CheckoutConfirmationLineModel>();
+    if (order != null && order.Lines.Count > 0)
+    {
+        foreach (var line in order.Lines)
+        {
+            summaryLines.Add(new CheckoutConfirmationLineModel
+            {
+                ProductName = line.ProductNameSnapshot,
+                Quantity = line.Quantity,
+                LineTotal = OrderLineDisplayHelper.GetGrossLineTotal(line)
+            });
+        }
+    }
+    else if (snapshot?.Lines?.Count > 0)
+    {
+        summaryLines.AddRange(snapshot.Lines);
+    }
+    var hasOrderSummary = summaryLines.Count > 0;
     ViewData["Title"] = "Sipariş onayı";
 }
 
@@ -34,14 +53,14 @@
 
             <div class="checkout-confirmation-order-box">
                 <span class="checkout-confirmation-order-label">Sipariş numaranız</span>
-                <strong class="checkout-confirmation-order-number">@(string.IsNullOrWhiteSpace(orderNumber) ? ("#" + orderId) : orderNumber)</strong>
+                <strong class="checkout-confirmation-order-number">@(string.IsNullOrWhiteSpace(orderNumber) ? "—" : orderNumber)</strong>
             </div>
 
             @if (grandTotal > 0)
             {
                 <p class="checkout-confirmation-total">
                     <span>Toplam tutar</span>
-                    <strong>@grandTotal.ToString("N2") @currency</strong>
+                    <strong>@CurrencyDisplayHelper.FormatAmount(grandTotal, currencyCode)</strong>
                 </p>
             }
 
@@ -69,8 +88,8 @@
                     {
                         <p class="mb-1 checkout-bank-iban"><span class="text-muted">IBAN:</span> <code>@bankIban</code></p>
                     }
-                    <p class="mb-1"><span class="text-muted">Tutar:</span> <strong>@grandTotal.ToString("N2") @currency</strong></p>
-                    <p class="mb-2"><span class="text-muted">Açıklama:</span> <strong>@(string.IsNullOrWhiteSpace(orderNumber) ? orderId.ToString() : orderNumber)</strong></p>
+                    <p class="mb-1"><span class="text-muted">Tutar:</span> <strong>@CurrencyDisplayHelper.FormatAmount(grandTotal, currencyCode)</strong></p>
+                    <p class="mb-2"><span class="text-muted">Açıklama:</span> <strong>@(string.IsNullOrWhiteSpace(orderNumber) ? "—" : orderNumber)</strong></p>
                     @if (paymentDueAt.HasValue)
                     {
                         <p class="small text-muted mb-2">Son ödeme tarihi: <strong>@paymentDueAt.Value.ToLocalTime().ToString("g")</strong></p>
@@ -102,19 +121,33 @@
                 }
             }
 
-            @if (order != null && order.Lines.Count > 0)
+            @if (hasOrderSummary)
             {
                 <div class="checkout-confirmation-lines">
                     <h2 class="checkout-confirmation-subtitle">Sipariş özeti</h2>
                     <ul class="checkout-confirmation-line-list">
-                        @foreach (var line in order.Lines)
+                        @foreach (var line in summaryLines)
                         {
                             <li>
-                                <span class="checkout-confirmation-line-name" title="@line.ProductNameSnapshot">@line.ProductNameSnapshot</span>
+                                <span class="checkout-confirmation-line-name" title="@line.ProductName">@line.ProductName</span>
                                 <span class="checkout-confirmation-line-qty">@(line.Quantity) adet</span>
-                                <span class="checkout-confirmation-line-price">@line.LineTotal.ToString("N2") @CurrencyDisplayHelper.GetLabel(order.CurrencySymbol, order.CurrencyCode)</span>
+                                <span class="checkout-confirmation-line-price">@CurrencyDisplayHelper.FormatAmount(line.LineTotal, currencyCode)</span>
                             </li>
                         }
+                        <li class="checkout-confirmation-line-shipping">
+                            <span class="checkout-confirmation-line-name">Kargo</span>
+                            <span class="checkout-confirmation-line-qty"></span>
+                            <span class="checkout-confirmation-line-price">
+                                @if (shippingTotal > 0m)
+                                {
+                                    @CurrencyDisplayHelper.FormatAmount(shippingTotal, currencyCode)
+                                }
+                                else
+                                {
+                                    <span>Ücretsiz</span>
+                                }
+                            </span>
+                        </li>
                     </ul>
                 </div>
             }

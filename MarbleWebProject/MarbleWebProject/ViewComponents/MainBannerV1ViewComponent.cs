@@ -23,7 +23,7 @@ public class MainBannerV1ViewComponent : ViewComponent
     public async Task<IViewComponentResult> InvokeAsync(List<AllBannerResponse>? models = null, CancellationToken cancellationToken = default)
     {
         var cacheHelper = new CacheHelper(_cache);
-        var key = "MainBanner" + AppConfig.CMSService.CustomName + AppConfig.CMSService.LanguageCode;
+        var key = "MainBanner" + AppConfig.Storefront.StoreAuth.CustomName + AppConfig.Storefront.StoreAuth.LanguageCode;
 
         if (!cacheHelper.IfCache(key))
         {

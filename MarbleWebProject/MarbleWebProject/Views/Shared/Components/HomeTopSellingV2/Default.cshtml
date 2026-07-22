@@ -20,7 +20,7 @@
                     @await Html.PartialAsync("_ProductListTitlePartial", item)
                     @if (item.Price.HasValue)
                     {
-                        <div class="product-price">@item.Price @item.CurrencyName</div>
+                        <div class="product-price">@CurrencyDisplayHelper.FormatAmount(item.Price, item.CurrencyName, item.CurrencyID)</div>
                     }
                 </div>
             </div>

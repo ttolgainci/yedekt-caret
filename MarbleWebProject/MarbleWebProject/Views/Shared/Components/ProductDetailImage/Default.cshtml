@@ -1,45 +1,54 @@
-﻿@model List<ProductImageList>
+﻿@using System.Linq
+@using MarbleWebProject.Helpers
+@model List<ProductImageList>
+@{
+    var images = (Model ?? new List<ProductImageList>())
+        .Where(x => !string.IsNullOrWhiteSpace(x.Path))
+        .ToList();
+
+    var main = images.FirstOrDefault(x => x.Type == 1) ?? images.FirstOrDefault();
+    var mainUrl = MediaUrlHelper.BuildProductImage(main?.Path);
+
+    var galleryPaths = new List<string>();
+    if (!string.IsNullOrWhiteSpace(main?.Path))
+        galleryPaths.Add(main!.Path!);
+
+    foreach (var img in images.Where(x => x.Type != 1))
+    {
+        if (galleryPaths.Any(existing => string.Equals(existing, img.Path, StringComparison.OrdinalIgnoreCase)))
+            continue;
+        galleryPaths.Add(img.Path!);
+    }
+}
 <div class="col-md-6">
     <div class="product-gallery product-gallery-vertical">
         <div class="row">
-            @{
-                string mainImageSet = "";
-                var mainImage = Model.Where(xx=>xx.Type==1).FirstOrDefault();
-                mainImageSet = mainImage != null ? mainImage.Path : "";
-            }
             <figure class="product-main-image">
+                <img id="product-zoom"
+                     src="@mainUrl"
+                     data-zoom-image="@mainUrl"
+                     alt="product image">
 
-                <img id="product-zoom" src="@AppConfig.CDNServices.ContentUploads@mainImageSet" data-zoom-image="@AppConfig.CDNServices.ContentUploads@mainImageSet" alt="product image">
-
-                <a href="#" id="btn-product-gallery" class="btn-product-gallery owl-carousel">
+                <a href="#" id="btn-product-gallery" class="btn-product-gallery">
                     <i class="icon-arrows"></i>
                 </a>
-                @if (Model.Where(cz => cz.Type == 0).ToList().Count > 4)
-                {
-                    <div class="swiper-button-next"><i class="fa fa-angle-right"></i></div>
-                    <div class="swiper-button-prev"><i class="fa fa-angle-left"></i></div>
-                }
             </figure><!-- End .product-main-image -->
-            @if (Model.Where(cz => cz.Type == 0).ToList().Count > 0)
+
+            @if (galleryPaths.Count > 0)
             {
-                <div id="product-zoom-gallery" class="product-image-gallery swiper-container" style="height:460px !important">
-
-                    <div class="swiper-wrapper">
-                        @foreach (var item in Model.Where(xxx => xxx.Type != 1))
-                        {
-                            <div class="swiper-slide" style="height:auto !important;margin-bottom:5px !important">
-                                <a href="#" class="product-gallery-item active" data-image="@AppConfig.CDNServices.ContentUploads@item.Path" data-zoom-image="@AppConfig.CDNServices.ContentUploads@item.Path">
-                                    <img src="@AppConfig.CDNServices.ContentUploads@item.Path">
-                                </a>
-                            </div>
-                        }
-
-                    </div>
-
-
-                </div>
+                <div id="product-zoom-gallery" class="product-image-gallery">
+                    @for (var i = 0; i < galleryPaths.Count; i++)
+                    {
+                        var url = MediaUrlHelper.BuildProductImage(galleryPaths[i]);
+                        <a href="#"
+                           class="product-gallery-item@(i == 0 ? " active" : "")"
+                           data-image="@url"
+                           data-zoom-image="@url">
+                            <img src="@url" alt="product gallery">
+                        </a>
+                    }
+                </div><!-- End .product-image-gallery -->
             }
-            <!-- End .product-image-gallery -->
         </div><!-- End .row -->
     </div><!-- End .product-gallery -->
 </div><!-- End .col-md-6 -->

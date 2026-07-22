@@ -1,4 +1,4 @@
-﻿using MarbleWebProject.Helper;
+using MarbleWebProject.Helper;
 using MarbleWebProject.Models;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.Hosting;
@@ -19,7 +19,9 @@ namespace MarbleWebProject.Controllers
         private string GenerateSitemap()
         {
             var baseUrl = $"{Request.Scheme}://{Request.Host}";
-            var urlList = FilterParametersHelper.SiteMapUrlList.Where(c=>c.LanguageCode == AppConfig.CMSService.LanguageCode);
+            var urlList = FilterParametersHelper.SiteMapUrlList.Where(c =>
+                c.LanguageCode == AppConfig.Storefront.StoreAuth.LanguageCode
+                && !string.Equals(c.Type, "PRODUCT_LEGACY", StringComparison.OrdinalIgnoreCase));
             var urls = new List<SitemapUrl>();
             foreach (var item in urlList)
             {

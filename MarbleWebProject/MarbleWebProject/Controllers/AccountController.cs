@@ -1,3 +1,5 @@
+using System.Text.RegularExpressions;
+
 using MarbleWebProject.Models;
 
 using MarbleWebProject.Helpers;
@@ -30,6 +32,10 @@ public class AccountController : Controller
 
     private readonly IStoreOrderApi _orders;
 
+    private readonly IStoreInvoiceApi _invoices;
+
+    private readonly IStoreReturnApi _returns;
+
     private readonly IBasketUserIdProvider _basketUserId;
 
     private readonly IStoreApiClient _api;
@@ -52,6 +58,10 @@ public class AccountController : Controller
 
         IStoreOrderApi orders,
 
+        IStoreInvoiceApi invoices,
+
+        IStoreReturnApi returns,
+
         IBasketUserIdProvider basketUserId,
 
         IStoreApiClient api,
@@ -71,6 +81,10 @@ public class AccountController : Controller
         _storeAuth = storeAuth;
 
         _orders = orders;
+
+        _invoices = invoices;
+
+        _returns = returns;
 
         _basketUserId = basketUserId;
 
@@ -392,6 +406,270 @@ public class AccountController : Controller
 
     }
 
+    [HttpGet]
+    [Route("account/orders/{id:int}/shipment/track")]
+    public async Task<IActionResult> TrackShipment(int id, bool refresh = false, CancellationToken cancellationToken = default)
+    {
+        if (!_customerSession.IsLoggedIn())
+            return Unauthorized();
+
+        try
+        {
+            var result = await _orders.TrackShipmentAsync(id, refresh, cancellationToken);
+            if (!result.Status)
+                return NotFound(new { message = result.ErrorMessage ?? "Takip bilgisi alınamadı." });
+
+            return Ok(result.Data);
+        }
+        catch (Exception ex)
+        {
+            return StatusCode(500, new { message = ex.Message });
+        }
+    }
+
+    [HttpGet]
+    [Route("account/returns")]
+    public async Task<IActionResult> Returns(CancellationToken cancellationToken)
+    {
+        if (!_customerSession.IsLoggedIn())
+            return RedirectToAction("Index", "Home");
+
+        await PrepareAccountViewAsync("returns", cancellationToken);
+        return View();
+    }
+
+    [HttpGet]
+    [Route("account/returns/list")]
+    public async Task<IActionResult> ReturnList(CancellationToken cancellationToken)
+    {
+        if (!_customerSession.IsLoggedIn())
+            return Unauthorized();
+
+        try
+        {
+            var result = await _returns.GetMyReturnsAsync(cancellationToken);
+            if (!result.Status)
+                return BadRequest(new { message = result.ErrorMessage ?? "İade talepleri yüklenemedi." });
+
+            return Ok(result.Data ?? new List<ReturnRequestListItemModel>());
+        }
+        catch (Exception ex)
+        {
+            return StatusCode(500, new { message = ex.Message });
+        }
+    }
+
+    [HttpGet]
+    [Route("account/returns/{id:int}")]
+    public async Task<IActionResult> ReturnDetail(int id, CancellationToken cancellationToken)
+    {
+        if (!_customerSession.IsLoggedIn())
+            return Unauthorized();
+
+        try
+        {
+            var result = await _returns.GetReturnDetailAsync(id, cancellationToken);
+            if (!result.Status || result.Data == null)
+                return NotFound(new { message = result.ErrorMessage ?? "İade talebi bulunamadı." });
+
+            return Ok(result.Data);
+        }
+        catch (Exception ex)
+        {
+            return StatusCode(500, new { message = ex.Message });
+        }
+    }
+
+    [HttpPost]
+    [Route("account/orders/{id:int}/returns")]
+    public async Task<IActionResult> CreateReturn(int id, [FromBody] StoreReturnCreateForm? body, CancellationToken cancellationToken)
+    {
+        if (!_customerSession.IsLoggedIn())
+            return Unauthorized();
+
+        if (body == null || body.Lines == null || body.Lines.Count == 0)
+            return BadRequest(new { message = "En az bir ürün satırı seçin." });
+
+        try
+        {
+            var result = await _returns.CreateReturnAsync(id, body, cancellationToken);
+            if (!result.Status)
+                return BadRequest(new { message = result.ErrorMessage ?? "İade talebi oluşturulamadı." });
+
+            return Ok(result.Data);
+        }
+        catch (Exception ex)
+        {
+            return StatusCode(500, new { message = ex.Message });
+        }
+    }
+
+    [HttpGet]
+
+    [Route("account/invoices")]
+
+    public async Task<IActionResult> Invoices(CancellationToken cancellationToken)
+
+    {
+
+        if (!_customerSession.IsLoggedIn())
+
+            return RedirectToAction("Index", "Home");
+
+        await PrepareAccountViewAsync("invoices", cancellationToken);
+
+        return View();
+
+    }
+
+
+
+    [HttpGet]
+
+    [Route("account/invoices/list")]
+
+    public async Task<IActionResult> InvoiceList(CancellationToken cancellationToken)
+
+    {
+
+        if (!_customerSession.IsLoggedIn())
+
+            return Unauthorized();
+
+        try
+
+        {
+
+            var result = await _invoices.GetMyInvoicesAsync(cancellationToken);
+
+            if (!result.Status)
+
+                return BadRequest(new { message = result.ErrorMessage ?? "Faturalar yüklenemedi." });
+
+            var items = result.Data ?? new List<CustomerInvoiceListItemModel>();
+            EnrichInvoiceListPdfUrls(items);
+            return Ok(items);
+
+        }
+
+        catch (Exception ex)
+
+        {
+
+            return StatusCode(500, new { message = ex.Message });
+
+        }
+
+    }
+
+
+
+    [HttpGet]
+
+    [Route("account/invoices/{id:int}")]
+
+    public async Task<IActionResult> InvoiceDetail(int id, CancellationToken cancellationToken)
+
+    {
+
+        if (!_customerSession.IsLoggedIn())
+
+            return Unauthorized();
+
+        try
+
+        {
+
+            var result = await _invoices.GetInvoiceDetailAsync(id, cancellationToken);
+
+            if (!result.Status || result.Data == null)
+
+                return NotFound(new { message = result.ErrorMessage ?? "Fatura bulunamadı." });
+
+            EnrichInvoicePdfUrl(result.Data);
+
+            return Ok(result.Data);
+
+        }
+
+        catch (Exception ex)
+
+        {
+
+            return StatusCode(500, new { message = ex.Message });
+
+        }
+
+    }
+
+
+
+    [HttpGet]
+
+    [Route("account/invoices/{id:int}/preview")]
+
+    public async Task<IActionResult> InvoicePreview(int id, CancellationToken cancellationToken)
+
+    {
+
+        if (!_customerSession.IsLoggedIn())
+
+            return RedirectToAction("Index", "Home");
+
+        var html = await _invoices.GetInvoicePreviewHtmlAsync(id, cancellationToken);
+
+        if (string.IsNullOrWhiteSpace(html))
+
+            return NotFound();
+
+        html = FixInvoicePreviewLogo(html);
+
+        return Content(html, "text/html; charset=utf-8");
+
+    }
+
+
+
+    [HttpGet]
+
+    [Route("account/invoices/{id:int}/pdf")]
+
+    public async Task<IActionResult> InvoicePdf(int id, CancellationToken cancellationToken)
+
+    {
+
+        if (!_customerSession.IsLoggedIn())
+
+            return RedirectToAction("Index", "Home");
+
+        var file = await _invoices.GetInvoicePdfAsync(id, cancellationToken);
+
+        if (!file.Found || file.Bytes == null)
+
+        {
+
+            var message = string.IsNullOrWhiteSpace(file.ErrorMessage)
+
+                ? "Fatura PDF henüz hazır değil. Kesim sonrası birkaç saniye bekleyip tekrar deneyin veya fatura önizlemesini kullanın."
+
+                : file.ErrorMessage;
+
+            return Content(
+
+                "<!DOCTYPE html><html><head><meta charset=\"utf-8\"><title>PDF</title></head><body style=\"font-family:sans-serif;padding:24px\">" +
+
+                "<h1>PDF bulunamadı</h1><p>" + System.Net.WebUtility.HtmlEncode(message) + "</p>" +
+
+                "<p><a href=\"/account/invoices/" + id + "/preview\">Fatura önizlemesine git</a></p></body></html>",
+
+                "text/html; charset=utf-8");
+
+        }
+
+        return File(file.Bytes, "application/pdf", file.FileName ?? $"invoice-{id}.pdf");
+
+    }
+
 
 
     [HttpGet]
@@ -647,6 +925,170 @@ public class AccountController : Controller
         var result = await _locations.GetTownsAsync(cityId, "tr", cancellationToken);
 
         return Ok(result.Data ?? new List<LocationLookupItemModel>());
+
+    }
+
+
+
+    [HttpGet]
+
+    [Route("account/forgot-password")]
+
+    public IActionResult ForgotPassword()
+
+    {
+
+        return View();
+
+    }
+
+
+
+    [HttpPost]
+
+    [Route("account/forgot-password")]
+
+    [ValidateAntiForgeryToken]
+
+    public async Task<IActionResult> ForgotPasswordPost(string email, CancellationToken cancellationToken)
+
+    {
+
+        var result = await _customerAuth.RequestPasswordResetAsync(email ?? "", cancellationToken);
+
+        ViewBag.Message = "İstek alındı. Hesap varsa e-posta ile sıfırlama bağlantısı gönderilir.";
+
+        if (!result.Status && !string.IsNullOrWhiteSpace(result.ErrorMessage))
+
+            ViewBag.Error = result.ErrorMessage;
+
+        return View("ForgotPassword");
+
+    }
+
+
+
+    [HttpGet]
+
+    [Route("account/reset-password")]
+
+    public IActionResult ResetPassword([FromQuery] string? token)
+
+    {
+
+        ViewBag.Token = token ?? "";
+
+        return View();
+
+    }
+
+
+
+    [HttpPost]
+
+    [Route("account/reset-password")]
+
+    [ValidateAntiForgeryToken]
+
+    public async Task<IActionResult> ResetPasswordPost(string token, string newPassword, string confirmPassword, CancellationToken cancellationToken)
+
+    {
+
+        ViewBag.Token = token ?? "";
+
+        if (string.IsNullOrWhiteSpace(token))
+
+        {
+
+            ViewBag.Error = "Geçersiz bağlantı.";
+
+            return View("ResetPassword");
+
+        }
+
+        if (string.IsNullOrWhiteSpace(newPassword) || newPassword.Length < 6)
+
+        {
+
+            ViewBag.Error = "Şifre en az 6 karakter olmalıdır.";
+
+            return View("ResetPassword");
+
+        }
+
+        if (!string.Equals(newPassword, confirmPassword, StringComparison.Ordinal))
+
+        {
+
+            ViewBag.Error = "Şifreler eşleşmiyor.";
+
+            return View("ResetPassword");
+
+        }
+
+
+
+        var result = await _customerAuth.ConfirmPasswordResetAsync(token, newPassword, cancellationToken);
+
+        if (!result.Status)
+
+        {
+
+            ViewBag.Error = result.ErrorMessage ?? "Şifre sıfırlanamadı.";
+
+            return View("ResetPassword");
+
+        }
+
+
+
+        ViewBag.Success = "Şifreniz güncellendi. Giriş yapabilirsiniz.";
+
+        ViewBag.Token = "";
+
+        return View("ResetPassword");
+
+    }
+
+
+
+    [HttpGet]
+
+    [Route("account/verify-email")]
+
+    public async Task<IActionResult> VerifyEmail([FromQuery] string? token, CancellationToken cancellationToken)
+
+    {
+
+        if (string.IsNullOrWhiteSpace(token))
+
+        {
+
+            ViewBag.Error = "Geçersiz veya eksik doğrulama bağlantısı.";
+
+            return View();
+
+        }
+
+
+
+        var result = await _customerAuth.VerifyEmailAsync(token, cancellationToken);
+
+        if (!result.Status)
+
+        {
+
+            ViewBag.Error = result.ErrorMessage ?? "E-posta doğrulanamadı.";
+
+            return View();
+
+        }
+
+
+
+        ViewBag.Success = "E-posta adresiniz doğrulandı.";
+
+        return View();
 
     }
 
@@ -911,6 +1353,80 @@ public class AccountController : Controller
                 line.Picture = MediaUrlHelper.Build(line.Picture);
 
         }
+
+    }
+
+
+
+    private static string FixInvoicePreviewLogo(string html)
+
+    {
+
+        return Regex.Replace(
+
+            html,
+
+            "(<img class=\"logo\" src=\")([^\"]+)(\")",
+
+            match =>
+
+            {
+
+                var src = match.Groups[2].Value;
+
+                if (src.StartsWith("http://", StringComparison.OrdinalIgnoreCase)
+
+                    || src.StartsWith("https://", StringComparison.OrdinalIgnoreCase)
+
+                    || src.StartsWith("data:", StringComparison.OrdinalIgnoreCase))
+
+                    return match.Value;
+
+                var full = MediaUrlHelper.BuildBrandAsset(AppConfig.CDNServices?.Logo, src);
+
+                if (string.IsNullOrWhiteSpace(full))
+
+                    full = MediaUrlHelper.Build(src);
+
+                return match.Groups[1].Value + full + match.Groups[3].Value;
+
+            },
+
+            RegexOptions.IgnoreCase);
+
+    }
+
+
+
+    private static void EnrichInvoiceListPdfUrls(IEnumerable<CustomerInvoiceListItemModel> items)
+
+    {
+
+        foreach (var item in items)
+
+        {
+
+            if (item.HasPdf || item.Status >= 1)
+
+                item.PdfUrl = $"/account/invoices/{item.ID}/pdf";
+
+        }
+
+    }
+
+
+
+    private static void EnrichInvoicePdfUrl(CustomerInvoiceDetailModel data)
+
+    {
+
+        if (data.Status >= 1 || !string.IsNullOrWhiteSpace(data.PdfUrl))
+
+            data.PdfUrl = $"/account/invoices/{data.ID}/pdf";
+
+        else
+
+            data.PdfUrl = null;
 
     }
 

@@ -7,7 +7,7 @@ public static class ApiClientConfig
 {
     public static string GetBaseUrl()
     {
-        var url = (Models.AppConfig.CMSService?.EndPoint ?? "").Trim();
+        var url = (Models.AppConfig.Storefront.StoreAuth?.EndPoint ?? "").Trim();
         if (string.IsNullOrEmpty(url))
             url = "http://localhost:5206";
         if (!url.EndsWith('/'))

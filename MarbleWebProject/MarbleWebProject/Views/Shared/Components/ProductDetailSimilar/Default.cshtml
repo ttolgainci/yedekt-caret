@@ -1,4 +1,4 @@
-﻿@using MarbleWebProject.Helper
+@using MarbleWebProject.Helper
 @model List<ProductList>
 <h2 class="title text-center mb-4">@Html.Translate("#You May Also Like#")</h2><!-- End .title text-center -->
 <div class="owl-carousel owl-simple carousel-equal-height carousel-with-shadow" data-toggle="owl"
@@ -54,7 +54,7 @@
                 @{ ViewData["ProductUrl"] = "/" + (item.Url ?? "").TrimStart('/'); }
                 @await Html.PartialAsync("_ProductListTitlePartial", item)
                 <div class="product-price">
-                   @item.Price @item.CurrencyName
+                   @CurrencyDisplayHelper.FormatAmount(item.Price, item.CurrencyName, item.CurrencyID)
                 </div><!-- End .product-price -->
                
             </div><!-- End .product-body -->

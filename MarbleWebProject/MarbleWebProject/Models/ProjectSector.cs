@@ -1,11 +1,13 @@
+using MarbleWebProject.Models.Options;
+
 namespace MarbleWebProject.Models;
 
 public static class ProjectSector
 {
     public static string ResolveSectorCode(string? sectorCode) =>
         string.IsNullOrWhiteSpace(sectorCode)
-            ? AppConfig.ProjectService.SectorCode
-            : Normalize(sectorCode, AppConfig.ProjectService.SectorCode);
+            ? AppConfig.Storefront.StoreAuth.SectorCode
+            : Normalize(sectorCode, AppConfig.Storefront.StoreAuth.SectorCode);
 
     public static bool IsAutoParts(string? sectorCode) =>
         string.Equals(Normalize(sectorCode), StoreSectorCodes.AutoParts, StringComparison.Ordinal);
@@ -46,7 +48,7 @@ public static class ProjectSector
         };
     }
 
-    public static void ApplyConfigurationDefaults(ProjectServiceSettings settings)
+    public static void ApplyConfigurationDefaults(StoreAuthOptions settings)
     {
         settings.StoreSectorType = ParseSectorType((int)settings.StoreSectorType, StoreSectorType.Apparel);
 

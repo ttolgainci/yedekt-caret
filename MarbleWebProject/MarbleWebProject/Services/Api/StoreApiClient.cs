@@ -61,7 +61,37 @@ public sealed class StoreApiClient : IStoreApiClient
         return data;
     }
 
-    public async Task<T> GetAsync<T>(string path, string? bearerToken = null, CancellationToken cancellationToken = default)
+    public async Task<T> GetAsync<T>(string path, string? bearerToken = null, CancellationToken cancellationToken = default, IReadOnlyDictionary<string, string>? extraHeaders = null)
+    {
+        var relative = (path ?? "").Trim();
+        if (!relative.StartsWith('/'))
+            relative = "/" + relative;
+
+        using var request = new HttpRequestMessage(HttpMethod.Get, relative);
+        if (!string.IsNullOrWhiteSpace(bearerToken))
+            request.Headers.Authorization = new AuthenticationHeaderValue("Bearer", bearerToken);
+
+        if (extraHeaders != null)
+        {
+            foreach (var h in extraHeaders)
+                request.Headers.TryAddWithoutValidation(h.Key, h.Value);
+        }
+
+        using var response = await _http.SendAsync(request, cancellationToken);
+        if (!response.IsSuccessStatusCode)
+        {
+            var errorBody = await response.Content.ReadAsStringAsync(cancellationToken);
+            throw new HttpRequestException(
+                $"API {(int)response.StatusCode} {response.ReasonPhrase} for GET {relative}. Body: {errorBody}");
+        }
+
+        var data = await response.Content.ReadFromJsonAsync<T>(JsonOptions, cancellationToken);
+        if (data == null)
+            throw new InvalidOperationException($"Empty API response for GET {relative}.");
+        return data;
+    }
+
+    public async Task<string> GetStringAsync(string path, string? bearerToken = null, CancellationToken cancellationToken = default)
     {
         var relative = (path ?? "").Trim();
         if (!relative.StartsWith('/'))
@@ -79,10 +109,28 @@ public sealed class StoreApiClient : IStoreApiClient
                 $"API {(int)response.StatusCode} {response.ReasonPhrase} for GET {relative}. Body: {errorBody}");
         }
 
-        var data = await response.Content.ReadFromJsonAsync<T>(JsonOptions, cancellationToken);
-        if (data == null)
-            throw new InvalidOperationException($"Empty API response for GET {relative}.");
-        return data;
+        return await response.Content.ReadAsStringAsync(cancellationToken);
+    }
+
+    public async Task<byte[]> GetBytesAsync(string path, string? bearerToken = null, CancellationToken cancellationToken = default)
+    {
+        var relative = (path ?? "").Trim();
+        if (!relative.StartsWith('/'))
+            relative = "/" + relative;
+
+        using var request = new HttpRequestMessage(HttpMethod.Get, relative);
+        if (!string.IsNullOrWhiteSpace(bearerToken))
+            request.Headers.Authorization = new AuthenticationHeaderValue("Bearer", bearerToken);
+
+        using var response = await _http.SendAsync(request, cancellationToken);
+        if (!response.IsSuccessStatusCode)
+        {
+            var errorBody = await response.Content.ReadAsStringAsync(cancellationToken);
+            throw new HttpRequestException(
+                $"API {(int)response.StatusCode} {response.ReasonPhrase} for GET {relative}. Body: {errorBody}");
+        }
+
+        return await response.Content.ReadAsByteArrayAsync(cancellationToken);
     }
 
     public async Task<T> PutAsync<T>(string path, object? body, string? bearerToken = null, CancellationToken cancellationToken = default, IReadOnlyDictionary<string, string>? extraHeaders = null)

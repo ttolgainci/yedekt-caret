@@ -39,7 +39,7 @@ internal static class HomeManufacturersBannerHelper
         CancellationToken cancellationToken)
     {
         var cacheHelper = new CacheHelper(cache);
-        var key = "HomeBrands:" + AppConfig.CMSService.CustomName + ":" + AppConfig.CMSService.LanguageCode;
+        var key = "HomeBrands:" + AppConfig.Storefront.StoreAuth.CustomName + ":" + AppConfig.Storefront.StoreAuth.LanguageCode;
 
         List<HomeBrandModel> brands;
         if (!cacheHelper.IfCache(key))

@@ -1,4 +1,4 @@
-﻿@using MarbleWebProject.Helper
+@using MarbleWebProject.Helper
 @model ProductsByCageoryResponse
 @{
     int maxPageLinks = 5; // Maximum number of page links to display
@@ -22,7 +22,7 @@
                                     <a class="banner-link" href="/@Model.Url/@item.Url">
                                         <h3 class="banner-title">@item.ProductName</h3><!-- End .banner-title -->
                                         <h4 class="banner-subtitle">@item.StockStatus</h4><!-- End .banner-subtitle -->
-                                        <h4 class="banner-subtitle">@item.Price @item.CurrencyName</h4><!-- End .banner-subtitle -->
+                                        <h4 class="banner-subtitle">@CurrencyDisplayHelper.FormatAmount(item.Price, item.CurrencyName, item.CurrencyID)</h4><!-- End .banner-subtitle -->
                                         <span class="banner-link-text">@Html.Translate("#Shop Now#")</span>
                                     </a><!-- End .banner-link -->
                                 </div><!-- End .banner -->
@@ -50,7 +50,7 @@
                 @{ ViewData["ProductUrl"] = $"/{Model.Url?.Trim('/')}/{item.Url?.Trim('/')}"; }
                 @await Html.PartialAsync("_ProductListTitlePartial", item)
                 <div class="product-price">
-                    <span class="new-price">@item.Price @item.CurrencyName</span>
+                    <span class="new-price">@CurrencyDisplayHelper.FormatAmount(item.Price, item.CurrencyName, item.CurrencyID)</span>
                     @*  <span class="old-price">$84.00</span> *@
                 </div><!-- End .product-price -->
                 @await Html.PartialAsync("_ProductListQuantityPartial", item)

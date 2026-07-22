@@ -1,0 +1,17 @@
+@{
+    ViewData["Title"] = "Faturalarım";
+}
+
+<div class="store-account-panel store-account-invoices-panel">
+    <h2 class="store-account-panel-title">Faturalarım</h2>
+    <p class="text-muted small">Kesilmiş ve gönderilmiş faturalarınız burada listelenir.</p>
+    <div id="invoices-list"></div>
+    <div id="invoice-detail" class="d-none mt-4">
+        <button type="button" class="btn btn-link px-0 mb-2" id="invoice-back">&larr; Listeye dön</button>
+        <div id="invoice-detail-body"></div>
+    </div>
+</div>
+
+@section Scripts {
+    <script src="~/PageJs/CustomerInvoices.js"></script>
+}

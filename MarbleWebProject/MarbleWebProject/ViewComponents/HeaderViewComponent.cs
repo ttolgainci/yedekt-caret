@@ -1,6 +1,7 @@
 using MarbleWebProject.Helper;
 using MarbleWebProject.Helpers;
 using MarbleWebProject.Models;
+using MarbleWebProject.Models.Options;
 using MarbleWebProject.Services.Api;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.Caching.Memory;
@@ -14,32 +15,32 @@ public class HeaderViewComponent : ViewComponent
     private readonly IMemoryCache _cache;
     private readonly IStoreCatalogApi _catalog;
     private readonly IStoreAuthService _auth;
-    private readonly ProjectServiceSettings _project;
+    private readonly StoreAuthOptions _storeAuth;
 
     public HeaderViewComponent(
         IMemoryCache cache,
         IStoreCatalogApi catalog,
         IStoreAuthService auth,
-        IOptions<ProjectServiceSettings> project)
+        IOptions<StoreAuthOptions> storeAuth)
     {
         _cache = cache;
         _catalog = catalog;
         _auth = auth;
-        _project = project.Value;
+        _storeAuth = storeAuth.Value;
     }
 
     public async Task<IViewComponentResult> InvokeAsync(CancellationToken cancellationToken = default)
     {
         var categories = await GetCategoriesAsync(cancellationToken);
-        var nav = CategoryNavHelper.BuildNavigation(categories, _project.HeaderNavMaxVisibleCategories);
+        var nav = CategoryNavHelper.BuildNavigation(categories, _storeAuth.HeaderNavMaxVisibleCategories);
         return View(nav);
     }
 
     private async Task<List<CategoryListModel>> GetCategoriesAsync(CancellationToken cancellationToken)
     {
         var cacheHelper = new CacheHelper(_cache);
-        var key = "CategoryListHeader" + AppConfig.CMSService.CustomName
-            + AppConfig.CMSService.MarketCode + AppConfig.CMSService.LanguageCode;
+        var key = "CategoryListHeader" + AppConfig.Storefront.StoreAuth.CustomName
+            + AppConfig.Storefront.StoreAuth.MarketCode + AppConfig.Storefront.StoreAuth.LanguageCode;
 
         if (cacheHelper.IfCache(key))
             return cacheHelper.GetCache(key) as List<CategoryListModel> ?? new List<CategoryListModel>();

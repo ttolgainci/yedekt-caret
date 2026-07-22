@@ -1,10 +1,9 @@
 @using MarbleWebProject.Helper
+@using MarbleWebProject.Helpers
 @model BasketSetModel
 @{
     var hasItems = Model?.CartList?.Count > 0;
-    var setTotalPrice = hasItems
-        ? (string.IsNullOrWhiteSpace(Model!.Info.GrandTotal) ? Model.Info.Total : Model.Info.GrandTotal)
-        : "";
+    var setTotalPrice = hasItems ? Model!.Info.Total : "";
 }
 @if (!hasItems)
 {
@@ -34,9 +33,6 @@ else
                 </a>
                 <div class="store-cart-line-info">
                     <a href="@productUrl" class="store-cart-line-title store-product-name" title="@item.ProductName">@item.ProductName</a>
-                    <div class="store-cart-line-unit">
-                        <span class="cartProductPrice basket-product-price">@unitPrice.ToString("N2")</span> @item.CurrencyName
-                    </div>
                     <div class="store-cart-line-qty">
                         <button type="button" class="store-cart-qty-btn js-cart-qty-minus" aria-label="-">−</button>
                         <span class="store-cart-qty-value">@qty</span>
@@ -44,7 +40,7 @@ else
                     </div>
                 </div>
                 <div class="store-cart-line-total">
-                    @lineTotal.ToString("N2") @item.CurrencyName
+                    @CurrencyDisplayHelper.FormatAmount(lineTotal, item.CurrencyName)
                 </div>
                 <button type="button"
                         class="store-cart-line-remove js-cart-line-remove"

@@ -1,128 +1,187 @@
-﻿@using MarbleWebProject.Helper
-@model ProductInfo
+﻿@using System.Linq
+@using MarbleWebProject.Helper
+@using MarbleWebProject.Helpers
+@model ProductInfoPageModel
 @{
+    var p = Model.Product;
     var addToCartLabel = Html.Translate("#Add to cart#");
     var inBasketLabel = Html.Translate("#in the basket#");
-    string btnText = addToCartLabel;
+    var btnText = addToCartLabel;
     int? basketQuantity = 0;
-    string shippingText = "";
 
-    @if (Model.HasBasket)
+    if (p.HasBasket)
     {
-        basketQuantity = Model.BasketQuantity;
+        basketQuantity = p.BasketQuantity;
         btnText = inBasketLabel;
     }
-    @if (Model.ShippingPrice==null)
+
+    var qty = p.Quantity ?? 0;
+    string stockIcon;
+    string stockText;
+    if (qty <= 0)
     {
-        shippingText = Html.Translate("#Free Shipping#");
+        stockIcon = "✖";
+        stockText = Html.Translate("#Out of stock#");
+    }
+    else if (qty <= 3)
+    {
+        stockIcon = "⚠";
+        var lastLabel = Html.Translate("#Only {0} left#");
+        stockText = lastLabel.Contains("{0}", StringComparison.Ordinal)
+            ? string.Format(lastLabel, qty)
+            : $"{lastLabel} {qty}";
     }
     else
     {
-        shippingText = @Model.ShippingPrice.ToString() + " " + Model.CurrencyName;
+        stockIcon = "✓";
+        stockText = Html.Translate("#In stock#");
     }
-    string dimensionsText = $"{(Model.Length != null ? $"{Html.Translate("#Length#")} {Math.Round(Model.Length.GetValueOrDefault())} {Model.LengthClassUnit} x " : "")}" +
-                         $"{(Model.Width != null ? $"{Html.Translate("#Width#")} {Math.Round(Model.Width.GetValueOrDefault())} {Model.LengthClassUnit} x " : "")}" +
-                         $"{(Model.Height != null ? $"{Html.Translate("#Height#")} {Math.Round(Model.Height.GetValueOrDefault())} {Model.LengthClassUnit}" : "")}".TrimEnd('x', ' ');
 
+    var stockCode = !string.IsNullOrWhiteSpace(p.Sku) ? p.Sku : p.ProductCode;
+    var oemText = p.OemCodes != null && p.OemCodes.Count > 0
+        ? string.Join(", ", p.OemCodes.Where(x => !string.IsNullOrWhiteSpace(x)))
+        : (p.ProductModel ?? "");
+
+    string? brandUrl = null;
+    if (p.BrandID is > 0)
+    {
+        brandUrl = !string.IsNullOrWhiteSpace(p.BrandSlug)
+            ? "/" + p.BrandSlug.Trim().TrimStart('/')
+            : "/arama?brandId=" + p.BrandID.Value;
+    }
+
+    var brandPictureUrl = !string.IsNullOrWhiteSpace(p.BrandPicture)
+        ? MediaUrlHelper.Build(p.BrandPicture)
+        : "";
+
+    var auth = AppConfig.Storefront?.StoreAuth;
+    var showShipEstimate = auth?.ShowSameDayShippingEstimate != false && (auth?.SameDayShippingCutoffHour ?? 16) >= 0;
+    string? shipEstimateText = null;
+    if (showShipEstimate && qty > 0)
+    {
+        var cutoffHour = auth?.SameDayShippingCutoffHour ?? 16;
+        var cutoffMinute = Math.Clamp(auth?.SameDayShippingCutoffMinute ?? 0, 0, 59);
+        var now = DateTime.Now;
+        var cutoff = new DateTime(now.Year, now.Month, now.Day, cutoffHour, cutoffMinute, 0);
+        var cutoffLabel = cutoff.ToString("HH:mm");
+        if (now <= cutoff)
+        {
+            var tpl = Html.Translate("#Order by {0} today → Ships today#");
+            shipEstimateText = tpl.Contains("{0}", StringComparison.Ordinal)
+                ? string.Format(tpl, cutoffLabel)
+                : tpl;
+        }
+        else
+        {
+            shipEstimateText = Html.Translate("#Order now → Ships tomorrow#");
+        }
+    }
+
+    var tags = (p.Tags ?? "")
+        .Split(new[] { ',', ';' }, StringSplitOptions.RemoveEmptyEntries)
+        .Select(t => t.Trim())
+        .Where(t => t.Length > 0)
+        .ToList();
 }
 
 <div class="col-md-6">
-    <div class="product-details  product-detail-code_@Model.ProductID">
-        <h1 class="product-title">@Model.ProductName</h1><!-- End .product-title -->
-
-      @*   <div class="ratings-container">
-            <div class="ratings">
-                <div class="ratings-val" style="width: 80%;"></div><!-- End .ratings-val -->
-            </div><!-- End .ratings -->
-               <a class="ratings-text" href="#product-review-link" id="review-link">( 2 Reviews )</a> 
-        </div> *@<!-- End .rating-container -->
+    <div class="product-details product-detail-code_@p.ProductID">
+        <h1 class="product-title">@p.ProductName</h1><!-- End .product-title -->
 
         <div class="product-price">
-            @{
-                string setPrice = Model.Price.ToString();
-                string currency = Model.CurrencyName;
-            }
-            @setPrice @currency <br />
-           
-          
-        </div>
+            @CurrencyDisplayHelper.FormatAmount(p.Price, p.CurrencyName)
+        </div><!-- End .product-price -->
 
-        @foreach (var item in Model.ProductDiscounts)
-        {
-            <label for="size">@item.Quantity  @Html.Translate("#of them#")  @item.price @Model.CurrencyName</label>
-
-            <br />
-        }<!-- End .product-price -->
-        @if (!string.IsNullOrEmpty(Model.Description))
+        @if (!string.IsNullOrEmpty(p.ShortDescription))
         {
             <div class="product-content">
-                @Html.Raw(Model.Description)
-            </div>
+                @Html.Raw(p.ShortDescription)
+            </div><!-- End .product-content -->
         }
 
-        @if (!string.IsNullOrWhiteSpace(Model.StockStatus))
+        @if (!string.IsNullOrWhiteSpace(p.BrandName))
         {
             <div class="details-filter-row details-row-size">
-                <label style="width:25%!important">@Html.Translate("#Stock Status#") : </label>
-                <div class="product-nav product-nav-thumbs">
-                    @Model.StockStatus
-                </div>
+                <label>@Html.Translate("#Brand#"):</label>
+                @if (!string.IsNullOrWhiteSpace(brandPictureUrl))
+                {
+                    <span class="product-brand-thumb">
+                        <img src="@brandPictureUrl" alt="@p.BrandName" width="120" height="45">
+                    </span>
+                }
+                @if (!string.IsNullOrWhiteSpace(brandUrl))
+                {
+                    <a href="@brandUrl" class="product-brand-name-link">@Html.Translate("#View all brands from#") @p.BrandName</a>
+                }
+                else
+                {
+                    <span>@p.BrandName</span>
+                }
             </div><!-- End .details-filter-row -->
         }
 
-        @if (Model.Quantity.HasValue)
+        @if (!string.IsNullOrWhiteSpace(stockCode))
         {
             <div class="details-filter-row details-row-size">
-                <label style="width:25%!important">@Html.Translate("#Quantity#") : </label>
-                <div class="product-nav product-nav-thumbs">
-                    @Model.Quantity.Value @Html.Translate("#pcs#")
-                </div>
+                <label>@Html.Translate("#Stock Code#"):</label>
+                @stockCode
             </div><!-- End .details-filter-row -->
         }
-      <!-- End .details-filter-row -->
+
+        @if (!string.IsNullOrWhiteSpace(oemText))
+        {
+            <div class="details-filter-row details-row-size">
+                <label>@Html.Translate("#OEM#"):</label>
+                @oemText
+            </div><!-- End .details-filter-row -->
+        }
+
         <div class="details-filter-row details-row-size">
-            <label style="width:25%!important">@Html.Translate("#Shipping#") :  </label>
-            <div class="product-nav product-nav-thumbs">
-                <i class="icon-truck"></i>  @shippingText
-            </div>
+            <label>@Html.Translate("#Stock Status#"):</label>
+            <span class="product-stock-inline-icon" aria-hidden="true">@stockIcon</span>
+            <span>@stockText</span>
         </div><!-- End .details-filter-row -->
-        @if (!string.IsNullOrEmpty(dimensionsText))
+
+        @if (!string.IsNullOrWhiteSpace(shipEstimateText))
         {
             <div class="details-filter-row details-row-size">
-                <label style="width:25%!important">@Html.Translate("#Dimensions#") :  </label>
-                <div class="product-nav product-nav-thumbs">
-                    @dimensionsText
+                <label>@Html.Translate("#Estimated shipping#"):</label>
+                <div class="product-detail-value">
+                    <i class="icon-truck"></i> @shipEstimateText
                 </div>
-            </div>
+            </div><!-- End .details-filter-row -->
         }
+
         <div class="product-details-action">
             <div class="details-action-col">
                 <div class="product-details-quantity">
-                    <input type="number" class="form-control product-detail-Quantity" value="@basketQuantity" min="@Model.MinimumQuantity" max="@Model.Quantity" step="1" data-decimals="0" required>
-                </div><!-- End .product-details-quantity -->             
-                <a href="#" onclick="setProductToBasket(this); return false;" data-pid="@Model.ProductID" data-purl="@Model.Url" data-add-label="@addToCartLabel" data-inbasket-label="@inBasketLabel" class="btn-product btn-cart"><span>@btnText</span></a>
-                <div class="details-action-wrapper">
-                    <a href="#" data-pid="@Model.ProductID" onclick="setProductToSepete(this)" class="btn-product btn-wishlist" title="Wishlist"><span>@Html.Translate("#Add to Wishlist#")</span></a>
-                    @*  <a href="#" class="btn-product btn-compare" title="Compare"><span>Add to Compare</span></a> *@
-                </div>
+                    <input type="number" class="form-control product-detail-Quantity" value="@basketQuantity" min="@p.MinimumQuantity" max="@p.Quantity" step="1" data-decimals="0" required>
+                </div><!-- End .product-details-quantity -->
+                <a href="#" onclick="setProductToBasket(this); return false;" data-pid="@p.ProductID" data-purl="@p.Url" data-add-label="@addToCartLabel" data-inbasket-label="@inBasketLabel" class="btn-product btn-cart"><span>@btnText</span></a>
+                <div class="details-action-wrapper"><a href="#" data-pid="@p.ProductID" onclick="setProductToSepete(this)" class="btn-product btn-wishlist" title="Wishlist"><span>@Html.Translate("#Add to Wishlist#")</span></a></div>
             </div><!-- End .details-action-col -->
-            <!-- End .details-action-wrapper -->
         </div><!-- End .product-details-action -->
+        @if (Model.HasVehicleFitment)
+        {
+            <div class="product-details-footer">
+                <div class="product-cat">
+                    <a href="#product-fitment-link" id="fitment-link" class="btn-product product-fitment-link"><span>@Html.Translate("#Which vehicles is this part compatible with?#")</span></a>
+                </div><!-- End .product-cat -->
+            </div>
 
-        <div class="product-details-footer">
-            <div class="product-cat">
-                <span>Category:</span>
-                <a href="#">Women</a>,
-                <a href="#">Dresses</a>,
-                <a href="#">Yellow</a>
-            </div><!-- End .product-cat -->
-            @* <div class="social-icons social-icons-sm">
-            <span class="social-label">Share:</span>
-            <a href="#" class="social-icon" title="Facebook" target="_blank"><i class="icon-facebook-f"></i></a>
-            <a href="#" class="social-icon" title="Twitter" target="_blank"><i class="icon-twitter"></i></a>
-            <a href="#" class="social-icon" title="Instagram" target="_blank"><i class="icon-instagram"></i></a>
-            <a href="#" class="social-icon" title="Pinterest" target="_blank"><i class="icon-pinterest"></i></a>
-            </div> *@
-        </div><!-- End .product-details-footer -->
+            <!-- End .product-details-footer -->
+        }
+        @if (tags.Count > 0)
+        {
+            <div class="product-details-footer">
+                <div class="product-cat">
+                    <span>@Html.Translate("#Tags#"):</span>
+                    @for (var i = 0; i < tags.Count; i++)
+                    {
+                        <span>@tags[i]</span>@(i < tags.Count - 1 ? ", " : "")
+                    }
+                </div><!-- End .product-cat -->
+            </div><!-- End .product-details-footer -->
+        }
     </div><!-- End .product-details -->
 </div>

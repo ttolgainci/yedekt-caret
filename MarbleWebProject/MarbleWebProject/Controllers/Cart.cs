@@ -1,6 +1,7 @@
 using MarbleWebProject.Helpers;
 using MarbleWebProject.Models;
 using MarbleWebProject.Services.Api;
+using MarbleWebProject.Services.Storefront;
 using Microsoft.AspNetCore.Mvc;
 using System.Net.Http;
 
@@ -12,17 +13,20 @@ public class Cart : Controller
     private readonly IStoreAuthService _auth;
     private readonly IStoreShippingApi _shipping;
     private readonly IBasketUserIdProvider _basketUserId;
+    private readonly IStoreCurrencyFormatter _currencyFormatter;
 
     public Cart(
         IStoreBasketApi basket,
         IStoreAuthService auth,
         IStoreShippingApi shipping,
-        IBasketUserIdProvider basketUserId)
+        IBasketUserIdProvider basketUserId,
+        IStoreCurrencyFormatter currencyFormatter)
     {
         _basket = basket;
         _auth = auth;
         _shipping = shipping;
         _basketUserId = basketUserId;
+        _currencyFormatter = currencyFormatter;
     }
 
     public async Task<IActionResult> Index(CancellationToken cancellationToken = default)
@@ -84,6 +88,7 @@ public class Cart : Controller
             LanguageCode = session.LanguageCode,
             ProductID = ProductID,
             CartQuantity = qty,
+            IsDelta = true,
             Url = Url ?? string.Empty,
             UserID = userGuid
         }, cancellationToken);
@@ -221,10 +226,11 @@ public class Cart : Controller
             return;
         }
 
-        var subtotal = model.CartList.Sum(c => (c.Price ?? 0) * (c.CartQuantity ?? 0));
+        var subtotal = CartBasketMergeHelper.ComputeGrossSubtotal(model.CartList);
         var currency = model.CartList.FirstOrDefault()?.CurrencyName ?? string.Empty;
         model.Info.CurrencyName = currency;
-        model.Info.Subtotal = "<span class='basket-subtotal-price'>" + subtotal.ToString("N2") + "</span> " + currency;
+        var formattedSubtotal = _currencyFormatter.Format(subtotal, currency);
+        model.Info.Subtotal = "<span class='basket-subtotal-price'>" + formattedSubtotal + "</span>";
 
         var quote = await _shipping.CalculateAsync(new ShippingCalculateRequest
         {
@@ -238,7 +244,7 @@ public class Cart : Controller
         if (quote == null)
         {
             model.Info.GrandTotal = model.Info.Subtotal;
-            model.Info.Total = model.Info.Subtotal;
+            model.Info.Total = "<span class='basket-total-price'>" + formattedSubtotal + "</span>";
             return;
         }
 
@@ -248,8 +254,8 @@ public class Cart : Controller
         model.Info.CarrierId = quote.CarrierId;
 
         var grandTotal = subtotal + quote.ShippingPrice;
-        model.Info.GrandTotal = "<span class='basket-total-price'>" + grandTotal.ToString("N2") + "</span> " + currency;
-        model.Info.Total = model.Info.GrandTotal;
+        model.Info.GrandTotal = "<span class='basket-total-price'>" + _currencyFormatter.Format(grandTotal, currency) + "</span>";
+        model.Info.Total = "<span class='basket-total-price'>" + formattedSubtotal + "</span>";
     }
 
     private async Task<IActionResult> BasketJsonAsync(string userGuid, string languageCode, CancellationToken cancellationToken)
@@ -265,6 +271,7 @@ public class Cart : Controller
                 productID = c.ProductID,
                 name = c.ProductName,
                 price = c.Price,
+                taxPercent = c.TaxPercent,
                 currency = c.CurrencyName,
                 currencyName = c.CurrencyName,
                 image = MediaUrlHelper.BuildProductImage(c.MainImage),

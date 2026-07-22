@@ -23,6 +23,17 @@
     {
         <meta name="description" content="@seo.Description" />
     }
+    @if (!string.IsNullOrWhiteSpace(seo.CanonicalUrl))
+    {
+        <link rel="canonical" href="@seo.CanonicalUrl" />
+    }
+    @if (seo.Alternates != null)
+    {
+        foreach (var alt in seo.Alternates)
+        {
+            <link rel="alternate" hreflang="@alt.Hreflang" href="@alt.Href" />
+        }
+    }
     @if (!string.IsNullOrWhiteSpace(faviconUrl))
     {
         <link rel="icon" href="@faviconUrl">
@@ -70,6 +81,7 @@
     <script src="~/assets/js/owl.carousel.min.js"></script>
     <script src="~/assets/js/jquery.plugin.min.js"></script>
     <script src="~/assets/js/jquery.magnific-popup.min.js"></script>
+    <script src="~/assets/js/jquery.elevateZoom.min.js"></script>
     <script src="~/assets/js/jquery.countdown.min.js"></script>
     <script src="~/assets/js/bootstrap-input-spinner.js"></script>
     <script src="~/assets/js/main.js"></script>
@@ -78,9 +90,21 @@
         window.MarbleStore = {
             mediaBase: '@MediaUrlHelper.GetUploadsBaseUrl()',
             defaultProductImage: @Html.Raw(System.Text.Json.JsonSerializer.Serialize(MediaUrlHelper.BuildProductImage(null))),
-            apiBase: '@AppConfig.CMSService.EndPoint.TrimEnd('/')'
+            apiBase: '@AppConfig.Storefront.StoreAuth.EndPoint.TrimEnd('/')',
+            currencies: @Html.Raw(System.Text.Json.JsonSerializer.Serialize(
+                AppConfig.Storefront.Currencies.Select(c => new {
+                    id = c.Id,
+                    code = c.Code,
+                    title = c.Title,
+                    symbol = c.Symbol,
+                    position = c.Position,
+                    displayLocale = c.DisplayLocale,
+                    priceFormat = c.PriceFormat,
+                    displayOrder = c.DisplayOrder
+                })))
         };
     </script>
+    <script src="~/PageJs/store-currency.js" asp-append-version="true"></script>
     <script src="~/PageJs/Master.js"></script>
     <script src="~/PageJs/PageLoading.js" asp-append-version="true"></script>
     <script src="~/PageJs/CartBasket.js" asp-append-version="true"></script>

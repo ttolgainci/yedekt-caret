@@ -26,18 +26,16 @@ public sealed class StoreRouteBootstrap : IStoreRouteBootstrap
         {
             UserName = _auth.UserName,
             Password = _auth.Password,
-            CustomName = _auth.CustomName
+            CustomName = _auth.CustomName,
+            Audience = "store"
         }, bearerToken: null, cancellationToken);
 
-        if (string.IsNullOrWhiteSpace(login?.Token) || login.Token.Contains("Kullanici", StringComparison.OrdinalIgnoreCase))
+        if (!IsValidToken(login))
             throw new InvalidOperationException(
-                "API login failed at startup. Check StoreAuth (or CMSService) in appsettings.");
+                "API login failed at startup. Check StoreAuth in appsettings.");
 
-        if (AppConfig.CMSService != null)
-        {
-            AppConfig.CMSService.LanguageCode = login.LanguageCode;
-            AppConfig.CMSService.LanguageCulture = login.LanguageCulture;
-        }
+        AppConfig.Storefront.StoreAuth.LanguageCode = login.LanguageCode;
+        AppConfig.Storefront.StoreAuth.LanguageCulture = login.LanguageCulture;
 
         var token = login.Token;
 
@@ -80,6 +78,26 @@ public sealed class StoreRouteBootstrap : IStoreRouteBootstrap
             }
         }
 
+        var legacyProductRoutes = await _api.PostAsync<BaseResponse<List<CategoryRouteModel>>>(
+            "/Product/GetLegacyProductRedirectRoutes", new { }, token, cancellationToken);
+        if (legacyProductRoutes.Status && legacyProductRoutes.Data != null)
+        {
+            var index = 1;
+            foreach (var item in legacyProductRoutes.Data)
+            {
+                routeList.Add(new RouteListModel
+                {
+                    PageType = "PRODUCT_LEGACY",
+                    RouteName = "LegacyProduct " + index,
+                    RouteUrl = item.Url,
+                    LanguageCode = item.LanguageCode,
+                    ID = item.ID,
+                    CatID = item.CatID
+                });
+                index++;
+            }
+        }
+
         var infoRoutes = await _api.PostAsync<BaseResponse<List<InformationRouteModel>>>(
             "/Information/GetInformationForRoute", new { }, token, cancellationToken);
         if (infoRoutes.Status && infoRoutes.Data != null)
@@ -104,6 +122,7 @@ public sealed class StoreRouteBootstrap : IStoreRouteBootstrap
         {
             FilterParametersHelper.TranslateFullList = translateAll.Data.Select(c => new TranslateAllResponse
             {
+                AgencyGroupID = c.AgencyGroupID,
                 Key = c.Key,
                 KeyLang = c.KeyLang,
                 RetLang = c.RetLang,
@@ -112,5 +131,16 @@ public sealed class StoreRouteBootstrap : IStoreRouteBootstrap
         }
 
         return routeList;
+    }
+
+    private static bool IsValidToken(TokenResponse? token) =>
+        !string.IsNullOrWhiteSpace(token?.Token)
+        && !token.Token.Contains("Kullanici", StringComparison.OrdinalIgnoreCase)
+        && LooksLikeJwt(token.Token);
+
+    private static bool LooksLikeJwt(string token)
+    {
+        var parts = token.Split('.');
+        return parts.Length == 3 && parts.All(p => p.Length > 0);
     }
 }

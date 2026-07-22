@@ -144,7 +144,17 @@ public sealed class StoreCustomerAddressApi : IStoreCustomerAddressApi
 
         postalCode = form.PostalCode,
 
-        deliveryInstructions = form.DeliveryInstructions
+        deliveryInstructions = form.DeliveryInstructions,
+
+        invoiceType = form.InvoiceType,
+
+        taxNumber = form.TaxNumber,
+
+        taxOffice = form.TaxOffice,
+
+        companyName = form.CompanyName,
+
+        isEInvoice = form.IsEInvoice
 
     };
 

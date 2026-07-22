@@ -2,19 +2,46 @@ $(function () {
     var $form = $('#checkout-form');
     if ($form.length === 0) return;
 
-    var prefill = window.checkoutPrefill || {};
-    var i18n = window.checkoutI18n || {};
+    $.getJSON('/checkout/bootstrap')
+        .done(function (boot) {
+            startCheckout((boot && boot.prefill) || {}, (boot && boot.i18n) || {});
+        })
+        .fail(function () {
+            startCheckout({}, {});
+        });
+
+    function startCheckout(prefill, i18n) {
 
     function tx(key) {
         return (i18n[key] !== undefined && i18n[key] !== null) ? i18n[key] : key;
     }
 
     function showCheckoutNotify(message, type) {
-        if (window.alertify && alertify.notify) {
-            alertify.notify(message, type || 'success', 2.5);
-            return;
+        var level = type || 'success';
+        if (window.alertify) {
+            if (level === 'error' && typeof alertify.error === 'function') {
+                alertify.error(message, 5);
+                return;
+            }
+            if (typeof alertify.notify === 'function') {
+                alertify.notify(message, level, level === 'error' ? 5 : 2.5);
+                return;
+            }
         }
         alert(message);
+    }
+
+    function checkoutErrorMessage(xhr, fallback) {
+        if (xhr && xhr.responseJSON && xhr.responseJSON.message) {
+            return xhr.responseJSON.message;
+        }
+        if (xhr && xhr.responseText) {
+            try {
+                var parsed = JSON.parse(xhr.responseText);
+                if (parsed && parsed.message) return parsed.message;
+            } catch (e) { /* ignore */ }
+        }
+        return fallback || tx('orderFailed');
     }
     var savedAddresses = [];
     var selectedAddress = null;
@@ -57,19 +84,32 @@ $(function () {
         }
     }
 
+    function prefillLoggedInIntoAddrForm() {
+        if (!prefill.isLoggedIn) return;
+        if (!$('#checkout-addr-firstname').val() && prefill.firstName) {
+            $('#checkout-addr-firstname').val(prefill.firstName);
+        }
+        if (!$('#checkout-addr-lastname').val() && prefill.lastName) {
+            $('#checkout-addr-lastname').val(prefill.lastName);
+        }
+        if (!$('#checkout-addr-phone').val() && prefill.phone) {
+            $('#checkout-addr-phone').val(prefill.phone);
+        }
+    }
+
     function validateGuestInfo() {
         if (prefill.isLoggedIn) return true;
         var email = getGuestEmail();
         var first = getGuestFirstName();
         var last = getGuestLastName();
         if (!email) {
-            alert(tx('pleaseEnterEmail'));
+            showCheckoutNotify(tx('pleaseEnterEmail'), 'error');
             $('#co-collapse-guest').collapse('show');
             $('#co-guest-email').focus();
             return false;
         }
         if (!first || !last) {
-            alert(tx('pleaseEnterFirstLastName'));
+            showCheckoutNotify(tx('pleaseEnterFirstLastName'), 'error');
             $('#co-collapse-guest').collapse('show');
             return false;
         }
@@ -81,6 +121,32 @@ $(function () {
         var digits = String(phone).replace(/\D/g, '');
         if (digits.length < 4) return phone;
         return '(' + digits.substring(0, 3) + ') *****' + digits.slice(-2);
+    }
+
+    function isCorporateAddress(addr) {
+        if (!addr) return false;
+        var meta = addr.invoiceMeta || {};
+        if (meta.invoiceType === 'Corporate') return true;
+        if (addr.invoiceType === 'Corporate') return true;
+        var label = (addr.label || '').toLowerCase();
+        return label.indexOf(tx('corporateLabelMatch')) >= 0 || label.indexOf('corporate') >= 0;
+    }
+
+    function buildInvoiceMeta(addr) {
+        if (addr && addr.invoiceMeta) return addr.invoiceMeta;
+        return {
+            invoiceType: (addr && addr.invoiceType) || 'Individual',
+            taxNumber: (addr && addr.taxNumber) || '',
+            taxOffice: (addr && addr.taxOffice) || '',
+            companyName: (addr && addr.companyName) || '',
+            eInvoice: !!(addr && addr.isEInvoice)
+        };
+    }
+
+    function attachInvoiceMeta(addr) {
+        if (!addr) return addr;
+        addr.invoiceMeta = buildInvoiceMeta(addr);
+        return addr;
     }
 
     function formatAddressLine(addr) {
@@ -135,8 +201,7 @@ $(function () {
 
             var name = [addr.contactFirstName, addr.contactLastName].filter(Boolean).join(' ');
             var line = addr.displayLine || formatAddressLine(addr);
-            var isCorp = (addr.invoiceMeta && addr.invoiceMeta.invoiceType === 'Corporate')
-                || (addr.label || '').toLowerCase().indexOf(tx('corporateLabelMatch')) >= 0;
+            var isCorp = isCorporateAddress(addr);
             var corpBadge = isCorp ? ' <span class="badge badge-secondary ml-1">' + tx('corporate') + '</span>' : '';
 
             if (!cardMode) {
@@ -208,8 +273,12 @@ $(function () {
     var checkoutSubtotal = Number(prefill.subtotal || 0);
 
     function formatShippingMoney(amount) {
+        var currency = prefill.currency || 'TL';
+        if (typeof formatStorePrice === 'function') {
+            return formatStorePrice(amount, currency);
+        }
         var num = Number(amount || 0);
-        return num.toLocaleString('tr-TR', { minimumFractionDigits: 2, maximumFractionDigits: 2 }) + ' ' + (prefill.currency || 'TL');
+        return num.toLocaleString('tr-TR', { minimumFractionDigits: 2, maximumFractionDigits: 2 }) + ' ' + currency;
     }
 
     function updateCheckoutTotals(shippingPrice) {
@@ -381,7 +450,7 @@ $(function () {
                 url: '/account/addresses/' + id,
                 success: afterDelete,
                 error: function (xhr) {
-                    alert((xhr.responseJSON && xhr.responseJSON.message) || tx('addressDeleteFailed'));
+                    showCheckoutNotify(checkoutErrorMessage(xhr, tx('addressDeleteFailed')), 'error');
                 }
             });
         } else {
@@ -429,13 +498,16 @@ $(function () {
     }
 
     function openAddrFormModal(mode, addr) {
-        addrFormMode = mode === 'corporate' ? 'corporate' : 'individual';
+        var resolvedMode = mode;
+        if (addr && isCorporateAddress(addr)) resolvedMode = 'corporate';
+        addrFormMode = resolvedMode === 'corporate' ? 'corporate' : 'individual';
         $('#checkout-addr-form-title').text(addr ? tx('editAddress') : tx('addAddress'));
         resetAddrForm();
 
         loadCountries().then(function () {
-            if (!addr) prefillGuestIntoAddrForm();
             if (!addr) {
+                prefillGuestIntoAddrForm();
+                prefillLoggedInIntoAddrForm();
                 var tr = $('#checkout-addr-country option').filter(function () {
                     return $(this).text().toLowerCase().indexOf(tx('turkeyMatch')) >= 0;
                 }).first().val();
@@ -461,8 +533,8 @@ $(function () {
         $('#checkout-addr-phone').val(addr.contactPhone || '');
         $('#checkout-addr-line1').val(addr.addressLine1 || '');
 
-        var meta = addr.invoiceMeta || {};
-        var isCorp = meta.invoiceType === 'Corporate' || (addr.label || '').toLowerCase().indexOf(tx('corporateLabelMatch')) >= 0;
+        var meta = addr.invoiceMeta || buildInvoiceMeta(addr);
+        var isCorp = meta.invoiceType === 'Corporate' || isCorporateAddress(addr);
         setInvoiceType(isCorp ? 'Corporate' : 'Individual');
         $('#checkout-addr-tax-number').val(meta.taxNumber || '');
         $('#checkout-addr-tax-office').val(meta.taxOffice || '');
@@ -488,6 +560,7 @@ $(function () {
             selectedBillingId: selectedBillingAddress ? selectedBillingAddress.id : null,
             billingDifferent: $('#co-billing-different').is(':checked'),
             paymentMethod: $('input[name="co-payment"]:checked').val() || null,
+            paymentProviderCode: $('input[name="co-payment-provider"]:checked').val() || null,
             bankAccountId: parseInt($('input[name="co-bank-account"]:checked').val(), 10) || null,
             orderNote: ($('#co-order-note').val() || '').trim(),
             localAddrSeq: localAddrSeq
@@ -536,7 +609,7 @@ $(function () {
         restoringDraft = true;
         try {
             if (!prefill.isLoggedIn && draft.addresses && draft.addresses.length) {
-                savedAddresses = draft.addresses.slice();
+                savedAddresses = draft.addresses.slice().map(function (a) { return attachInvoiceMeta(a); });
                 if (draft.localAddrSeq) localAddrSeq = draft.localAddrSeq;
             }
 
@@ -584,6 +657,10 @@ $(function () {
             if (draft.bankAccountId) {
                 $('input[name="co-bank-account"][value="' + draft.bankAccountId + '"]').prop('checked', true);
             }
+
+            if (draft.paymentProviderCode) {
+                $('input[name="co-payment-provider"][value="' + draft.paymentProviderCode + '"]').prop('checked', true);
+            }
         } finally {
             restoringDraft = false;
         }
@@ -598,7 +675,7 @@ $(function () {
 
         var previousId = selectedAddress ? selectedAddress.id : null;
         return $.getJSON('/account/addresses/list').then(function (items) {
-            savedAddresses = items || [];
+            savedAddresses = (items || []).map(function (a) { return attachInvoiceMeta(a); });
             if (!savedAddresses.length) {
                 selectedAddress = null;
                 renderCheckoutAddressPicker();
@@ -618,6 +695,7 @@ $(function () {
 
     function collectAddrFormPayload() {
         var formId = parseAddressFormId();
+        var meta = collectInvoiceMetaFromForm();
         return {
             id: typeof formId === 'number' ? formId : 0,
             label: $('#checkout-addr-label').val(),
@@ -630,7 +708,12 @@ $(function () {
             addressLine1: $('#checkout-addr-line1').val(),
             addressLine2: '',
             isDefaultBilling: false,
-            isDefaultShipping: savedAddresses.length === 0
+            isDefaultShipping: savedAddresses.length === 0,
+            invoiceType: meta.invoiceType,
+            taxNumber: meta.taxNumber,
+            taxOffice: meta.taxOffice,
+            companyName: meta.companyName,
+            isEInvoice: meta.eInvoice
         };
     }
 
@@ -653,7 +736,7 @@ $(function () {
         }
         if (currentInvoiceType === 'Corporate') {
             if (!$('#checkout-addr-tax-number').val() || !$('#checkout-addr-tax-office').val() || !$('#checkout-addr-company').val()) {
-                alert(tx('corporateInvoiceRequired'));
+                showCheckoutNotify(tx('corporateInvoiceRequired'), 'error');
                 return false;
             }
         }
@@ -679,7 +762,13 @@ $(function () {
             townId: payload.townId,
             townName: townLabel !== tx('selectOption') ? townLabel : '',
             addressLine1: payload.addressLine1,
-            displayLine: [payload.addressLine1, townLabel, cityLabel].filter(function (x) { return x && x !== tx('selectOption'); }).join(' / ')
+            invoiceType: payload.invoiceType,
+            taxNumber: payload.taxNumber,
+            taxOffice: payload.taxOffice,
+            companyName: payload.companyName,
+            isEInvoice: payload.isEInvoice,
+            displayLine: [payload.addressLine1, townLabel, cityLabel].filter(function (x) { return x && x !== tx('selectOption'); }).join(' / '),
+            invoiceMeta: meta
         };
     }
 
@@ -722,6 +811,10 @@ $(function () {
 
     $('#checkout-payment-accordion').on('click', '.checkout-bank-card', function (e) {
         if ($(e.target).closest('.js-copy-iban').length) return;
+        selectPaymentMethod($(this).closest('.checkout-pay-panel').find('input[name="co-payment"]'));
+    });
+
+    $('#checkout-payment-accordion').on('click', '.checkout-provider-card', function (e) {
         selectPaymentMethod($(this).closest('.checkout-pay-panel').find('input[name="co-payment"]'));
     });
 
@@ -772,7 +865,7 @@ $(function () {
         e.preventDefault();
         e.stopPropagation();
         var addr = findAddressById($(this).data('id'));
-        if (addr) openAddrFormModal('individual', addr);
+        if (addr) openAddrFormModal(isCorporateAddress(addr) ? 'corporate' : 'individual', addr);
     });
 
     $(document).on('click', '.checkout-addr-delete-btn', function (e) {
@@ -788,6 +881,7 @@ $(function () {
 
     $('#co-guest-email, #co-guest-firstname, #co-guest-lastname, #co-order-note').on('input change', scheduleSaveDraft);
     $('#checkout-payment-accordion').on('change', 'input[name="co-bank-account"]', scheduleSaveDraft);
+    $('#checkout-payment-accordion').on('change', 'input[name="co-payment-provider"]', scheduleSaveDraft);
 
     $(window).on('pagehide', flushCheckoutDraft);
     $('a[href]').not('[href^="#"]').on('click', function () {
@@ -805,7 +899,7 @@ $(function () {
         e.stopPropagation();
         var id = parseInt($(this).data('id'), 10);
         var addr = findAddressById(id);
-        if (addr) openAddrFormModal('individual', addr);
+        if (addr) openAddrFormModal(isCorporateAddress(addr) ? 'corporate' : 'individual', addr);
     });
 
     $('#checkout-addr-list').on('change', 'input[name="checkout-addr-pick"]', function () {
@@ -815,7 +909,7 @@ $(function () {
     $('#checkout-addr-list-select-btn').on('click', function () {
         var id = listSelectedId || parseInt($('input[name="checkout-addr-pick"]:checked').val(), 10);
         if (!id) {
-            alert(tx('pleaseSelectAddress'));
+            showCheckoutNotify(tx('pleaseSelectAddress'), 'error');
             return;
         }
         var addr = findAddressById(id);
@@ -847,12 +941,22 @@ $(function () {
             var local = buildLocalAddress(payload, meta, saved);
             if (saved && saved.id) local.id = saved.id;
             else if (!local.id) local.id = nextLocalAddressId();
+            attachInvoiceMeta(local);
 
             if (prefill.isLoggedIn) {
                 return loadSavedAddresses().then(function () {
                     var refreshed = findAddressById(local.id);
-                    if (refreshed) applyShippingAddress(refreshed, meta);
-                    else upsertSavedAddress(local, meta);
+                    if (refreshed) {
+                        refreshed.invoiceMeta = meta;
+                        refreshed.invoiceType = meta.invoiceType;
+                        refreshed.taxNumber = meta.taxNumber;
+                        refreshed.taxOffice = meta.taxOffice;
+                        refreshed.companyName = meta.companyName;
+                        refreshed.isEInvoice = meta.eInvoice;
+                        upsertSavedAddress(refreshed, meta);
+                    } else {
+                        upsertSavedAddress(local, meta);
+                    }
                     $('#checkout-address-form-modal').modal('hide');
                 });
             }
@@ -870,7 +974,7 @@ $(function () {
                 data: JSON.stringify(payload),
                 success: function (saved) { finish(saved); },
                 error: function (xhr) {
-                    alert((xhr.responseJSON && xhr.responseJSON.message) || tx('addressSaveFailed'));
+                    showCheckoutNotify(checkoutErrorMessage(xhr, tx('addressSaveFailed')), 'error');
                 },
                 complete: function () { $btn.prop('disabled', false); }
             });
@@ -892,7 +996,7 @@ $(function () {
         e.preventDefault();
 
         if (!selectedAddress) {
-            alert(tx('pleaseSelectShipping'));
+            showCheckoutNotify(tx('pleaseSelectShipping'), 'error');
             $('#co-collapse-address').collapse('show');
             return;
         }
@@ -900,7 +1004,7 @@ $(function () {
         var billingDifferent = $('#co-billing-different').is(':checked');
         var billingAddr = billingDifferent ? selectedBillingAddress : selectedAddress;
         if (billingDifferent && !billingAddr) {
-            alert(tx('pleaseSelectBilling'));
+            showCheckoutNotify(tx('pleaseSelectBilling'), 'error');
             $('#co-collapse-address').collapse('show');
             return;
         }
@@ -909,26 +1013,37 @@ $(function () {
 
         var orderEmail = getGuestEmail();
         if (prefill.isLoggedIn && !orderEmail) {
-            alert(tx('emailRequired'));
+            showCheckoutNotify(tx('emailRequired'), 'error');
             return;
         }
 
         var orderFirstName = (selectedAddress.contactFirstName || getGuestFirstName() || '').trim();
         var orderLastName = (selectedAddress.contactLastName || getGuestLastName() || '').trim();
         if (!orderFirstName || !orderLastName) {
-            alert(tx('firstLastRequired'));
+            showCheckoutNotify(tx('firstLastRequired'), 'error');
             if (!prefill.isLoggedIn) $('#co-collapse-guest').collapse('show');
             return;
         }
 
         var paymentMethod = $('input[name="co-payment"]:checked').val() || 'CashOnDelivery';
-        if (paymentMethod === 'CreditCard') {
-            alert(tx('creditCardNotAvailable'));
+        if (paymentMethod === 'CreditCard' && !prefill.creditCardEnabled) {
+            showCheckoutNotify(tx('creditCardNotAvailable'), 'error');
             return;
         }
 
+        var paymentProviderCode = null;
+        if (paymentMethod === 'CreditCard') {
+            paymentProviderCode = $('input[name="co-payment-provider"]:checked').val() || null;
+            if (!paymentProviderCode) {
+                showCheckoutNotify('Lütfen ödeme sağlayıcısı seçin (ör. iyzico).', 'error');
+                $('#co-collapse-payment').collapse('show');
+                openPaymentPanel($('.checkout-pay-panel[data-payment="CreditCard"]'));
+                return;
+            }
+        }
+
         if (paymentMethod === 'BankTransfer' && !prefill.bankTransferEnabled) {
-            alert(tx('bankTransferNotAvailable') || 'Havale / EFT şu an aktif değil.');
+            showCheckoutNotify(tx('bankTransferNotAvailable') || 'Havale / EFT şu an aktif değil.', 'error');
             return;
         }
 
@@ -937,7 +1052,7 @@ $(function () {
             var bankRaw = $('input[name="co-bank-account"]:checked').val();
             bankAccountId = bankRaw ? parseInt(bankRaw, 10) : null;
             if (!bankAccountId || bankAccountId <= 0) {
-                alert('Lütfen havale için banka hesabı seçin.');
+                showCheckoutNotify('Lütfen havale için banka hesabı seçin.', 'error');
                 $('#co-collapse-payment').collapse('show');
                 openPaymentPanel($('.checkout-pay-panel[data-payment="BankTransfer"]'));
                 return;
@@ -947,7 +1062,7 @@ $(function () {
         var carrierRaw = $('#co-carrier-id').val();
         var carrierId = carrierRaw ? parseInt(carrierRaw, 10) : null;
         if (!carrierId || carrierId <= 0) {
-            alert(tx('pleaseSelectCarrier'));
+            showCheckoutNotify(tx('pleaseSelectCarrier'), 'error');
             $('#co-collapse-shipping').collapse('show');
             return;
         }
@@ -968,7 +1083,7 @@ $(function () {
             });
         });
         if ($('.co-legal-consent').length > 0 && !legalValid) {
-            alert(tx('legalConsentRequired') || 'Lütfen tüm yasal metinleri onaylayın.');
+            showCheckoutNotify(tx('legalConsentRequired') || 'Lütfen tüm yasal metinleri onaylayın.', 'error');
             return;
         }
 
@@ -1033,19 +1148,40 @@ $(function () {
             success: function (res) {
                 $.ajax({ type: 'DELETE', url: '/checkout/draft' });
                 var payment = res.paymentMethod || payload.paymentMethod;
+                if (payment === 'CreditCard' && prefill.creditCardEnabled) {
+                    $.ajax({
+                        type: 'POST',
+                        url: '/checkout/initiate-payment',
+                        contentType: 'application/json',
+                        data: JSON.stringify({ orderId: res.orderId, providerCode: paymentProviderCode }),
+                        success: function (payRes) {
+                            if (payRes.redirectUrl) {
+                                window.location.href = payRes.redirectUrl;
+                                return;
+                            }
+                            showCheckoutNotify('Ödeme sayfası alınamadı.', 'error');
+                            if (window.hideStorePageLoading) window.hideStorePageLoading();
+                            $btn.prop('disabled', false);
+                        },
+                        error: function (xhr) {
+                            if (window.hideStorePageLoading) window.hideStorePageLoading();
+                            $btn.prop('disabled', false);
+                            showCheckoutNotify(checkoutErrorMessage(xhr, 'Ödeme başlatılamadı.'), 'error');
+                        }
+                    });
+                    return;
+                }
                 if (window.showStorePageLoading) {
                     window.showStorePageLoading();
                 }
-                window.location.href = '/checkout/confirmation/' + res.orderId
-                    + '?orderNumber=' + encodeURIComponent(res.orderNumber || '')
-                    + '&payment=' + encodeURIComponent(payment);
+                window.location.href = '/checkout/confirmation';
             },
             error: function (xhr) {
                 if (window.hideStorePageLoading) {
                     window.hideStorePageLoading();
                 }
                 $btn.prop('disabled', false);
-                alert((xhr.responseJSON && xhr.responseJSON.message) || tx('orderFailed'));
+                showCheckoutNotify(checkoutErrorMessage(xhr, tx('orderFailed')), 'error');
             }
         });
     });
@@ -1057,4 +1193,5 @@ $(function () {
     loadSavedAddresses().then(function () {
         return restoreCheckoutDraft();
     });
+    }
 });

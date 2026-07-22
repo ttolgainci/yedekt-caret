@@ -1,4 +1,4 @@
-﻿@using MarbleWebProject.Helper
+@using MarbleWebProject.Helper
 <div class="modal fade" id="signin-modal" tabindex="-1" role="dialog" aria-hidden="true">
     <div class="modal-dialog modal-dialog-centered" role="document">
         <div class="modal-content">
@@ -41,6 +41,7 @@
                                             <input type="checkbox" class="custom-control-input" id="signin-remember">
                                             <label class="custom-control-label" for="signin-remember">@Html.Translate("#Remember Me#")</label>
                                         </div>
+                                        <a href="/account/forgot-password" class="forgot-link">Şifremi unuttum</a>
                                     </div>
                                 </form>
                             </div>
@@ -69,6 +70,10 @@
                                     <div class="form-group">
                                         <label for="register-password-confirm">@Html.Translate("#Again Password#") *</label>
                                         <input type="password" class="form-control" id="register-password-confirm" name="passwordConfirm" required autocomplete="new-password">
+                                    </div>
+                                    <div class="custom-control custom-checkbox mb-2">
+                                        <input type="checkbox" class="custom-control-input" id="register-kvkk" name="acceptKvkk" required>
+                                        <label class="custom-control-label" for="register-kvkk">KVKK aydınlatma metnini okudum ve kabul ediyorum *</label>
                                     </div>
                                     <div class="form-footer">
                                         <button type="submit" class="btn btn-outline-primary-2">

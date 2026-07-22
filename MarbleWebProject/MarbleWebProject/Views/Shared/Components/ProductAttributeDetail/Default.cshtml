@@ -1,35 +1,114 @@
-﻿@model List<ProductAttributeList>
+@using System.Linq
+@using MarbleWebProject.Helper
+@model ProductDetailTabsViewModel
+@{
+    var attributes = (Model?.Attributes ?? new List<ProductAttributeList>())
+        .Where(a => !string.IsNullOrWhiteSpace(a.AttributeName) || !string.IsNullOrWhiteSpace(a.AttributeDetails))
+        .OrderBy(a => a.AttributeOrder)
+        .ThenBy(a => a.AttributeName)
+        .ToList();
 
+    var product = Model?.Product;
+    var fitments = (Model?.VehicleFitments ?? new List<ProductVehicleFitmentItem>())
+        .Where(f => !string.IsNullOrWhiteSpace(f.Label))
+        .ToList();
+
+    var hasDescription = !string.IsNullOrWhiteSpace(Model?.Description);
+
+    var specRows = new List<(string Label, string Value)>();
+    if (product != null)
+    {
+        if (product.Weight.HasValue)
+            specRows.Add((Html.Translate("#Weight#").ToString(), $"{product.Weight.Value} {product.WeightClassUnit}".Trim()));
+
+        var dimParts = new List<string>();
+        if (product.Length.HasValue)
+            dimParts.Add(Math.Round(product.Length.Value).ToString());
+        if (product.Width.HasValue)
+            dimParts.Add(Math.Round(product.Width.Value).ToString());
+        if (product.Height.HasValue)
+            dimParts.Add(Math.Round(product.Height.Value).ToString());
+        if (dimParts.Count > 0)
+            specRows.Add((Html.Translate("#Dimensions#").ToString(), $"{string.Join(" x ", dimParts)} {product.LengthClassUnit}".Trim()));
+    }
+
+    foreach (var item in attributes)
+    {
+        var name = item.AttributeName ?? "";
+        var val = item.AttributeDetails ?? item.AttributeDescription ?? "";
+        if (string.IsNullOrWhiteSpace(name) && string.IsNullOrWhiteSpace(val))
+            continue;
+        specRows.Add((name, val));
+    }
+
+    var hasSpecs = specRows.Count > 0;
+    var hasFitment = fitments.Count > 0;
+    if (!hasDescription && !hasSpecs && !hasFitment)
+    {
+        return;
+    }
+
+    var activeDesc = hasDescription;
+    var activeInfo = !hasDescription && hasSpecs;
+    var activeFitment = !hasDescription && !hasSpecs && hasFitment;
+}
 <div class="product-details-tab">
-    <ul class="nav nav-pills justify-content-center" role="tablist">
-        @{
-            int liIndex = 0;
-        }
-        @foreach (var item in Model)
+    <ul class="nav nav-tabs nav-tabs-bg" role="tablist">
+        @if (hasDescription)
         {
-            string setclass = liIndex == 0 ? "active" : "";
             <li class="nav-item">
-                <a class="nav-link @liIndex @setclass" id="product-desc-li-@liIndex" data-toggle="tab" href="#product-desc-@liIndex" role="tab" aria-controls="product-desc-tab" aria-selected="true">@item.AttributeName</a>
+                <a class="nav-link@(activeDesc ? " active" : "")" id="product-desc-link" data-toggle="tab" href="#product-desc-tab" role="tab" aria-controls="product-desc-tab" aria-selected="@(activeDesc ? "true" : "false")">@Html.Translate("#Description#")</a>
             </li>
-            liIndex++;
         }
-
-    </ul>
-    <div class="tab-content">
-        @{
-            int tabIndex = 0;
-        }
-        @foreach (var item in Model)
+        @if (hasSpecs)
         {
-            string setclass = tabIndex == 0 ? "show active" : "";
-            <div class="tab-pane fade @setclass" id="product-desc-@tabIndex" role="tabpanel" aria-labelledby="product-desc-@tabIndex">
-                <div class="product-desc-content">
-                    @Html.Raw(item.AttributeDescription)
-                </div>
-            </div>
-            tabIndex++;
+            <li class="nav-item">
+                <a class="nav-link@(activeInfo ? " active" : "")" id="product-info-link" data-toggle="tab" href="#product-info-tab" role="tab" aria-controls="product-info-tab" aria-selected="@(activeInfo ? "true" : "false")">@Html.Translate("#Additional information#")</a>
+            </li>
         }
-
-
+        @if (hasFitment)
+        {
+            <li class="nav-item">
+                <a class="nav-link@(activeFitment ? " active" : "")" id="product-fitment-link" data-toggle="tab" href="#product-fitment-tab" role="tab" aria-controls="product-fitment-tab" aria-selected="@(activeFitment ? "true" : "false")">@Html.Translate("#Vehicle fitment#")</a>
+            </li>
+        }
+    </ul>
+    <div class="tab-content tab-content-border">
+        @if (hasDescription)
+        {
+            <div class="tab-pane fade@(activeDesc ? " show active" : "")" id="product-desc-tab" role="tabpanel" aria-labelledby="product-desc-link">
+                <div class="product-desc-content">
+                    @Html.Raw(Model!.Description)
+                </div><!-- End .product-desc-content -->
+            </div><!-- .End .tab-pane -->
+        }
+        @if (hasSpecs)
+        {
+            <div class="tab-pane fade@(activeInfo ? " show active" : "")" id="product-info-tab" role="tabpanel" aria-labelledby="product-info-link">
+                <div class="product-desc-content">
+                    <h3>@Html.Translate("#Additional information#")</h3>
+                    <ul class="product-plain-list">
+                        @foreach (var row in specRows)
+                        {
+                            <li>@(string.IsNullOrWhiteSpace(row.Label) ? row.Value : $"{row.Label}: {row.Value}")</li>
+                        }
+                    </ul>
+                </div><!-- End .product-desc-content -->
+            </div><!-- .End .tab-pane -->
+        }
+        @if (hasFitment)
+        {
+            <div class="tab-pane fade@(activeFitment ? " show active" : "")" id="product-fitment-tab" role="tabpanel" aria-labelledby="product-fitment-link">
+                <div class="product-desc-content">
+                    <h3>@Html.Translate("#Vehicle fitment#")</h3>
+                    <ul class="product-plain-list">
+                        @foreach (var item in fitments)
+                        {
+                            <li>@item.Label</li>
+                        }
+                    </ul>
+                </div><!-- End .product-desc-content -->
+            </div><!-- .End .tab-pane -->
+        }
     </div><!-- End .tab-content -->
 </div><!-- End .product-details-tab -->

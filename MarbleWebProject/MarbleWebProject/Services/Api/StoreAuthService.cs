@@ -55,12 +55,13 @@ public sealed class StoreAuthService : IStoreAuthService
         {
             UserName = userName,
             Password = password,
-            CustomName = customName
+            CustomName = customName,
+            Audience = "store"
         };
         var response = await _api.PostAsync<TokenResponse>("/AccountManager/login", body, bearerToken: null, cancellationToken);
         if (!IsValidToken(response))
             throw new InvalidOperationException(
-                "API login failed. Check StoreAuth (or CMSService) UserName/Password/CustomName in appsettings.");
+                "API login failed. Check StoreAuth UserName/Password/CustomName in appsettings.");
         return response;
     }
 
@@ -75,7 +76,14 @@ public sealed class StoreAuthService : IStoreAuthService
 
     private static bool IsValidToken(TokenResponse? token) =>
         !string.IsNullOrWhiteSpace(token?.Token)
-        && !token.Token.Contains("Kullanici", StringComparison.OrdinalIgnoreCase);
+        && !token.Token.Contains("Kullanici", StringComparison.OrdinalIgnoreCase)
+        && LooksLikeJwt(token.Token);
+
+    private static bool LooksLikeJwt(string token)
+    {
+        var parts = token.Split('.');
+        return parts.Length == 3 && parts.All(p => p.Length > 0);
+    }
 
     private TokenResponse? ReadFromSession()
     {
@@ -101,9 +109,7 @@ public sealed class StoreAuthService : IStoreAuthService
 
     private static void ApplyLanguageToAppConfig(TokenResponse token)
     {
-        if (AppConfig.CMSService == null)
-            return;
-        AppConfig.CMSService.LanguageCode = token.LanguageCode;
-        AppConfig.CMSService.LanguageCulture = token.LanguageCulture;
+        AppConfig.Storefront.StoreAuth.LanguageCode = token.LanguageCode;
+        AppConfig.Storefront.StoreAuth.LanguageCulture = token.LanguageCulture;
     }
 }

@@ -127,9 +127,22 @@ $(function () {
         }).join('');
     }
 
+    function renderTrackingTimeline(shipment) {
+        var events = shipment.trackingEvents || shipment.TrackingEvents || [];
+        if (!events.length) return '';
+        var items = events.map(function (evt) {
+            var at = evt.atUtc || evt.AtUtc;
+            var desc = evt.description || evt.Description || '';
+            var when = at ? formatDate(at) : '';
+            return '<li><span class="store-od-track-when">' + escapeHtml(when) + '</span> ' + escapeHtml(desc) + '</li>';
+        }).join('');
+        return '<ul class="store-od-track-timeline">' + items + '</ul>';
+    }
+
     function renderTrackingBox(data) {
         var shipment = getShipment(data);
         var tracking = shipment.trackingNumber || shipment.TrackingNumber || '';
+        var trackingUrl = shipment.trackingUrl || shipment.TrackingUrl || '';
         var carrier = shipment.carrierName || shipment.CarrierName || '';
         var statusText = shipment.statusText || shipment.StatusText || '';
         var shippingPrice = shipment.shippingPrice ?? shipment.ShippingPrice;
@@ -148,13 +161,16 @@ $(function () {
         if (shippingPrice != null && !isNaN(Number(shippingPrice))) {
             rows += '<div class="store-od-tracking-row"><span>Kargo ücreti:</span><strong>' + formatMoney(shippingPrice, data) + '</strong></div>';
         }
-        var btn = hasTracking
-            ? '<button type="button" class="btn btn-sm store-od-track-btn" data-tracking="' + escapeAttr(tracking) + '">Kargom Nerede?</button>'
-            : '';
+        var btn = '';
+        if (hasTracking) {
+            btn = '<button type="button" class="btn btn-sm store-od-track-btn" data-tracking="' + escapeAttr(tracking) + '" data-tracking-url="' + escapeAttr(trackingUrl) + '" data-order-id="' + escapeAttr(data.id) + '">Kargom Nerede?</button>';
+        }
+        var timeline = renderTrackingTimeline(shipment);
         return (
             '<div class="store-od-tracking">' +
                 '<p class="store-od-tracking-msg">' + escapeHtml(shipmentStatusMessage(data)) + '</p>' +
                 (rows ? '<div class="store-od-tracking-meta">' + rows + '</div>' : '') +
+                timeline +
                 btn +
             '</div>'
         );
@@ -185,7 +201,7 @@ $(function () {
             html += '<p class="mb-1"><code>' + escapeHtml(bt.iban || bt.Iban) + '</code></p>';
         }
         html += '<p class="mb-1"><span class="text-muted">Tutar:</span> <strong>' + formatMoney(data.grandTotal, data) + '</strong></p>';
-        html += '<p class="mb-2"><span class="text-muted">Açıklama:</span> <strong>' + escapeHtml(data.orderNumber || ('#' + data.id)) + '</strong></p>';
+        html += '<p class="mb-2"><span class="text-muted">Açıklama:</span> <strong>' + escapeHtml(data.orderNumber || '—') + '</strong></p>';
         if (dueText) {
             html += '<p class="small text-muted mb-2">Son ödeme: <strong>' + escapeHtml(dueText) + '</strong></p>';
         }
@@ -303,6 +319,49 @@ $(function () {
         return num.toLocaleString('tr-TR', { minimumFractionDigits: 2, maximumFractionDigits: 2 }) + ' ' + currencyLabel(currencySource);
     }
 
+    function canRequestReturn(data) {
+        var status = Number(data.orderStatus);
+        var payment = Number(data.paymentStatus);
+        return payment === 1 && status >= 2 && status !== 9;
+    }
+
+    function renderReturnRequestBlock(data) {
+        if (!canRequestReturn(data)) return '';
+
+        var lineRows = (data.lines || []).map(function (line) {
+            var lineId = line.id || line.Id || line.ID;
+            var name = line.productNameSnapshot || line.ProductNameSnapshot || '';
+            var maxQty = line.quantity || line.Quantity || 1;
+            return (
+                '<div class="store-od-return-line mb-2">' +
+                    '<label class="d-flex align-items-start gap-2 mb-0">' +
+                        '<input type="checkbox" class="store-od-return-check mt-1" data-line-id="' + escapeAttr(lineId) + '" data-max-qty="' + maxQty + '" />' +
+                        '<span class="flex-grow-1">' +
+                            '<strong>' + escapeHtml(name) + '</strong>' +
+                            '<span class="d-block small text-muted">Maks. ' + maxQty + ' adet</span>' +
+                        '</span>' +
+                        '<input type="number" class="form-control form-control-sm store-od-return-qty" style="width:4.5rem" min="1" max="' + maxQty + '" value="1" disabled />' +
+                    '</label>' +
+                    '<input type="text" class="form-control form-control-sm mt-1 store-od-return-note" placeholder="Satır notu (isteğe bağlı)" disabled />' +
+                '</div>'
+            );
+        }).join('');
+
+        return (
+            '<section class="store-od-return mt-3">' +
+                '<h3 class="store-od-footer-title">İade talebi</h3>' +
+                '<p class="small text-muted">İade etmek istediğiniz ürünleri seçin. Talebiniz incelendikten sonra size bilgi verilecektir.</p>' +
+                '<div class="store-od-return-lines mb-3">' + lineRows + '</div>' +
+                '<div class="mb-3">' +
+                    '<label class="form-label small">İade gerekçesi</label>' +
+                    '<textarea class="form-control form-control-sm store-od-return-reason" rows="3" placeholder="Kısaca açıklayın"></textarea>' +
+                '</div>' +
+                '<button type="button" class="btn btn-sm btn-outline-primary store-od-return-submit" data-order-id="' + escapeAttr(data.id) + '">İade talebi gönder</button>' +
+                '<p class="small text-muted mt-2 mb-0"><a href="/account/returns">Tüm iade taleplerim</a></p>' +
+            '</section>'
+        );
+    }
+
     function matchesFilter(order) {
         var status = order.orderStatus;
         if (activeFilter === 'ongoing') return status !== 3 && status !== 9;
@@ -314,7 +373,7 @@ $(function () {
     function matchesSearch(order) {
         if (!searchQuery) return true;
         var q = searchQuery.toLowerCase();
-        var label = (order.orderNumber || ('#' + order.id)).toLowerCase();
+        var label = (order.orderNumber || '').toLowerCase();
         return label.indexOf(q) !== -1;
     }
 
@@ -333,7 +392,7 @@ $(function () {
         }
 
         visible.forEach(function (order) {
-            var label = order.orderNumber || ('#' + order.id);
+            var label = order.orderNumber || '—';
             var $card = $('<article class="store-order-card"></article>');
             var $top = $('<div class="store-order-card-top"></div>');
             $top.append(
@@ -361,8 +420,9 @@ $(function () {
         $('#order-detail').removeClass('d-none');
         toggleListChrome(false);
 
-        var orderNo = data.orderNumber || ('#' + data.id);
-        var deliveryNo = data.orderNumber || ('#' + data.id);
+        var orderNo = data.orderNumber || '—';
+        var shipment = getShipment(data);
+        var deliveryNo = shipment.shipmentNumber || shipment.ShipmentNumber || '—';
         var statusCls = statusClass(data.orderStatus);
         var statusIcon = data.orderStatus === 3 ? '✓' : (data.orderStatus === 9 ? '✕' : (data.orderStatus === 2 ? '↗' : '●'));
 
@@ -387,6 +447,7 @@ $(function () {
                     '</div>' +
                 '</section>' +
                 renderBankTransferBlock(data) +
+                renderReturnRequestBlock(data) +
                 '<section class="store-od-footer">' +
                     '<div class="store-od-footer-col">' +
                         '<h3 class="store-od-footer-title">Teslimat Adresi</h3>' +
@@ -415,9 +476,14 @@ $(function () {
     }
 
     $('#orders-tabs').on('click', '.nav-link', function () {
+        var filter = $(this).data('filter');
+        if (filter === 'returns') {
+            window.location.href = '/account/returns';
+            return;
+        }
         $('#orders-tabs .nav-link').removeClass('active');
         $(this).addClass('active');
-        activeFilter = $(this).data('filter');
+        activeFilter = filter;
         renderList();
     });
 
@@ -466,16 +532,87 @@ $(function () {
 
     $('#order-detail').on('click', '.store-od-track-btn', function () {
         var tracking = $(this).data('tracking');
+        var trackingUrl = $(this).data('tracking-url');
+        var orderId = $(this).data('order-id');
         if (!tracking) return;
-        if (navigator.clipboard && navigator.clipboard.writeText) {
-            navigator.clipboard.writeText(String(tracking)).then(function () {
-                alert('Takip numarası kopyalandı: ' + tracking);
-            }).catch(function () {
+
+        function openCarrier() {
+            if (trackingUrl) {
+                window.open(String(trackingUrl), '_blank', 'noopener');
+                return;
+            }
+            if (navigator.clipboard && navigator.clipboard.writeText) {
+                navigator.clipboard.writeText(String(tracking)).then(function () {
+                    alert('Takip numarası kopyalandı: ' + tracking);
+                }).catch(function () {
+                    alert('Takip numarası: ' + tracking);
+                });
+            } else {
                 alert('Takip numarası: ' + tracking);
-            });
-        } else {
-            alert('Takip numarası: ' + tracking);
+            }
         }
+
+        if (!orderId) {
+            openCarrier();
+            return;
+        }
+
+        $.getJSON('/account/orders/' + orderId + '/shipment/track?refresh=true')
+            .done(function (resp) {
+                if (resp && resp.events && resp.events.length) {
+                    var $box = $('.store-od-tracking');
+                    $box.find('.store-od-track-timeline').remove();
+                    var events = resp.events.map(function (evt) {
+                        return '<li><span class="store-od-track-when">' + escapeHtml(formatDate(evt.atUtc || evt.AtUtc)) + '</span> ' + escapeHtml(evt.description || evt.Description || '') + '</li>';
+                    }).join('');
+                    $box.find('.store-od-track-btn').before('<ul class="store-od-track-timeline">' + events + '</ul>');
+                }
+                openCarrier();
+            })
+            .fail(openCarrier);
+    });
+
+    $('#order-detail').on('change', '.store-od-return-check', function () {
+        var $line = $(this).closest('.store-od-return-line');
+        var on = $(this).is(':checked');
+        $line.find('.store-od-return-qty, .store-od-return-note').prop('disabled', !on);
+    });
+
+    $('#order-detail').on('click', '.store-od-return-submit', function () {
+        var orderId = $(this).data('order-id');
+        var lines = [];
+        $('.store-od-return-line').each(function () {
+            var $row = $(this);
+            var $check = $row.find('.store-od-return-check');
+            if (!$check.is(':checked')) return;
+            var lineId = Number($check.data('line-id'));
+            var qty = Number($row.find('.store-od-return-qty').val()) || 0;
+            var note = ($row.find('.store-od-return-note').val() || '').trim();
+            if (lineId > 0 && qty > 0) {
+                lines.push({ shopOrderLineID: lineId, quantity: qty, note: note || null });
+            }
+        });
+        if (!lines.length) {
+            alert('Lütfen en az bir ürün seçin.');
+            return;
+        }
+        var reason = ($('.store-od-return-reason').val() || '').trim();
+        var $btn = $(this).prop('disabled', true);
+        $.ajax({
+            url: '/account/orders/' + orderId + '/returns',
+            method: 'POST',
+            contentType: 'application/json',
+            data: JSON.stringify({ reason: reason || null, lines: lines })
+        })
+            .done(function () {
+                alert('İade talebiniz alındı. İnceleme sonucu e-posta ile bilgilendirileceksiniz.');
+                window.location.href = '/account/returns';
+            })
+            .fail(function (xhr) {
+                var msg = (xhr.responseJSON && xhr.responseJSON.message) || 'İade talebi gönderilemedi.';
+                alert(msg);
+            })
+            .always(function () { $btn.prop('disabled', false); });
     });
 
     loadOrders();

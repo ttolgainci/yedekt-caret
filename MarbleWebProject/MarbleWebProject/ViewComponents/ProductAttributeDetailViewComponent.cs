@@ -1,16 +1,16 @@
-﻿using MarbleWebProject.Models;
+using MarbleWebProject.Models;
 using Microsoft.AspNetCore.Mvc;
-using Microsoft.Identity.Client;
 
 namespace MarbleWebProject.ViewComponents
 {
-
     [ViewComponent]
     public class ProductAttributeDetailViewComponent : ViewComponent
     {
-        public async Task<IViewComponentResult> InvokeAsync(List<ProductAttributeList> model)
+        public Task<IViewComponentResult> InvokeAsync(ProductDetailTabsViewModel model)
         {
-            return View(model);
+            model ??= new ProductDetailTabsViewModel();
+            model.Attributes ??= new List<ProductAttributeList>();
+            return Task.FromResult<IViewComponentResult>(View(model));
         }
     }
 }

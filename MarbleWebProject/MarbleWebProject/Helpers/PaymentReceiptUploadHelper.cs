@@ -1,3 +1,5 @@
+using MarbleWebProject.Models;
+
 namespace MarbleWebProject.Helpers;
 
 public static class PaymentReceiptUploadHelper
@@ -21,7 +23,9 @@ public static class PaymentReceiptUploadHelper
         if (string.IsNullOrEmpty(ext) || !AllowedExtensions.Contains(ext))
             return (false, null, "Yalnızca JPG, PNG, GIF, WEBP veya PDF yükleyebilirsiniz.");
 
-        var project = configuration["ProjectService:ProjectName"]?.Trim();
+        var project = configuration["StoreAuth:ProjectName"]?.Trim();
+        if (string.IsNullOrWhiteSpace(project))
+            project = AppConfig.ProjectName;
         if (string.IsNullOrWhiteSpace(project))
             project = "Store";
 

@@ -89,7 +89,9 @@
                 firstName: $('#register-firstname').val(),
                 lastName: $('#register-lastname').val(),
                 phone: $('#register-phone').val(),
-                customerType: 'Retail'
+                customerType: 'Retail',
+                acceptKvkk: $('#register-kvkk').is(':checked'),
+                marketingConsent: false
             }),
             success: function (result) {
                 setCustomerLoggedIn(result.displayName || '');

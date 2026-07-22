@@ -120,11 +120,14 @@ $(function () {
         $('#checkout-addr-phone').val(addr.contactPhone || '');
         $('#checkout-addr-line1').val(addr.addressLine1 || '');
 
-        var isCorp = (addr.label || '').toLowerCase().indexOf('kurumsal') >= 0;
+        var isCorp = (addr.label || '').toLowerCase().indexOf('kurumsal') >= 0
+            || (addr.label || '').toLowerCase().indexOf('corporate') >= 0
+            || addr.invoiceType === 'Corporate';
         setInvoiceType(isCorp ? 'Corporate' : 'Individual');
         $('#checkout-addr-tax-number').val(addr.taxNumber || '');
         $('#checkout-addr-tax-office').val(addr.taxOffice || '');
         $('#checkout-addr-company').val(addr.companyName || '');
+        $('#checkout-addr-e-invoice').prop('checked', !!addr.isEInvoice);
 
         $('#checkout-addr-country').val(addr.countryId || '');
         loadCities(addr.countryId).then(function () {
@@ -191,7 +194,12 @@ $(function () {
             addressLine1: $('#checkout-addr-line1').val(),
             addressLine2: '',
             isDefaultBilling: addresses.length === 0,
-            isDefaultShipping: addresses.length === 0
+            isDefaultShipping: addresses.length === 0,
+            invoiceType: currentInvoiceType,
+            taxNumber: currentInvoiceType === 'Corporate' ? $('#checkout-addr-tax-number').val() : '',
+            taxOffice: currentInvoiceType === 'Corporate' ? $('#checkout-addr-tax-office').val() : '',
+            companyName: currentInvoiceType === 'Corporate' ? $('#checkout-addr-company').val() : '',
+            isEInvoice: currentInvoiceType === 'Corporate' && $('#checkout-addr-e-invoice').is(':checked')
         };
     }
 

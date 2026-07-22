@@ -16,8 +16,11 @@ public class ProductDetailSimilarViewComponent : ViewComponent
         _auth = auth;
     }
 
-    public async Task<IViewComponentResult> InvokeAsync(ProductSimilarModel data, CancellationToken cancellationToken = default)
+    public async Task<IViewComponentResult> InvokeAsync(ProductSimilarModel? data, CancellationToken cancellationToken = default)
     {
+        if (data == null || data.ProductID <= 0 || data.CategoryID <= 0)
+            return Content(string.Empty);
+
         var session = await _auth.GetSessionAsync(cancellationToken);
         var routeResponse = await _catalog.GetProductDetailSimilarAsync(new ProductsByCageoryRequest
         {
@@ -26,7 +29,7 @@ public class ProductDetailSimilarViewComponent : ViewComponent
             CategoryID = data.CategoryID
         }, cancellationToken);
 
-        if (routeResponse.Status)
+        if (routeResponse.Status && routeResponse.Data != null && routeResponse.Data.Count > 0)
             return View(routeResponse.Data);
 
         return Content(string.Empty);

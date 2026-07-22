@@ -1,0 +1,38 @@
+{
+  "version": "0.2.0",
+  "configurations": [
+    {
+      "name": "API (http://localhost:5206)",
+      "type": "coreclr",
+      "request": "launch",
+      "preLaunchTask": "build-api",
+      "program": "${workspaceFolder}/MarbleApiProject/MarbleApiProject/bin/Debug/net8.0/MarbleApiProject.dll",
+      "args": [],
+      "cwd": "${workspaceFolder}/MarbleApiProject/MarbleApiProject",
+      "stopAtEntry": false,
+      "env": {
+        "ASPNETCORE_ENVIRONMENT": "Development",
+        "ASPNETCORE_URLS": "http://localhost:5206"
+      },
+      "serverReadyAction": {
+        "action": "openExternally",
+        "pattern": "\\bNow listening on:\\s+(https?://\\S+)",
+        "uriFormat": "http://localhost:5206/swagger"
+      }
+    },
+    {
+      "name": "Web (http://localhost:5001)",
+      "type": "coreclr",
+      "request": "launch",
+      "preLaunchTask": "build-web",
+      "program": "${workspaceFolder}/MarbleWebProject/MarbleWebProject/bin/Debug/net8.0/MarbleWebProject.dll",
+      "args": [],
+      "cwd": "${workspaceFolder}/MarbleWebProject/MarbleWebProject",
+      "stopAtEntry": false,
+      "env": {
+        "ASPNETCORE_ENVIRONMENT": "Development",
+        "ASPNETCORE_URLS": "http://localhost:5001"
+      }
+    }
+  ]
+}

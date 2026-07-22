@@ -1,4 +1,4 @@
-﻿namespace MarbleWebProject.Models
+namespace MarbleWebProject.Models
 {
     public class CartModel
     {
@@ -9,6 +9,7 @@
         public decimal? Price { get; set; }
         public string CurrencyName { get; set; }
         public int? CartQuantity { get; set; }
+        public int? TaxPercent { get; set; }
     }
    public class CartFullModel
     {
@@ -19,6 +20,10 @@
     {
         public string Total { get; set; }
         public string Subtotal { get; set; }
+        public string GrossSubtotal { get; set; }
+        public decimal? GrossSubtotalValue { get; set; }
+        public string TaxTotal { get; set; }
+        public decimal? TaxTotalValue { get; set; }
         public string GrandTotal { get; set; }
         public int? TotalQuantity { get; set; }
         public decimal? ShippingPrice { get; set; }

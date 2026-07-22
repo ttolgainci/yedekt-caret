@@ -67,10 +67,10 @@
                             @if (item.Price.HasValue)
                             {
                                 <div class="product-price">
-                                    <span class="new-price">@item.Price @item.CurrencyName</span>
+                                    <span class="new-price">@CurrencyDisplayHelper.FormatAmount(item.Price, item.CurrencyName, item.CurrencyID)</span>
                                     @if (hasDiscount)
                                     {
-                                        <span class="old-price">@wasLabel @item.OriginalPrice @item.CurrencyName</span>
+                                        <span class="old-price">@wasLabel @CurrencyDisplayHelper.FormatAmount(item.OriginalPrice, item.CurrencyName, item.CurrencyID)</span>
                                     }
                                 </div>
                             }

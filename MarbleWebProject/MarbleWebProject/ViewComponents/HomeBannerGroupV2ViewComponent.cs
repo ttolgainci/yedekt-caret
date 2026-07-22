@@ -23,7 +23,7 @@ public class HomeBannerGroupV2ViewComponent : ViewComponent
     public async Task<IViewComponentResult> InvokeAsync(CancellationToken cancellationToken = default)
     {
         var cacheHelper = new CacheHelper(_cache);
-        var key = "HomeBannerGroup" + AppConfig.CMSService.CustomName + AppConfig.CMSService.LanguageCode;
+        var key = "HomeBannerGroup" + AppConfig.Storefront.StoreAuth.CustomName + AppConfig.Storefront.StoreAuth.LanguageCode;
         List<AllBannerResponse>? banners = null;
 
         if (cacheHelper.IfCache(key))

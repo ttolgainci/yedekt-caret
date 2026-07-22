@@ -1,17 +1,18 @@
 @model BasketSetModel
 @using MarbleWebProject.Helper
+@using MarbleWebProject.Helpers
 @using MarbleWebProject.Models
 @{
     ViewData["Title"] = "Ödeme";
     var isLoggedIn = ViewBag.IsCustomerLoggedIn as bool? == true;
-    var languageCode = ViewBag.LanguageCode as string ?? "tr";
     var carrierId = ViewBag.CarrierId as int?;
     var carrierName = ViewBag.CarrierName as string;
     var shippingPrice = Model.Info.ShippingPrice;
-    var subtotalValue = Model.CartList.Sum(c => (c.Price ?? 0) * (c.CartQuantity ?? 1));
-    var cartItemsJson = Model.CartList.Select(c => new { productId = c.ProductID, quantity = c.CartQuantity is < 1 ? 1 : c.CartQuantity!.Value }).ToList();
     var customerEmail = ViewBag.CustomerEmail as string;
     var bankTransferEnabled = ViewBag.BankTransferEnabled as bool? == true;
+    var creditCardEnabled = ViewBag.CreditCardEnabled as bool? == true;
+    var paymentProviders = ViewBag.PaymentProviders as List<CheckoutPaymentProviderModel> ?? new List<CheckoutPaymentProviderModel>();
+    var defaultPaymentProvider = paymentProviders.FirstOrDefault(p => p.IsDefault) ?? paymentProviders.FirstOrDefault();
     var bank = ViewBag.BankInfo as StoreBankTransferInfoModel;
     var bankAccounts = bank?.Accounts?.Where(x => x.IsActive).OrderBy(x => x.SortOrder).ThenBy(x => x.ID).ToList() ?? new List<StoreBankAccountItemModel>();
     var hasBankInfo = bankAccounts.Count > 0;
@@ -155,6 +156,8 @@
                                 <div class="card-body pt-0">
                                     <div class="checkout-pay-accordion" id="checkout-payment-accordion">
 
+                                        @if (creditCardEnabled && paymentProviders.Count > 0)
+                                        {
                                         <div class="checkout-pay-panel" data-payment="CreditCard">
                                             <label class="checkout-pay-header collapsed" aria-expanded="false">
                                                 <input type="radio" name="co-payment" value="CreditCard" class="checkout-pay-input" />
@@ -164,52 +167,43 @@
                                             </label>
                                             <div id="co-pay-card" class="collapse">
                                                 <div class="checkout-pay-body">
-                                                    <div class="row">
-                                                        <div class="col-md-7">
-                                                            <label>@Html.Translate("#Name on card#")</label>
-                                                            <input type="text" class="form-control mb-2" id="co-card-name" placeholder="@Html.Translate("#Full Name#")" autocomplete="cc-name" disabled />
-                                                            <label>@Html.Translate("#Card Number#")</label>
-                                                            <input type="text" class="form-control mb-2" id="co-card-number" placeholder="0000 0000 0000 0000" autocomplete="cc-number" maxlength="19" disabled />
-                                                            <div class="row">
-                                                                <div class="col-4">
-                                                                    <label>@Html.Translate("#Month#")</label>
-                                                                    <select class="form-control mb-2" id="co-card-month" disabled>
-                                                                        <option value="">@Html.Translate("#Month#")</option>
-                                                                        @for (var m = 1; m <= 12; m++) { <option value="@m.ToString("00")">@m.ToString("00")</option> }
-                                                                    </select>
-                                                                </div>
-                                                                <div class="col-4">
-                                                                    <label>@Html.Translate("#Year#")</label>
-                                                                    <select class="form-control mb-2" id="co-card-year" disabled>
-                                                                        <option value="">@Html.Translate("#Year#")</option>
-                                                                        @for (var y = DateTime.Now.Year; y <= DateTime.Now.Year + 12; y++) { <option value="@y">@y</option> }
-                                                                    </select>
-                                                                </div>
-                                                                <div class="col-4">
-                                                                    <label>CVV</label>
-                                                                    <input type="text" class="form-control mb-2" id="co-card-cvv" placeholder="CVV" maxlength="4" disabled />
-                                                                </div>
-                                                            </div>
-                                                            <p class="checkout-pay-secure small mb-0">
-                                                                <strong class="text-success">@Html.Translate("#Secure Shopping:#")</strong>
-                                                                @Html.Translate("#Payment will be processed with 3D Secure for your security.#")
-                                                            </p>
-                                                            <p class="alert alert-light small mt-2 mb-0">@Html.Translate("#Credit card payment will be available soon.#")</p>
-                                                        </div>
-                                                        <div class="col-md-5 d-none d-md-flex align-items-center justify-content-center">
-                                                            <div class="checkout-card-preview" aria-hidden="true">
-                                                                <div class="checkout-card-preview-chip"></div>
-                                                                <div class="checkout-card-preview-number" id="co-card-preview-number">•••• •••• •••• ••••</div>
-                                                                <div class="checkout-card-preview-footer">
-                                                                    <span id="co-card-preview-name">@Html.Translate("#Full Name#").ToString()?.ToUpperInvariant()</span>
-                                                                    <span id="co-card-preview-exp">AA/YY</span>
-                                                                </div>
-                                                            </div>
-                                                        </div>
+                                                    <p class="small text-muted mb-3">Kart bilgilerinizi sitemizde girmiyorsunuz; seçtiğiniz ödeme sağlayıcısının güvenli sayfasında 3D Secure ile ödeme yapılır.</p>
+                                                    <div class="checkout-payment-providers" id="co-payment-providers">
+                                                        @foreach (var provider in paymentProviders)
+                                                        {
+                                                            <label class="checkout-provider-card">
+                                                                <input type="radio" name="co-payment-provider" value="@provider.Code" @(provider.Code == defaultPaymentProvider?.Code ? "checked" : "") />
+                                                                <span class="checkout-provider-card-body">
+                                                                    <strong class="d-block">@provider.Name</strong>
+                                                                    <span class="d-block small text-muted">Güvenli ödeme sayfasına yönlendirilirsiniz</span>
+                                                                </span>
+                                                            </label>
+                                                        }
                                                     </div>
+                                                    <p class="checkout-pay-secure small mb-0 mt-3">
+                                                        <strong class="text-success">@Html.Translate("#Secure Shopping:#")</strong>
+                                                        @Html.Translate("#Payment will be processed with 3D Secure for your security.#")
+                                                    </p>
                                                 </div>
                                             </div>
                                         </div>
+                                        }
+                                        else
+                                        {
+                                        <div class="checkout-pay-panel checkout-pay-panel--disabled" data-payment="CreditCard">
+                                            <label class="checkout-pay-header collapsed" aria-expanded="false">
+                                                <input type="radio" name="co-payment" value="CreditCard" class="checkout-pay-input" disabled />
+                                                <span class="checkout-pay-radio" aria-hidden="true"></span>
+                                                <span class="checkout-pay-title">@Html.Translate("#Credit / Debit Card#")</span>
+                                                <i class="icon-angle-right checkout-pay-chevron"></i>
+                                            </label>
+                                            <div id="co-pay-card" class="collapse">
+                                                <div class="checkout-pay-body">
+                                                    <p class="alert alert-light small mb-0">@Html.Translate("#Credit card payment will be available soon.#")</p>
+                                                </div>
+                                            </div>
+                                        </div>
+                                        }
 
                                         @if (bankTransferEnabled)
                                         {
@@ -299,7 +293,7 @@
                                 <li class="checkout-summary-item">
                                     <a href="@url" class="checkout-summary-item-name" title="@productName">@productName</a>
                                     <span class="checkout-summary-item-qty" title="@($"{Html.Translate("#Qty:#")} {qty}")">@qty</span>
-                                    <span class="checkout-summary-item-price" title="@($"{lineTotal:N2} {item.CurrencyName}")">@lineTotal.ToString("N2") @item.CurrencyName</span>
+                                    <span class="checkout-summary-item-price" title="@CurrencyDisplayHelper.FormatAmount(lineTotal, item.CurrencyName)">@CurrencyDisplayHelper.FormatAmount(lineTotal, item.CurrencyName)</span>
                                 </li>
                             }
                         </ul>
@@ -308,14 +302,14 @@
                             <tbody>
                                 <tr class="summary-subtotal">
                                     <td>@Html.Translate("#Subtotal:#")</td>
-                                    <td>@Html.Raw(Model.Info.Subtotal)</td>
+                                    <td id="co-summary-subtotal">@Html.Raw(Model.Info.Subtotal)</td>
                                 </tr>
                                 <tr>
                                     <td>@Html.Translate("#Shipping:#")</td>
                                     <td id="co-summary-shipping">
                                         @if (shippingPrice.HasValue)
                                         {
-                                            @shippingPrice.Value.ToString("N2")@(!string.IsNullOrWhiteSpace(Model.Info.CurrencyName) ? $" {Model.Info.CurrencyName}" : "")
+                                            @CurrencyDisplayHelper.FormatAmount(shippingPrice.Value, Model.Info.CurrencyName)
                                         }
                                         else
                                         {
@@ -386,57 +380,5 @@
             alertify.set('notifier', 'delay', 2.5);
         }
     </script>
-    <script>
-        window.checkoutPrefill = {
-            email: @Html.Raw(System.Text.Json.JsonSerializer.Serialize(customerEmail ?? "")),
-            languageCode: @Html.Raw(System.Text.Json.JsonSerializer.Serialize(languageCode)),
-            isLoggedIn: @(isLoggedIn ? "true" : "false"),
-            carrierId: @(carrierId.HasValue ? carrierId.Value.ToString() : "null"),
-            carrierName: @Html.Raw(System.Text.Json.JsonSerializer.Serialize(carrierName ?? "")),
-            shippingPrice: @(shippingPrice.HasValue ? shippingPrice.Value.ToString(System.Globalization.CultureInfo.InvariantCulture) : "null"),
-            subtotal: @subtotalValue.ToString(System.Globalization.CultureInfo.InvariantCulture),
-            cartItems: @Html.Raw(System.Text.Json.JsonSerializer.Serialize(cartItemsJson)),
-            currency: @Html.Raw(System.Text.Json.JsonSerializer.Serialize(Model.Info.CurrencyName ?? "")),
-            bankTransferEnabled: @(bankTransferEnabled ? "true" : "false")
-        };
-        window.checkoutI18n = {
-            pleaseEnterEmail: @Html.Raw(System.Text.Json.JsonSerializer.Serialize(Html.Translate("#Please enter your email address.#").ToString())),
-            pleaseEnterFirstLastName: @Html.Raw(System.Text.Json.JsonSerializer.Serialize(Html.Translate("#Please enter your first and last name.#").ToString())),
-            noAddressYet: @Html.Raw(System.Text.Json.JsonSerializer.Serialize(Html.Translate("#No address added yet.#").ToString())),
-            noAddressYetAdd: @Html.Raw(System.Text.Json.JsonSerializer.Serialize(Html.Translate("#No address yet. Click Add Address to create one.#").ToString())),
-            selectBillingAddress: @Html.Raw(System.Text.Json.JsonSerializer.Serialize(Html.Translate("#Select an address for billing.#").ToString())),
-            noSavedAddress: @Html.Raw(System.Text.Json.JsonSerializer.Serialize(Html.Translate("#No saved addresses. You can add a new one.#").ToString())),
-            deleteAddressConfirm: @Html.Raw(System.Text.Json.JsonSerializer.Serialize(Html.Translate("#Delete this address?#").ToString())),
-            addressDeleteFailed: @Html.Raw(System.Text.Json.JsonSerializer.Serialize(Html.Translate("#Address could not be deleted.#").ToString())),
-            selectOption: @Html.Raw(System.Text.Json.JsonSerializer.Serialize(Html.Translate("#Select#").ToString())),
-            turkey: @Html.Raw(System.Text.Json.JsonSerializer.Serialize(Html.Translate("#Turkey#").ToString())),
-            turkeyMatch: @Html.Raw(System.Text.Json.JsonSerializer.Serialize("türk")),
-            editAddress: @Html.Raw(System.Text.Json.JsonSerializer.Serialize(Html.Translate("#Edit address#").ToString())),
-            addAddress: @Html.Raw(System.Text.Json.JsonSerializer.Serialize(Html.Translate("#Add address#").ToString())),
-            corporateInvoiceRequired: @Html.Raw(System.Text.Json.JsonSerializer.Serialize(Html.Translate("#Tax ID, tax office and company name are required for corporate invoice.#").ToString())),
-            ibanCopied: @Html.Raw(System.Text.Json.JsonSerializer.Serialize(Html.Translate("#IBAN copied.#").ToString())),
-            pleaseSelectAddress: @Html.Raw(System.Text.Json.JsonSerializer.Serialize(Html.Translate("#Please select an address.#").ToString())),
-            addressSaveFailed: @Html.Raw(System.Text.Json.JsonSerializer.Serialize(Html.Translate("#Address could not be saved.#").ToString())),
-            pleaseSelectShipping: @Html.Raw(System.Text.Json.JsonSerializer.Serialize(Html.Translate("#Please select a shipping address.#").ToString())),
-            pleaseSelectBilling: @Html.Raw(System.Text.Json.JsonSerializer.Serialize(Html.Translate("#Please select a billing address.#").ToString())),
-            emailRequired: @Html.Raw(System.Text.Json.JsonSerializer.Serialize(Html.Translate("#Email address is required.#").ToString())),
-            firstLastRequired: @Html.Raw(System.Text.Json.JsonSerializer.Serialize(Html.Translate("#First and last name are required.#").ToString())),
-            creditCardNotAvailable: @Html.Raw(System.Text.Json.JsonSerializer.Serialize(Html.Translate("#Credit card payment is not available yet. Please choose Cash on delivery.#").ToString())),
-            bankTransferNotAvailable: @Html.Raw(System.Text.Json.JsonSerializer.Serialize("Havale / EFT ödemesi şu an aktif değil. Lütfen kapıda ödeme seçin.")),
-            orderFailed: @Html.Raw(System.Text.Json.JsonSerializer.Serialize(Html.Translate("#Order failed.#").ToString())),
-            pleaseSelectCarrier: @Html.Raw(System.Text.Json.JsonSerializer.Serialize("Lütfen kargo firması seçin.")),
-            loadingCarriers: @Html.Raw(System.Text.Json.JsonSerializer.Serialize("Kargo seçenekleri hesaplanıyor...")),
-            carriersLoadFailed: @Html.Raw(System.Text.Json.JsonSerializer.Serialize("Kargo seçenekleri yüklenemedi.")),
-            selectAddressForCarriers: @Html.Raw(System.Text.Json.JsonSerializer.Serialize("Önce teslimat adresi seçin.")),
-            noCarrierOptions: @Html.Raw(System.Text.Json.JsonSerializer.Serialize("Bu adres için kargo seçeneği bulunamadı.")),
-            legalConsentRequired: @Html.Raw(System.Text.Json.JsonSerializer.Serialize("Lütfen tüm yasal metinleri onaylayın.")),
-            edit: @Html.Raw(System.Text.Json.JsonSerializer.Serialize(Html.Translate("#Edit#").ToString())),
-            delete: @Html.Raw(System.Text.Json.JsonSerializer.Serialize(Html.Translate("#Delete#").ToString())),
-            corporate: @Html.Raw(System.Text.Json.JsonSerializer.Serialize(Html.Translate("#Corporate#").ToString())),
-            address: @Html.Raw(System.Text.Json.JsonSerializer.Serialize(Html.Translate("#Address#").ToString())),
-            corporatePrefix: @Html.Raw(System.Text.Json.JsonSerializer.Serialize(Html.Translate("#Corporate - #").ToString())),
-            corporateLabelMatch: @Html.Raw(System.Text.Json.JsonSerializer.Serialize("kurumsal"))
-        };
-    </script>
-    <script src="~/PageJs/checkout.js"></script>
+    <script src="~/PageJs/checkout.js" asp-append-version="true"></script>
 }

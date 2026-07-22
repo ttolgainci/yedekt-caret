@@ -24,7 +24,7 @@ public class MasterMobileMenuViewComponent : ViewComponent
     {
         var allModel = new MobileMenuModel();
         var cacheHelper = new CacheHelper(_cache);
-        var key = "CategoryMobileListHeader" + AppConfig.CMSService.CustomName + AppConfig.CMSService.MarketCode + AppConfig.CMSService.LanguageCode;
+        var key = "CategoryMobileListHeader" + AppConfig.Storefront.StoreAuth.CustomName + AppConfig.Storefront.StoreAuth.MarketCode + AppConfig.Storefront.StoreAuth.LanguageCode;
         List<CategoryListModel> returnData;
 
         if (!cacheHelper.IfCache(key))

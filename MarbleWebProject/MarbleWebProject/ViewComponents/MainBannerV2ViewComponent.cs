@@ -29,7 +29,7 @@ public class MainBannerV2ViewComponent : ViewComponent
     public async Task<IViewComponentResult> InvokeAsync(List<AllBannerResponse>? models = null, CancellationToken cancellationToken = default)
     {
         var cacheHelper = new CacheHelper(_cache);
-        var key = "MainBanner" + AppConfig.CMSService.CustomName + AppConfig.CMSService.LanguageCode;
+        var key = "MainBanner" + AppConfig.Storefront.StoreAuth.CustomName + AppConfig.Storefront.StoreAuth.LanguageCode;
 
         if (!cacheHelper.IfCache(key))
         {
@@ -59,14 +59,21 @@ public class MainBannerV2ViewComponent : ViewComponent
             return Content(string.Empty);
 
         var makes = new List<VehicleMakeListItem>();
-        var makesKey = "VehicleMakes" + AppConfig.CMSService.CustomName;
+        var makesKey = "VehicleMakes" + AppConfig.Storefront.StoreAuth.CustomName;
         if (!cacheHelper.IfCache(makesKey))
         {
-            var makesResp = await _catalog.GetVehicleMakesAsync(cancellationToken);
-            if (makesResp.Status && makesResp.Data != null)
-                cacheHelper.SetCache(makesKey, makesResp.Data);
-            else
+            try
+            {
+                var makesResp = await _catalog.GetVehicleMakesAsync(cancellationToken);
+                if (makesResp.Status && makesResp.Data != null)
+                    cacheHelper.SetCache(makesKey, makesResp.Data);
+                else
+                    cacheHelper.SetCache(makesKey, new List<VehicleMakeListItem>());
+            }
+            catch
+            {
                 cacheHelper.SetCache(makesKey, new List<VehicleMakeListItem>());
+            }
         }
 
         makes = cacheHelper.GetCache(makesKey) as List<VehicleMakeListItem> ?? new List<VehicleMakeListItem>();

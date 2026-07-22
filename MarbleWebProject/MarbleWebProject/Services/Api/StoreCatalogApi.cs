@@ -44,6 +44,26 @@ public sealed class StoreCatalogApi : IStoreCatalogApi
         return await _api.PostAsync<BaseResponse<ProductDetailResponse>>("/Product/GetProductDetail", request, token, cancellationToken);
     }
 
+    public async Task<BaseResponse<string>> GetProductCanonicalUrlAsync(int productId, string languageCode, CancellationToken cancellationToken = default)
+    {
+        var token = await _auth.GetTokenAsync(cancellationToken);
+        return await _api.PostAsync<BaseResponse<string>>(
+            "/Product/GetCanonicalUrl",
+            new { ProductId = productId, LanguageCode = languageCode },
+            token,
+            cancellationToken);
+    }
+
+    public async Task<BaseResponse<List<ProductAlternateUrlModel>>> GetProductAlternateUrlsAsync(int productId, CancellationToken cancellationToken = default)
+    {
+        var token = await _auth.GetTokenAsync(cancellationToken);
+        return await _api.PostAsync<BaseResponse<List<ProductAlternateUrlModel>>>(
+            "/Product/GetAlternateUrls",
+            new { ProductId = productId, LanguageCode = (string?)null },
+            token,
+            cancellationToken);
+    }
+
     public async Task<BaseResponse<ProductCartInfo>> GetProductForCartAsync(ProductCartRequest request, CancellationToken cancellationToken = default)
     {
         var token = await _auth.GetTokenAsync(cancellationToken);

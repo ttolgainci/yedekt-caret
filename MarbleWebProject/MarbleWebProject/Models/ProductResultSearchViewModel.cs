@@ -121,15 +121,10 @@ public class ProductResultSearchViewModel
         BuildAramaUrl(minPrice: min, maxPrice: max, pageNumber: 1, includeCurrentPrice: false);
 
     public string FormatPrice(decimal? price) =>
-        price.HasValue ? price.Value.ToString("N2") : string.Empty;
+        CurrencyDisplayHelper.FormatAmount(price, CurrencySymbol);
 
-    public string FormatPriceWithCurrency(decimal? price, string? currencySymbol = null)
-    {
-        if (!price.HasValue)
-            return string.Empty;
-        var sym = string.IsNullOrWhiteSpace(currencySymbol) ? CurrencySymbol : currencySymbol;
-        return $"{FormatPrice(price)} {sym}".Trim();
-    }
+    public string FormatPriceWithCurrency(decimal? price, string? currencySymbol = null) =>
+        CurrencyDisplayHelper.FormatAmount(price, currencySymbol ?? CurrencySymbol);
 
     public string VehicleContextTitle
     {

@@ -1,4 +1,4 @@
-﻿using MarbleWebProject.Models;
+using MarbleWebProject.Models;
 
 namespace MarbleWebProject.Helper
 {
@@ -8,13 +8,13 @@ namespace MarbleWebProject.Helper
         {
             return TranslateFullList;
         }
-        public static List<TranslateAllResponse> TranslateFullList { get; set; }
+        public static List<TranslateAllResponse> TranslateFullList { get; set; } = new();
 
         public static List<SiteMapUrlModel> GetUrlListForSiteMap()
         {
             return SiteMapUrlList;
         }
-        public static List<SiteMapUrlModel> SiteMapUrlList { get; set; }
+        public static List<SiteMapUrlModel> SiteMapUrlList { get; set; } = new();
 
         public static UserModel GetUserID()
         {

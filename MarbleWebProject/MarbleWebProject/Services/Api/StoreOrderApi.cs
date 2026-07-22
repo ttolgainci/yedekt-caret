@@ -25,6 +25,30 @@ public sealed class StoreOrderApi : IStoreOrderApi
         return await _api.GetAsync<BaseResponse<ShopOrderDetailModel>>($"/api/orders/{orderId}", token, cancellationToken);
     }
 
+    public async Task<BaseResponse<ShipmentTrackingResultModel>> TrackShipmentAsync(
+        int orderId,
+        bool refresh = false,
+        CancellationToken cancellationToken = default)
+    {
+        var token = await _session.GetTokenAsync(cancellationToken);
+        var refreshQuery = refresh ? "?refresh=true" : "";
+        return await _api.GetAsync<BaseResponse<ShipmentTrackingResultModel>>(
+            $"/api/orders/{orderId}/shipment/track{refreshQuery}",
+            token,
+            cancellationToken);
+    }
+
+    public Task<BaseResponse<ShopOrderDetailModel>> GetGuestOrderDetailAsync(
+        int orderId,
+        string guestUserId,
+        string checkoutKey,
+        CancellationToken cancellationToken = default)
+    {
+        var path = $"/api/orders/guest/{orderId}?guestUserId={Uri.EscapeDataString(guestUserId)}";
+        var headers = new Dictionary<string, string> { ["X-Checkout-Key"] = checkoutKey };
+        return _api.GetAsync<BaseResponse<ShopOrderDetailModel>>(path, bearerToken: null, cancellationToken, headers);
+    }
+
     public async Task<BaseResponse<List<OrderBasket>>> MergeCartAsync(MergeCartForm form, CancellationToken cancellationToken = default)
     {
         var token = await _session.GetTokenAsync(cancellationToken);

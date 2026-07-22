@@ -41,7 +41,10 @@ public sealed class StorefrontRuntimeProvider : IStorefrontRuntimeProvider
 
     private static StorefrontRuntimeConfig SyncAppConfig(StorefrontRuntimeConfig runtime)
     {
+        // Preserve StoreAuth across layout reloads (LanguageCode / credentials live here).
+        var auth = AppConfig.Storefront.StoreAuth;
         AppConfig.Storefront = runtime;
+        AppConfig.Storefront.StoreAuth = auth;
         return runtime;
     }
 }

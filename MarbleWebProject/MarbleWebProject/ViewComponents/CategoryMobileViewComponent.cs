@@ -23,7 +23,7 @@ public class CategoryMobileViewComponent : ViewComponent
     public async Task<IViewComponentResult> InvokeAsync(List<CategoryListModel> models, CancellationToken cancellationToken = default)
     {
         var cacheHelper = new CacheHelper(_cache);
-        var key = "CategoryMobileListHeader" + AppConfig.CMSService.CustomName + AppConfig.CMSService.MarketCode + AppConfig.CMSService.LanguageCode;
+        var key = "CategoryMobileListHeader" + AppConfig.Storefront.StoreAuth.CustomName + AppConfig.Storefront.StoreAuth.MarketCode + AppConfig.Storefront.StoreAuth.LanguageCode;
 
         if (!cacheHelper.IfCache(key))
         {

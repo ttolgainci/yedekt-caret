@@ -10,6 +10,8 @@ public interface IStoreCatalogApi
     Task<BaseResponse<List<CategoryRouteModel>>> GetCategoryRoutesAsync(CancellationToken cancellationToken = default);
     Task<BaseResponse<List<CategoryRouteModel>>> GetProductRoutesAsync(CancellationToken cancellationToken = default);
     Task<BaseResponse<ProductDetailResponse>> GetProductDetailAsync(ProductDetailRequest request, CancellationToken cancellationToken = default);
+    Task<BaseResponse<string>> GetProductCanonicalUrlAsync(int productId, string languageCode, CancellationToken cancellationToken = default);
+    Task<BaseResponse<List<ProductAlternateUrlModel>>> GetProductAlternateUrlsAsync(int productId, CancellationToken cancellationToken = default);
     Task<BaseResponse<ProductCartInfo>> GetProductForCartAsync(ProductCartRequest request, CancellationToken cancellationToken = default);
     Task<BaseResponse<List<ProductBreadcrumbsResponse>>> GetProductBreadcrumbAsync(ProductBreadcrumbRequest request, CancellationToken cancellationToken = default);
     Task<BaseResponse<List<CategoryBreadcrumbModel>>> GetCategoryBreadcrumbAsync(CategoryBreadcrumbRequest request, CancellationToken cancellationToken = default);

@@ -28,6 +28,8 @@ public sealed class StoreCustomerAuthApi : IStoreCustomerAuthApi
             companyName = form.CompanyName,
             taxOffice = form.TaxOffice,
             taxNumber = form.TaxNumber,
+            acceptKvkk = form.AcceptKvkk,
+            marketingConsent = form.MarketingConsent,
             languageID = 0
         }, bearerToken: null, cancellationToken);
     }
@@ -66,4 +68,13 @@ public sealed class StoreCustomerAuthApi : IStoreCustomerAuthApi
             birthDate = form.BirthDate
         }, bearerToken, cancellationToken);
     }
+
+    public Task<BaseResponse> RequestPasswordResetAsync(string email, CancellationToken cancellationToken = default) =>
+        _api.PostAsync<BaseResponse>("/api/customers/password-reset/request", new { email }, bearerToken: null, cancellationToken);
+
+    public Task<BaseResponse> ConfirmPasswordResetAsync(string token, string newPassword, CancellationToken cancellationToken = default) =>
+        _api.PostAsync<BaseResponse>("/api/customers/password-reset/confirm", new { token, newPassword }, bearerToken: null, cancellationToken);
+
+    public Task<BaseResponse> VerifyEmailAsync(string token, CancellationToken cancellationToken = default) =>
+        _api.PostAsync<BaseResponse>("/api/customers/verify-email", new { token }, bearerToken: null, cancellationToken);
 }

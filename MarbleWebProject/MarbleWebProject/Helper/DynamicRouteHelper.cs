@@ -73,11 +73,14 @@ namespace MarbleWebProject.Helper
                         });
                         break;
                     case "PRODUCT":
+                        // Sitemap only — live traffic uses catch-all {brandSlug}/{productSegment}-p-{id}.
+                        break;
+                    case "PRODUCT_LEGACY":
                         routeDefinitions.Add(new RouteDefinition
                         {
                             Name = item.RouteName,
                             Pattern = item.RouteUrl,
-                            Defaults = new Info { controller = "ProductDetail", action = "Index",id=item.ID.GetValueOrDefault(),catID=item.CatID.GetValueOrDefault() }
+                            Defaults = new Info { controller = "ProductDetail", action = "RedirectCanonical", id = item.ID.GetValueOrDefault() }
                         });
                         break;
                     case "INFORMATION":

@@ -19,7 +19,7 @@
                     <h3 class="product-title"><a href="@productUrl">@item.ProductName</a></h3>
                     @if (item.Price.HasValue)
                     {
-                        <div class="product-price">@item.Price @item.CurrencyName</div>
+                        <div class="product-price">@CurrencyDisplayHelper.FormatAmount(item.Price, item.CurrencyName, item.CurrencyID)</div>
                     }
                 </div>
             </div>
@@ -93,7 +93,7 @@
                             @await Html.PartialAsync("_ProductListTitlePartial", item)
                             @if (item.Price.HasValue)
                             {
-                                <div class="product-price">@item.Price @item.CurrencyName</div>
+                                <div class="product-price">@CurrencyDisplayHelper.FormatAmount(item.Price, item.CurrencyName, item.CurrencyID)</div>
                             }
                         </div>
                     </div>

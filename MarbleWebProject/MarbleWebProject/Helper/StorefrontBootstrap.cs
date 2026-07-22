@@ -14,10 +14,11 @@ public static class StorefrontBootstrap
 
         var layoutTask = storefront.GetPublishedLayoutAsync(cancellationToken);
         var generalTask = storefront.GetGeneralSettingsAsync(cancellationToken);
+        var currenciesTask = storefront.GetCurrenciesAsync(cancellationToken);
 
         try
         {
-            await Task.WhenAll(layoutTask, generalTask);
+            await Task.WhenAll(layoutTask, generalTask, currenciesTask);
         }
         catch (Exception ex)
         {
@@ -60,6 +61,22 @@ public static class StorefrontBootstrap
         catch (Exception ex)
         {
             logger.LogWarning(ex, "Storefront general settings could not be loaded.");
+        }
+
+        try
+        {
+            var currenciesResponse = await currenciesTask;
+            if (currenciesResponse.Status && currenciesResponse.Data != null)
+            {
+                runtime.Currencies = currenciesResponse.Data
+                    .OrderBy(c => c.DisplayOrder)
+                    .ThenBy(c => c.Id)
+                    .ToList();
+            }
+        }
+        catch (Exception ex)
+        {
+            logger.LogWarning(ex, "Storefront currencies could not be loaded.");
         }
 
         return runtime;

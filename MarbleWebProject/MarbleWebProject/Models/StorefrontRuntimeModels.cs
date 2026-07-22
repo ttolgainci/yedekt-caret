@@ -1,9 +1,13 @@
 using System.Text.Json.Serialization;
+using MarbleWebProject.Models.Options;
 
 namespace MarbleWebProject.Models;
 
 public sealed class StorefrontRuntimeConfig
 {
+    /// <summary>Kurulum + login runtime state (StoreAuth).</summary>
+    public StoreAuthOptions StoreAuth { get; set; } = new();
+
     public string LayoutVersion { get; set; } = "v1";
 
     /// <summary>Key = ViewComponentName (DB), Value = IsActive</summary>
@@ -17,6 +21,8 @@ public sealed class StorefrontRuntimeConfig
     public string SearchResultLayout { get; set; } = "grid4";
 
     public StoreGeneralSettingsModel General { get; set; } = new();
+
+    public List<StoreCurrencyModel> Currencies { get; set; } = new();
 }
 
 public sealed class StorefrontPublishedLayoutModel

@@ -8,6 +8,7 @@ public interface IStoreStorefrontApi
     Task<BaseResponse<StorefrontPageLayoutModel>> GetHomeLayoutAsync(CancellationToken cancellationToken = default);
     Task<BaseResponse<StorefrontPublishedLayoutModel>> GetPublishedLayoutAsync(CancellationToken cancellationToken = default);
     Task<BaseResponse<StoreGeneralSettingsModel>> GetGeneralSettingsAsync(CancellationToken cancellationToken = default);
+    Task<BaseResponse<List<StoreCurrencyModel>>> GetCurrenciesAsync(CancellationToken cancellationToken = default);
     Task<BaseResponse<List<CampaignActiveModel>>> GetActiveCampaignsAsync(CancellationToken cancellationToken = default);
     Task<BaseResponse<List<ProductList>>> GetHomeListedProductsAsync(int limit = 12, CancellationToken cancellationToken = default);
     Task<BaseResponse<List<ProductList>>> GetTopSellingProductsAsync(int limit = 12, CancellationToken cancellationToken = default);
