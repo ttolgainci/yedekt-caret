@@ -16,24 +16,30 @@ public class ProductBreadcrumbViewComponent : ViewComponent
         _auth = auth;
     }
 
-    public async Task<IViewComponentResult> InvokeAsync(string name, CancellationToken cancellationToken = default)
+    /// <summary>
+    /// Canonical URL /{brand}/{slug}-p-{id} olduğu için kategori path'ten değil CategoryID ile çözülür.
+    /// </summary>
+    public async Task<IViewComponentResult> InvokeAsync(string name, int categoryId = 0, CancellationToken cancellationToken = default)
     {
-        var route = Request.Path.Value;
-        var routeList = route?.Split('/') ?? Array.Empty<string>();
-        if (routeList.Length < 2)
-            return Content(string.Empty);
+        var categories = new List<CategoryBreadcrumbModel>();
 
-        var categoryUrl = routeList[^2];
-        var session = await _auth.GetSessionAsync(cancellationToken);
-        var routeResponse = await _catalog.GetProductBreadcrumbPathAsync(new ProductBreadcrumbRequest
+        if (categoryId > 0)
         {
-            LanguageCode = session.LanguageCode,
-            CategoryUrl = categoryUrl
-        }, cancellationToken);
+            var session = await _auth.GetSessionAsync(cancellationToken);
+            var routeResponse = await _catalog.GetCategoryBreadcrumbAsync(new CategoryBreadcrumbRequest
+            {
+                LanguageCode = session.LanguageCode,
+                CategoryID = categoryId
+            }, cancellationToken);
 
-        if (!routeResponse.Status)
-            return Content(string.Empty);
+            if (routeResponse.Status && routeResponse.Data != null)
+                categories = routeResponse.Data;
+        }
 
-        return View(new ProductBreadcrumbModel { CagetoryList = routeResponse.Data, Name = name });
+        return View(new ProductBreadcrumbModel
+        {
+            CagetoryList = categories,
+            Name = name ?? ""
+        });
     }
 }

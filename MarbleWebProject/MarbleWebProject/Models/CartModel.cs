@@ -26,6 +26,8 @@ namespace MarbleWebProject.Models
         public decimal? TaxTotalValue { get; set; }
         public string GrandTotal { get; set; }
         public int? TotalQuantity { get; set; }
+        /// <summary>Farklı ürün satırı sayısı (header badge).</summary>
+        public int? ItemCount { get; set; }
         public decimal? ShippingPrice { get; set; }
         public string? CarrierName { get; set; }
         public decimal? TotalDesi { get; set; }

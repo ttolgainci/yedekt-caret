@@ -67,6 +67,7 @@ public static class CartBasketMergeHelper
         model.Info.CurrencyName = currency;
         model.Info.Total = "<span class='basket-total-price'>" + CurrencyDisplayHelper.FormatAmount(total, currency) + "</span>";
         model.Info.TotalQuantity = merged.Sum(c => c.quantity ?? 0);
+        model.Info.ItemCount = merged.Count;
         return model;
     }
 
@@ -84,6 +85,7 @@ public static class CartBasketMergeHelper
         info.DrawerTotalPrice = AppendCurrencyIfMissing(model.Info.Total, currency);
         info.TotalPrice = AppendCurrencyIfMissing(model.Info.GrandTotal ?? model.Info.Total, currency);
         info.TotalQuantity = model.Info.TotalQuantity;
+        info.ItemCount = model.Info.ItemCount ?? model.CartList.Count;
         info.ShippingPrice = model.Info.ShippingPrice;
         info.CarrierName = model.Info.CarrierName;
         info.TotalDesi = model.Info.TotalDesi;

@@ -1,7 +1,7 @@
 @model BasketSetModel
 @{
     var hasItems = Model?.CartList?.Count > 0;
-    var qty = hasItems ? Model!.Info.TotalQuantity ?? 0 : 0;
+    var qty = hasItems ? (Model!.Info.ItemCount ?? Model.CartList.Count) : 0;
     var itemsTemplate = Html.Translate("#Cart items count subtitle#");
     if (string.IsNullOrWhiteSpace(itemsTemplate) || !itemsTemplate.Contains("{0}"))
     {

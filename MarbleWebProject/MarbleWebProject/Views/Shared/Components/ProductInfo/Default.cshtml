@@ -54,28 +54,9 @@
         ? MediaUrlHelper.Build(p.BrandPicture)
         : "";
 
-    var auth = AppConfig.Storefront?.StoreAuth;
-    var showShipEstimate = auth?.ShowSameDayShippingEstimate != false && (auth?.SameDayShippingCutoffHour ?? 16) >= 0;
-    string? shipEstimateText = null;
-    if (showShipEstimate && qty > 0)
-    {
-        var cutoffHour = auth?.SameDayShippingCutoffHour ?? 16;
-        var cutoffMinute = Math.Clamp(auth?.SameDayShippingCutoffMinute ?? 0, 0, 59);
-        var now = DateTime.Now;
-        var cutoff = new DateTime(now.Year, now.Month, now.Day, cutoffHour, cutoffMinute, 0);
-        var cutoffLabel = cutoff.ToString("HH:mm");
-        if (now <= cutoff)
-        {
-            var tpl = Html.Translate("#Order by {0} today → Ships today#");
-            shipEstimateText = tpl.Contains("{0}", StringComparison.Ordinal)
-                ? string.Format(tpl, cutoffLabel)
-                : tpl;
-        }
-        else
-        {
-            shipEstimateText = Html.Translate("#Order now → Ships tomorrow#");
-        }
-    }
+    string shippingText = (p.IsFreeShipping || p.ShippingPrice == 0m)
+        ? Html.Translate("#Free shipping#")
+        : Html.Translate("#Shipping fee applies#");
 
     var tags = (p.Tags ?? "")
         .Split(new[] { ',', ';' }, StringSplitOptions.RemoveEmptyEntries)
@@ -142,15 +123,12 @@
             <span>@stockText</span>
         </div><!-- End .details-filter-row -->
 
-        @if (!string.IsNullOrWhiteSpace(shipEstimateText))
-        {
-            <div class="details-filter-row details-row-size">
-                <label>@Html.Translate("#Estimated shipping#"):</label>
-                <div class="product-detail-value">
-                    <i class="icon-truck"></i> @shipEstimateText
-                </div>
-            </div><!-- End .details-filter-row -->
-        }
+        <div class="details-filter-row details-row-size">
+            <label>@Html.Translate("#Shipping#"):</label>
+            <div class="product-detail-value">
+                <i class="icon-truck"></i> @shippingText
+            </div>
+        </div><!-- End .details-filter-row -->
 
         <div class="product-details-action">
             <div class="details-action-col">
@@ -158,7 +136,16 @@
                     <input type="number" class="form-control product-detail-Quantity" value="@basketQuantity" min="@p.MinimumQuantity" max="@p.Quantity" step="1" data-decimals="0" required>
                 </div><!-- End .product-details-quantity -->
                 <a href="#" onclick="setProductToBasket(this); return false;" data-pid="@p.ProductID" data-purl="@p.Url" data-add-label="@addToCartLabel" data-inbasket-label="@inBasketLabel" class="btn-product btn-cart"><span>@btnText</span></a>
-                <div class="details-action-wrapper"><a href="#" data-pid="@p.ProductID" onclick="setProductToSepete(this)" class="btn-product btn-wishlist" title="Wishlist"><span>@Html.Translate("#Add to Wishlist#")</span></a></div>
+                <div class="details-action-wrapper">
+                    <a href="#"
+                       data-pid="@p.ProductID"
+                       data-purl="@(string.IsNullOrWhiteSpace(p.Url) ? "#" : (p.Url.StartsWith('/') ? p.Url : "/" + p.Url.TrimStart('/')))"
+                       data-add-label="@Html.Translate("#Add to Wishlist#")"
+                       data-remove-label="@Html.Translate("#Remove from Wishlist#")"
+                       onclick="toggleWishlist(this); return false;"
+                       class="btn-product btn-wishlist js-toggle-wishlist"
+                       title="@Html.Translate("#Add to Wishlist#")"><span>@Html.Translate("#Add to Wishlist#")</span></a>
+                </div>
             </div><!-- End .details-action-col -->
         </div><!-- End .product-details-action -->
         @if (Model.HasVehicleFitment)

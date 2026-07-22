@@ -3569,16 +3569,39 @@ body.store-page-loading-active {
     background: transparent !important;
 }
 .product-details-tab .product-plain-list {
-    list-style: none;
-    padding-left: 0;
+    list-style: none !important;
+    padding-left: 0 !important;
     margin: 0;
 }
 .product-details-tab .product-plain-list li {
-    list-style: none;
+    list-style: none !important;
+    position: static;
     margin: 0 0 0.6rem;
-    padding: 0;
+    padding: 0 !important;
     color: #666;
     line-height: 1.6;
+}
+.product-details-tab .product-plain-list li:before,
+.product-details-tab .product-plain-list li::before {
+    content: none !important;
+    display: none !important;
+}
+
+/* elevateZoom — Molla product.html inner zoom: mouse ile tüm alan */
+.product-main-image {
+    position: relative;
+    overflow: visible;
+}
+.product-main-image img#product-zoom {
+    display: block;
+    width: 100%;
+    max-width: none;
+}
+.product-gallery .zoomContainer {
+    z-index: 20;
+}
+.product-gallery .zoomWindow {
+    background-repeat: no-repeat !important;
 }
 @media (max-width: 575px) {
     .product-details .details-filter-row {

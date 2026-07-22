@@ -6,7 +6,11 @@
 @if (Model.ProductDetails != null)
 {
 
-    @await Component.InvokeAsync("ProductBreadcrumb", Model.ProductDetails.ProductName)
+    @await Component.InvokeAsync("ProductBreadcrumb", new
+    {
+        name = Model.ProductDetails.ProductName,
+        categoryId = Model.ProductDetails.CategoryID
+    })
     <!-- End .breadcrumb-nav -->
 
     <div class="page-content">
@@ -65,5 +69,5 @@
             });
         });
     </script>
-    <script src="~/PageJs/ProductDetail.js"></script>
+    <script src="~/PageJs/ProductDetail.js" asp-append-version="true"></script>
 }

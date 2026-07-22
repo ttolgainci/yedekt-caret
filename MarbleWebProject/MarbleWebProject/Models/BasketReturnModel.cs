@@ -9,6 +9,8 @@ namespace MarbleWebProject.Models
         public string TaxTotalPrice { get; set; }
         public decimal? TaxTotal { get; set; }
         public int? TotalQuantity { get; set; }
+        /// <summary>Sepetteki farklı ürün (satır) sayısı — header badge için.</summary>
+        public int? ItemCount { get; set; }
         public decimal? ShippingPrice { get; set; }
         public string? CarrierName { get; set; }
         public decimal? TotalDesi { get; set; }

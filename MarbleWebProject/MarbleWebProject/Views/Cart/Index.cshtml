@@ -56,7 +56,7 @@
 										
 										<div class="cart-product-quantity cartBasketList">
 
-											<input type="number" class="form-control cart-product-quantity-new" id="productQtySpinner_@item.ProductID" value="@item.CartQuantity" min="1" max="10" step="1" data-decimals="0" required>
+											<input type="number" class="form-control cart-product-quantity-new" id="productQtySpinner_@item.ProductID" value="@item.CartQuantity" min="1" max="9999" step="1" data-decimals="0" required>
 										</div><!-- End .cart-product-quantity -->
 									</td>
 									<td class="total-col"><span class="cartProductPrice cart-product-price" id="cartproductPrice_@item.ProductID">@CurrencyDisplayHelper.FormatAmount((item.Price ?? 0) * (item.CartQuantity ?? 1), item.CurrencyName)</span></td>

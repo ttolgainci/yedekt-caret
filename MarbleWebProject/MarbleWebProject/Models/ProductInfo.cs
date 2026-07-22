@@ -32,6 +32,8 @@ namespace MarbleWebProject.Models
 
         public decimal? ShippingPrice { get; set; }
 
+        public bool IsFreeShipping { get; set; }
+
         public string CurrencyName { get; set; }
 
         public string CurrencyCode { get; set; }

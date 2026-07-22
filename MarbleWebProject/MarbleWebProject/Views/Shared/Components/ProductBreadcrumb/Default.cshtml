@@ -1,17 +1,30 @@
 ﻿@using MarbleWebProject.Helper
+@using MarbleWebProject.Helpers
 @model ProductBreadcrumbModel
+@{
+    var categories = Model?.CagetoryList ?? new List<CategoryBreadcrumbModel>();
+    var productName = Model?.Name ?? "";
+}
 
 <nav aria-label="breadcrumb" class="breadcrumb-nav border-0 mb-0">
     <div class="container d-flex align-items-center">
         <ol class="breadcrumb">
-            <li class="breadcrumb-item"><a href="/">@Html.Translate("#Home#")</a></li>        
-            @if (Model.CagetoryList.Count > 0)
+            <li class="breadcrumb-item"><a href="/">@Html.Translate("#Home#")</a></li>
+            @foreach (var item in categories)
             {
-                foreach (var item in Model.CagetoryList)
-                {
-                    <li class="breadcrumb-item"><a href="@item.Url">@item.Name</a></li>
-                }
-                <li class="breadcrumb-item active" aria-current="page">@Model.Name</li>
+                var slugSource = (item.Url ?? "").Trim().Trim('/');
+                if (slugSource.StartsWith("category/", StringComparison.OrdinalIgnoreCase))
+                    slugSource = slugSource["category/".Length..];
+                slugSource = slugSource.Split('/').LastOrDefault() ?? "";
+                if (UrlSlugHelper.TryParseCategoryPath(slugSource, out _, out var slugPart) && !string.IsNullOrWhiteSpace(slugPart))
+                    slugSource = slugPart;
+
+                var categoryHref = UrlSlugHelper.BuildCategoryPath(slugSource, item.ID);
+                <li class="breadcrumb-item"><a href="@categoryHref">@item.Name</a></li>
+            }
+            @if (!string.IsNullOrWhiteSpace(productName))
+            {
+                <li class="breadcrumb-item active" aria-current="page">@productName</li>
             }
         </ol>
     </div><!-- End .container -->
