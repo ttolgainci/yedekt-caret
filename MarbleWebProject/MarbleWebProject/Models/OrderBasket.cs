@@ -22,5 +22,8 @@ namespace MarbleWebProject.Models
         public string Currency { get; set; }
         public string Image { get; set; }
         public string Url { get; set; }
+        /// <summary>Kullanılabilir stok (API NotMapped).</summary>
+        public int? StockQuantity { get; set; }
+        public int? ProductVariantID { get; set; }
     }
 }

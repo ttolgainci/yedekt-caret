@@ -10,29 +10,30 @@ public class HeaderWishlistV2ViewComponent : ViewComponent
 {
     private readonly IStoreWishlistApi _wishlist;
     private readonly IStoreAuthService _auth;
-    private readonly IBasketUserIdProvider _basketUserId;
+    private readonly IStoreCustomerSession _customerSession;
 
     public HeaderWishlistV2ViewComponent(
         IStoreWishlistApi wishlist,
         IStoreAuthService auth,
-        IBasketUserIdProvider basketUserId)
+        IStoreCustomerSession customerSession)
     {
         _wishlist = wishlist;
         _auth = auth;
-        _basketUserId = basketUserId;
+        _customerSession = customerSession;
     }
 
     public async Task<IViewComponentResult> InvokeAsync(CancellationToken cancellationToken = default)
     {
         var model = new WishlistSetModel();
-        var userId = await _basketUserId.ResolveBasketUserIdAsync(cancellationToken);
-        if (!string.IsNullOrWhiteSpace(userId))
+        var auth = await _customerSession.GetAsync(cancellationToken);
+        if (auth?.Customer?.Id is > 0)
         {
             var session = await _auth.GetSessionAsync(cancellationToken);
+            var languageCode = string.IsNullOrWhiteSpace(session.LanguageCode) ? "tr" : session.LanguageCode.Trim();
             var response = await _wishlist.GetAllAsync(new WishlistAllRequest
             {
-                UserID = userId,
-                LanguageCode = session.LanguageCode
+                UserID = auth.Customer.Id.ToString(),
+                LanguageCode = languageCode
             }, cancellationToken);
 
             if (response.Status && response.Data != null)

@@ -40,7 +40,7 @@ public class HeaderLanguageV1ViewComponent : ViewComponent
             return Content(string.Empty);
         }
 
-        var strData = "   <div class='header-dropdown'>";
+        var strData = "<div class='header-dropdown'>";
         strData += loginResponse.LanguageName;
         strData += " <div class='header-menu'><ul>";
         foreach (var item in languageResponse.Data)

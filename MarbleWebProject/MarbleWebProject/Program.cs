@@ -17,7 +17,7 @@ var configuration = builder.Configuration;
 // Mağaza entegrasyonları yalnızca API üzerinden — IntegrationClientConventions (Faz 0).
 
 var apiBaseUrl = NormalizeLocalDevServiceUrl(
-    (configuration.GetValue<string>("ApiService:BaseUrl") ?? "http://localhost:5206").Trim().TrimEnd('/'));
+    (configuration.GetValue<string>("ApiService:BaseUrl") ?? "http://localhost:5210").Trim().TrimEnd('/'));
 
 var storeAuth = configuration.GetSection(StoreAuthOptions.SectionName).Get<StoreAuthOptions>()
     ?? new StoreAuthOptions();
@@ -46,7 +46,6 @@ builder.Services.AddOptions<StoreAuthOptions>()
         options.StoreSectorType = storeAuth.StoreSectorType;
         options.SectorCode = storeAuth.SectorCode;
         options.ProjectName = storeAuth.ProjectName;
-        options.HeaderNavMaxVisibleCategories = storeAuth.HeaderNavMaxVisibleCategories;
         options.EndPoint = storeAuth.EndPoint;
         ProjectSector.ApplyConfigurationDefaults(options);
     });
@@ -149,16 +148,16 @@ else
 
 app.Use(async (ctx, next) =>
 {
-    if (!ctx.Request.Cookies.ContainsKey("UserIDForBasket"))
+    // Misafir kimliği yalnızca cookie'de tutulur (ürün listesi değil). Geçersiz token yenilenir.
+    var existing = ctx.Request.Cookies[BasketUserIdProvider.GuestCookieName];
+    if (!BasketUserIdProvider.IsValidGuestToken(existing))
     {
-        ctx.Response.Cookies.Append("UserIDForBasket", Guid.NewGuid().ToString(), new CookieOptions
-        {
-            HttpOnly = true,
-            Secure = ctx.Request.IsHttps,
-            SameSite = SameSiteMode.Strict,
-            Expires = DateTimeOffset.UtcNow.AddDays(14)
-        });
+        ctx.Response.Cookies.Append(
+            BasketUserIdProvider.GuestCookieName,
+            Guid.NewGuid().ToString("D"),
+            BasketUserIdProvider.BuildCookieOptions(ctx));
     }
+
     await next();
     if (ctx.Response.StatusCode == 404 && !ctx.Response.HasStarted)
     {

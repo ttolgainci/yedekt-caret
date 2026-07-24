@@ -61,8 +61,5 @@ public static class ProjectSector
         settings.ProjectName = string.IsNullOrWhiteSpace(settings.ProjectName)
             ? "default"
             : settings.ProjectName.Trim();
-
-        if (settings.HeaderNavMaxVisibleCategories < 1)
-            settings.HeaderNavMaxVisibleCategories = 9;
     }
 }

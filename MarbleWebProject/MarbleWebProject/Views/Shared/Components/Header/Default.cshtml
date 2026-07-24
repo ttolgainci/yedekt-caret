@@ -6,7 +6,7 @@
     var header = AppConfig.Storefront.Header;
     var isCustomerLoggedIn = StoreCustomerSession.IsLoggedIn();
 }
-<header class="header header-2 header-intro-clearance">
+<header class="header header-2 header-intro-clearance sticky-header">
     <div class="header-top store-header-top">
         <div class="container">
             <div class="store-header-top-bar">
@@ -84,8 +84,8 @@
         </div>
     </div>
 
-    <div class="header-bottom sticky-header">
-        <div class="container">
+    <div class="header-bottom">
+        <div class="container store-header-nav-row">
             @if (StorefrontFlagHelper.IsActive(header, "HeaderMainCategoryNavV1"))
             {
                 @await Component.InvokeAsync("HeaderMainCategoryNavV1", Model)
@@ -94,11 +94,11 @@
             {
                 @await Component.InvokeAsync("HeaderMainCategoryNavV2", Model)
             }
-            @if (Model.ShowBrowseCategories && StorefrontFlagHelper.IsActive(header, "HeaderCategoryNavV1"))
+            @if (StorefrontFlagHelper.IsActive(header, "HeaderCategoryNavV1"))
             {
                 @await Component.InvokeAsync("HeaderCategoryNavV1", Model)
             }
-            else @if (Model.ShowBrowseCategories && StorefrontFlagHelper.IsActive(header, "HeaderCategoryNavV2"))
+            else @if (StorefrontFlagHelper.IsActive(header, "HeaderCategoryNavV2"))
             {
                 @await Component.InvokeAsync("HeaderCategoryNavV2", Model)
             }

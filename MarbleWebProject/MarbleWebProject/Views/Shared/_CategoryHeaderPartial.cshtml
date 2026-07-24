@@ -13,7 +13,7 @@
     var textOnly = children.Where(c => string.IsNullOrWhiteSpace(c.Picture)).ToList();
 }
 
-<li class="@(hasChildren ? "megamenu-container" : null)">
+<li class="@(hasChildren ? "megamenu-container" : null)" data-nav-id="@CategoryNavHelper.GetCategoryId(Model)">
     <a href="@categoryUrl" class="@(hasChildren ? "sf-with-ul" : null)">@Model.Name</a>
     @if (hasChildren)
     {

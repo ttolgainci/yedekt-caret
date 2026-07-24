@@ -1,11 +1,9 @@
 using MarbleWebProject.Helper;
 using MarbleWebProject.Helpers;
 using MarbleWebProject.Models;
-using MarbleWebProject.Models.Options;
 using MarbleWebProject.Services.Api;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.Caching.Memory;
-using Microsoft.Extensions.Options;
 
 namespace MarbleWebProject.ViewComponents;
 
@@ -15,24 +13,21 @@ public class HeaderViewComponent : ViewComponent
     private readonly IMemoryCache _cache;
     private readonly IStoreCatalogApi _catalog;
     private readonly IStoreAuthService _auth;
-    private readonly StoreAuthOptions _storeAuth;
 
     public HeaderViewComponent(
         IMemoryCache cache,
         IStoreCatalogApi catalog,
-        IStoreAuthService auth,
-        IOptions<StoreAuthOptions> storeAuth)
+        IStoreAuthService auth)
     {
         _cache = cache;
         _catalog = catalog;
         _auth = auth;
-        _storeAuth = storeAuth.Value;
     }
 
     public async Task<IViewComponentResult> InvokeAsync(CancellationToken cancellationToken = default)
     {
         var categories = await GetCategoriesAsync(cancellationToken);
-        var nav = CategoryNavHelper.BuildNavigation(categories, _storeAuth.HeaderNavMaxVisibleCategories);
+        var nav = CategoryNavHelper.BuildNavigation(categories);
         return View(nav);
     }
 

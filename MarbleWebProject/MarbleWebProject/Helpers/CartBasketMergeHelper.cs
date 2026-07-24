@@ -22,6 +22,7 @@ public static class CartBasketMergeHelper
                 {
                     ID = first.ID,
                     ProductID = first.ProductID,
+                    ProductVariantID = first.ProductVariantID,
                     UserID = first.UserID,
                     LanguageCode = first.LanguageCode,
                     Name = first.Name,
@@ -32,6 +33,7 @@ public static class CartBasketMergeHelper
                     Currency = first.Currency,
                     Image = first.Image,
                     Url = first.Url,
+                    StockQuantity = g.Min(x => x.StockQuantity ?? int.MaxValue) is var min && min < int.MaxValue ? min : first.StockQuantity,
                     quantity = g.Sum(x => x.quantity ?? 0)
                 };
             })
@@ -50,7 +52,8 @@ public static class CartBasketMergeHelper
             Price = x.Price,
             CurrencyName = x.Currency ?? string.Empty,
             CartQuantity = x.quantity,
-            TaxPercent = x.Tax
+            TaxPercent = x.Tax,
+            StockQuantity = x.StockQuantity
         }).ToList();
     }
 

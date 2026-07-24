@@ -377,6 +377,10 @@ function updateCartFromResponse(result) {
     var html = buildCartDrawerHtml(data, dataTotal);
     $('#store-cart-drawer-body').html(html);
 
+    if (typeof window.setHeaderLowStockAlert === 'function') {
+        window.setHeaderLowStockAlert('cart', result.lowStockAlert || result.LowStockAlert || null);
+    }
+
     var totalQty = dataTotal.totalQuantity != null ? parseInt(dataTotal.totalQuantity, 10) : 0;
     if (!totalQty && data.length) {
         totalQty = 0;

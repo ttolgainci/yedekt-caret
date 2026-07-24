@@ -22,9 +22,6 @@ public sealed class StoreAuthOptions
     public string SectorCode { get; set; } = "";
     public string ProjectName { get; set; } = "";
 
-    /// <summary>Header ana menüde gösterilecek üst kategori sayısı.</summary>
-    public int HeaderNavMaxVisibleCategories { get; set; } = 9;
-
     /// <summary>Aynı gün kargo tahmini: kesim saati (yerel). Negatif = kapalı.</summary>
     public int SameDayShippingCutoffHour { get; set; } = 16;
 

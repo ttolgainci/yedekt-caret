@@ -3,7 +3,8 @@
 @{
     Layout = "~/Views/Shared/_Layout.cshtml";
     ViewData["Title"] = Html.Translate("#Wishlist#").ToString();
-    var hasItems = Model.Items.Count > 0;
+    var requiresLogin = ViewBag.WishlistRequiresLogin == true;
+    var hasItems = !requiresLogin && Model.Items.Count > 0;
 }
 
 <nav aria-label="breadcrumb" class="breadcrumb-nav">
@@ -19,7 +20,19 @@
     <div class="container">
         <h2 class="title text-center mb-4">@Html.Translate("#Wishlist#")</h2>
 
-        @if (!hasItems)
+        @if (requiresLogin)
+        {
+            <div class="product-result-empty text-center">
+                <div class="product-result-empty__icon" aria-hidden="true">
+                    <i class="icon-heart-o"></i>
+                </div>
+                <h3 class="product-result-empty__title">@Html.Translate("#Please sign in to view your wishlist.#")</h3>
+                <a href="#signin-modal" data-toggle="modal" class="btn btn-primary btn-minwidth-sm mt-2">
+                    <span>@Html.Translate("#Sign in / Sign up#")</span>
+                </a>
+            </div>
+        }
+        else if (!hasItems)
         {
             <div id="wishlist-empty-state" class="product-result-empty text-center">
                 <div class="product-result-empty__icon" aria-hidden="true">

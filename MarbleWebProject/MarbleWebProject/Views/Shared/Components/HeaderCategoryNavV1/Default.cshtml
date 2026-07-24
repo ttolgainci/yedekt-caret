@@ -1,13 +1,12 @@
+@using MarbleWebProject.Helper
 @model MarbleWebProject.Models.HeaderNavigationModel
-<div class="header-center">
+<div class="header-right store-browse-categories" data-store-browse-categories hidden>
     <div class="dropdown category-dropdown">
-        <a href="#" class="dropdown-toggle" role="button" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false" data-display="static" title="@Html.Translate("#Browse Categories#")">
-            @Html.Translate("#Browse Categories#")
-        </a>
-        <div class="dropdown-menu">
+        <a href="#" class="dropdown-toggle" role="button" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false" data-display="static" title="@Html.Translate("#Browse Categories#")" aria-label="@Html.Translate("#Browse Categories#")"></a>
+        <div class="dropdown-menu dropdown-menu-right">
             <nav class="side-nav">
-                <ul class="menu-vertical sf-arrows">
-                    @foreach (var category in Model.OverflowCategories)
+                <ul class="menu-vertical sf-arrows" data-store-nav-overflow>
+                    @foreach (var category in Model.MainNavCategories)
                     {
                         <partial name="_CategoryPartial" model="category" />
                     }

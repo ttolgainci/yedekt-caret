@@ -1,3 +1,4 @@
+using MarbleWebProject.Helpers;
 using MarbleWebProject.Models;
 
 namespace MarbleWebProject.Services.Api;
@@ -54,6 +55,20 @@ public sealed class StoreOrderApi : IStoreOrderApi
         var token = await _session.GetTokenAsync(cancellationToken);
         return await _api.PostAsync<BaseResponse<List<OrderBasket>>>(
             "/api/customers/merge-cart",
+            new
+            {
+                guestUserId = form.GuestUserId,
+                languageCode = form.LanguageCode ?? "tr"
+            },
+            token,
+            cancellationToken);
+    }
+
+    public async Task<BaseResponse<List<WishlistApiItem>>> MergeWishlistAsync(MergeCartForm form, CancellationToken cancellationToken = default)
+    {
+        var token = await _session.GetTokenAsync(cancellationToken);
+        return await _api.PostAsync<BaseResponse<List<WishlistApiItem>>>(
+            "/api/customers/merge-wishlist",
             new
             {
                 guestUserId = form.GuestUserId,

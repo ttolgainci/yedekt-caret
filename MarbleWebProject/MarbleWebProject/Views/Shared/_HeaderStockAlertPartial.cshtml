@@ -1,0 +1,17 @@
+@{
+    var scope = (ViewData["StockAlertScope"] as string) ?? "wishlist";
+    var defaultText = (ViewData["StockAlertText"] as string) ?? "";
+    var ctaLabel = (ViewData["StockAlertCta"] as string) ?? "View";
+    var alertJson = (ViewData["StockAlertJson"] as string) ?? "";
+}
+<div class="dropdown-menu dropdown-menu-right stock-alert-menu js-header-stock-alert"
+     data-scope="@scope"
+     data-default-text="@defaultText"
+     data-alert-json="@alertJson"
+     data-qty-template="@Html.Translate("#Only {0} left#")">
+    <div class="stock-alert-menu__intro js-stock-alert-text">@defaultText</div>
+    <div class="dropdown-cart-products js-stock-alert-products"></div>
+    <div class="dropdown-cart-action">
+        <a href="#" class="btn btn-primary btn-block js-stock-alert-cta">@ctaLabel</a>
+    </div>
+</div>

@@ -8,6 +8,7 @@ public class WishlistItemModel
     public string Url { get; set; } = "#";
     public decimal? Price { get; set; }
     public string CurrencyName { get; set; } = string.Empty;
+    public int? StockQuantity { get; set; }
 }
 
 public class WishlistSetModel

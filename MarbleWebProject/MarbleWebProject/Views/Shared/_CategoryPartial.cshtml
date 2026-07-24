@@ -1,11 +1,11 @@
 @using MarbleWebProject.Helpers
 @model CategoryListModel
-<li>
-    <a href="@CategoryNavHelper.BuildCategoryUrl(Model)" class="@(Model.SubCat.Count > 0 ? "sf-with-ul" : null)">@Model.Name</a>
-    @if (Model.SubCat.Count > 0)
+<li data-nav-id="@CategoryNavHelper.GetCategoryId(Model)">
+    <a href="@CategoryNavHelper.BuildCategoryUrl(Model)" class="@((Model.SubCat?.Count ?? 0) > 0 ? "sf-with-ul" : null)">@Model.Name</a>
+    @if ((Model.SubCat?.Count ?? 0) > 0)
     {
         <ul>
-            @foreach (var subCategory in Model.SubCat)
+            @foreach (var subCategory in Model.SubCat!)
             {
                 <partial name="_CategoryPartial" model="subCategory" />
             }

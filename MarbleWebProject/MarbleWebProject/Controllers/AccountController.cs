@@ -1186,6 +1186,8 @@ public class AccountController : Controller
 
         await _customerSession.ClearAsync(cancellationToken);
 
+        _basketUserId.RotateGuestBasketUserId();
+
         return Redirect("/");
 
     }
@@ -1201,6 +1203,8 @@ public class AccountController : Controller
     {
 
         await _customerSession.ClearAsync(cancellationToken);
+
+        _basketUserId.RotateGuestBasketUserId();
 
         return Ok(new { ok = true });
 
@@ -1290,6 +1294,8 @@ public class AccountController : Controller
 
         var session = await _storeAuth.GetSessionAsync(cancellationToken);
 
+        var languageCode = string.IsNullOrWhiteSpace(session.LanguageCode) ? "tr" : session.LanguageCode.Trim();
+
         try
 
         {
@@ -1300,7 +1306,7 @@ public class AccountController : Controller
 
                 GuestUserId = guestId,
 
-                LanguageCode = session.LanguageCode ?? "tr"
+                LanguageCode = languageCode
 
             }, cancellationToken);
 

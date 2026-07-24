@@ -36,7 +36,8 @@ public static class WishlistHelper
             MainImage = x.Image ?? string.Empty,
             Url = string.IsNullOrWhiteSpace(x.Url) ? "#" : x.Url,
             Price = x.Price,
-            CurrencyName = x.Currency ?? string.Empty
+            CurrencyName = x.Currency ?? string.Empty,
+            StockQuantity = x.StockQuantity
         }).ToList();
 
         return model;
@@ -46,9 +47,12 @@ public static class WishlistHelper
 public class WishlistApiItem
 {
     public int ProductID { get; set; }
+    public string UserID { get; set; } = string.Empty;
+    public string LanguageCode { get; set; } = string.Empty;
     public string Name { get; set; } = string.Empty;
     public decimal? Price { get; set; }
     public string Image { get; set; } = string.Empty;
     public string Url { get; set; } = string.Empty;
     public string Currency { get; set; } = string.Empty;
+    public int? StockQuantity { get; set; }
 }

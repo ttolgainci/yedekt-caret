@@ -438,11 +438,12 @@ public class CheckoutController : Controller
             {
                 try
                 {
-                    await _orders.MergeCartAsync(new MergeCartForm
+                    var mergeForm = new MergeCartForm
                     {
                         GuestUserId = guestId,
                         LanguageCode = languageCode
-                    }, cancellationToken);
+                    };
+                    await _orders.MergeCartAsync(mergeForm, cancellationToken);
                 }
                 catch
                 {

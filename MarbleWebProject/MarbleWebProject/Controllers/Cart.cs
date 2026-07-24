@@ -276,9 +276,21 @@ public class Cart : Controller
                 currencyName = c.CurrencyName,
                 image = MediaUrlHelper.BuildProductImage(c.MainImage),
                 url = c.Url,
-                quantity = c.CartQuantity ?? 0
+                quantity = c.CartQuantity ?? 0,
+                stockQuantity = c.StockQuantity
             }),
-            Info = CartBasketMergeHelper.BuildReturnInfo(model)
+            Info = CartBasketMergeHelper.BuildReturnInfo(model),
+            lowStockAlert = BuildCartLowStockAlert(model)
         });
     }
+
+    private static object? BuildCartLowStockAlert(BasketSetModel model) =>
+        StoreLowStockAlert.BuildPayload(
+            model.CartList.Select(c => (
+                c.ProductID,
+                c.ProductName ?? string.Empty,
+                MediaUrlHelper.BuildProductImage(c.MainImage),
+                c.Url ?? "#",
+                c.StockQuantity)),
+            "/cart");
 }

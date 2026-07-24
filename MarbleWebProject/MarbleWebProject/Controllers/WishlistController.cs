@@ -9,20 +9,26 @@ public class WishlistController : Controller
 {
     private readonly IStoreWishlistApi _wishlist;
     private readonly IStoreAuthService _auth;
-    private readonly IBasketUserIdProvider _basketUserId;
+    private readonly IStoreCustomerSession _customerSession;
 
     public WishlistController(
         IStoreWishlistApi wishlist,
         IStoreAuthService auth,
-        IBasketUserIdProvider basketUserId)
+        IStoreCustomerSession customerSession)
     {
         _wishlist = wishlist;
         _auth = auth;
-        _basketUserId = basketUserId;
+        _customerSession = customerSession;
     }
 
     public async Task<IActionResult> Index(CancellationToken cancellationToken = default)
     {
+        if (!await IsMemberAsync(cancellationToken))
+        {
+            ViewBag.WishlistRequiresLogin = true;
+            return View(new WishlistSetModel());
+        }
+
         var model = await LoadWishlistSetAsync(cancellationToken);
         return View(model);
     }
@@ -31,27 +37,39 @@ public class WishlistController : Controller
     [Route("Wishlist/Snapshot")]
     public async Task<IActionResult> Snapshot(CancellationToken cancellationToken = default)
     {
-        var userId = await _basketUserId.ResolveBasketUserIdAsync(cancellationToken);
-        if (string.IsNullOrWhiteSpace(userId))
+        if (!await IsMemberAsync(cancellationToken))
         {
             return Json(new
             {
+                requiresLogin = true,
                 totalCount = 0,
                 productIds = Array.Empty<int>(),
                 items = Array.Empty<object>()
             });
         }
 
+        var customerId = await ResolveMemberUserIdAsync(cancellationToken);
         var session = await _auth.GetSessionAsync(cancellationToken);
+        var languageCode = RequireLanguage(session.LanguageCode);
         var response = await _wishlist.GetAllAsync(new WishlistAllRequest
         {
-            UserID = userId,
-            LanguageCode = session.LanguageCode
+            UserID = customerId,
+            LanguageCode = languageCode
         }, cancellationToken);
 
         var items = response.Status && response.Data != null ? response.Data : new List<WishlistApiItem>();
+        var lowStockAlert = StoreLowStockAlert.BuildPayload(
+            items.Select(x => (
+                x.ProductID,
+                x.Name ?? string.Empty,
+                MediaUrlHelper.BuildProductImage(x.Image),
+                x.Url ?? "#",
+                x.StockQuantity)),
+            "/wishlist");
+
         return Json(new
         {
+            requiresLogin = false,
             totalCount = items.Count,
             productIds = items.Select(x => x.ProductID).ToList(),
             items = items.Select(x => new
@@ -61,8 +79,10 @@ public class WishlistController : Controller
                 price = x.Price,
                 currency = x.Currency,
                 image = MediaUrlHelper.BuildProductImage(x.Image),
-                url = x.Url
-            })
+                url = x.Url,
+                stockQuantity = x.StockQuantity
+            }),
+            lowStockAlert
         });
     }
 
@@ -73,16 +93,17 @@ public class WishlistController : Controller
         if (productId <= 0)
             return BadRequest(new { message = "Geçersiz ürün." });
 
-        var userId = await _basketUserId.ResolveBasketUserIdAsync(cancellationToken);
-        if (string.IsNullOrWhiteSpace(userId))
-            return BadRequest(new { message = "Oturum kimliği bulunamadı." });
+        if (!await IsMemberAsync(cancellationToken))
+            return Unauthorized(new { requiresLogin = true, message = "Favorilere eklemek için giriş yapmalısınız." });
 
+        var customerId = await ResolveMemberUserIdAsync(cancellationToken);
         var session = await _auth.GetSessionAsync(cancellationToken);
+        var languageCode = RequireLanguage(session.LanguageCode);
         var response = await _wishlist.ToggleAsync(new WishlistToggleRequest
         {
             ProductID = productId,
-            UserID = userId,
-            LanguageCode = session.LanguageCode,
+            UserID = customerId,
+            LanguageCode = languageCode,
             Url = url ?? string.Empty
         }, cancellationToken);
 
@@ -113,13 +134,17 @@ public class WishlistController : Controller
         if (productId <= 0)
             return BadRequest(new { message = "Geçersiz ürün." });
 
-        var userId = await _basketUserId.ResolveBasketUserIdAsync(cancellationToken);
+        if (!await IsMemberAsync(cancellationToken))
+            return Unauthorized(new { requiresLogin = true, message = "Giriş yapmalısınız." });
+
+        var customerId = await ResolveMemberUserIdAsync(cancellationToken);
         var session = await _auth.GetSessionAsync(cancellationToken);
+        var languageCode = RequireLanguage(session.LanguageCode);
         var response = await _wishlist.RemoveAsync(new WishlistRemoveRequest
         {
             ProductID = productId,
-            UserID = userId,
-            LanguageCode = session.LanguageCode
+            UserID = customerId,
+            LanguageCode = languageCode
         }, cancellationToken);
 
         var items = response.Status && response.Data != null ? response.Data : new List<WishlistApiItem>();
@@ -132,19 +157,34 @@ public class WishlistController : Controller
 
     private async Task<WishlistSetModel> LoadWishlistSetAsync(CancellationToken cancellationToken)
     {
-        var userId = await _basketUserId.ResolveBasketUserIdAsync(cancellationToken);
-        if (string.IsNullOrWhiteSpace(userId))
+        var customerId = await ResolveMemberUserIdAsync(cancellationToken);
+        if (string.IsNullOrWhiteSpace(customerId))
             return new WishlistSetModel();
 
         var session = await _auth.GetSessionAsync(cancellationToken);
         var response = await _wishlist.GetAllAsync(new WishlistAllRequest
         {
-            UserID = userId,
-            LanguageCode = session.LanguageCode
+            UserID = customerId,
+            LanguageCode = RequireLanguage(session.LanguageCode)
         }, cancellationToken);
 
         return response.Status && response.Data != null
             ? WishlistHelper.BuildSetModelFromApiItems(response.Data)
             : new WishlistSetModel();
     }
+
+    private async Task<bool> IsMemberAsync(CancellationToken cancellationToken)
+    {
+        var auth = await _customerSession.GetAsync(cancellationToken);
+        return auth?.Customer?.Id is > 0;
+    }
+
+    private async Task<string> ResolveMemberUserIdAsync(CancellationToken cancellationToken)
+    {
+        var auth = await _customerSession.GetAsync(cancellationToken);
+        return auth?.Customer?.Id is > 0 ? auth.Customer.Id.ToString() : string.Empty;
+    }
+
+    private static string RequireLanguage(string? languageCode) =>
+        string.IsNullOrWhiteSpace(languageCode) ? "tr" : languageCode.Trim();
 }

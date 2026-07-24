@@ -42,6 +42,9 @@
         if (typeof window.reloadCartFromServer === 'function') {
             window.reloadCartFromServer();
         }
+        if (typeof window.refreshWishlistSnapshot === 'function') {
+            window.refreshWishlistSnapshot();
+        }
     }
 
     $(document).on('submit', '#customer-login-form', function (e) {
@@ -102,6 +105,18 @@
                 var msg = (xhr.responseJSON && xhr.responseJSON.message) ? xhr.responseJSON.message : 'Kayıt başarısız.';
                 showAuthError(msg);
             }
+        });
+    });
+
+    $(document).on('click', '.js-customer-logout', function (e) {
+        e.preventDefault();
+        var href = $(this).attr('href') || '/account/logout';
+        $.ajax({
+            type: 'POST',
+            url: '/account/logout',
+            timeout: 4000
+        }).always(function () {
+            window.location.href = '/';
         });
     });
 

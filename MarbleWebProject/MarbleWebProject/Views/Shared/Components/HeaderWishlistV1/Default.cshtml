@@ -1,11 +1,33 @@
+@using System.Text.Json
 @using MarbleWebProject.Helper
+@using MarbleWebProject.Helpers
 @model WishlistSetModel
-<div class="wishlist">
-    <a href="/wishlist" title="@Html.Translate("#Wishlist#")">
+@{
+    ViewData["StockAlertScope"] = "wishlist";
+    ViewData["StockAlertText"] = Html.Translate("#Products in your favorites are running out, don't miss out#").ToString();
+    ViewData["StockAlertCta"] = Html.Translate("#View#").ToString();
+    var payload = StoreLowStockAlert.BuildPayload(
+        Model.Items.Select(x => (
+            x.ProductID,
+            x.ProductName ?? string.Empty,
+            MediaUrlHelper.BuildProductImage(x.MainImage),
+            string.IsNullOrWhiteSpace(x.Url) ? "/wishlist" : x.Url,
+            x.StockQuantity)),
+        "/wishlist");
+    ViewData["StockAlertJson"] = payload == null ? "" : JsonSerializer.Serialize(payload);
+}
+<div class="wishlist dropdown cart-dropdown">
+    <a href="/wishlist"
+       class="dropdown-toggle js-header-wishlist"
+       role="button"
+       aria-haspopup="true"
+       aria-expanded="false"
+       title="@Html.Translate("#Wishlist#")">
         <div class="icon">
             <i class="icon-heart-o"></i>
             <span class="wishlist-count badge" @(Model.TotalCount <= 0 ? "style=display:none" : null)>@Model.TotalCount</span>
         </div>
-        <p>@Html.Translate("#Wishlist#")</p>
+       <p>@Html.Translate("#Wishlist#")</p>
     </a>
+    @await Html.PartialAsync("_HeaderStockAlertPartial")
 </div>

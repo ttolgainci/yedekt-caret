@@ -1,8 +1,24 @@
+@using System.Text.Json
 @model BasketSetModel
 @using MarbleWebProject.Helper
+@using MarbleWebProject.Helpers
 @{
     var hasItems = Model?.CartList?.Count > 0;
     var setItemCount = hasItems ? (Model!.Info.ItemCount ?? Model.CartList.Count) : 0;
+    ViewData["StockAlertScope"] = "cart";
+    ViewData["StockAlertText"] = Html.Translate("#Products in your cart are running out, don't miss out#").ToString();
+    ViewData["StockAlertCta"] = Html.Translate("#View#").ToString();
+    var payload = hasItems
+        ? StoreLowStockAlert.BuildPayload(
+            Model!.CartList.Select(c => (
+                c.ProductID,
+                c.ProductName ?? string.Empty,
+                MediaUrlHelper.BuildProductImage(c.MainImage),
+                string.IsNullOrWhiteSpace(c.Url) ? "/cart" : c.Url,
+                c.StockQuantity)),
+            "/cart")
+        : null;
+    ViewData["StockAlertJson"] = payload == null ? "" : JsonSerializer.Serialize(payload);
 }
 <div class="dropdown cart-dropdown">
     <a href="#" class="dropdown-toggle js-open-cart-drawer" role="button" aria-haspopup="dialog" aria-controls="store-cart-drawer" title="@Html.Translate("#Cart#")">
@@ -10,6 +26,7 @@
             <i class="icon-shopping-cart"></i>
             <span class="cart-count basket-quantity-count" @(hasItems ? "" : "style=display:none")>@setItemCount</span>
         </div>
-        <p>@Html.Translate("#Cart#")</p>
+        <p>@Html.Translate("#Cart#")</p> 
     </a>
+    @await Html.PartialAsync("_HeaderStockAlertPartial")
 </div>

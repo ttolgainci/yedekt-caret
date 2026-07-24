@@ -10,6 +10,7 @@ namespace MarbleWebProject.Models
         public string CurrencyName { get; set; }
         public int? CartQuantity { get; set; }
         public int? TaxPercent { get; set; }
+        public int? StockQuantity { get; set; }
     }
    public class CartFullModel
     {

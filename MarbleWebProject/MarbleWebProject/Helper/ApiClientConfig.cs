@@ -9,7 +9,7 @@ public static class ApiClientConfig
     {
         var url = (Models.AppConfig.Storefront.StoreAuth?.EndPoint ?? "").Trim();
         if (string.IsNullOrEmpty(url))
-            url = "http://localhost:5206";
+            url = "http://localhost:5210";
         if (!url.EndsWith('/'))
             url += "/";
         return url;

@@ -1,10 +1,10 @@
-/* Mağaza özel stiller — renkler store-themes.css + StoreAuth:Theme */
+﻿/* MaÄŸaza Ã¶zel stiller â€” renkler store-themes.css + StoreAuth:Theme */
 
 .product-label-stock--brand {
     background-color: var(--store-brand);
 }
 
-/* Fiyatlar — tema renginden bağımsız sabit stil */
+/* Fiyatlar â€” tema renginden baÄŸÄ±msÄ±z sabit stil */
 .product-price,
 .product-price .new-price,
 .new-price,
@@ -45,7 +45,7 @@
     font-size: 1.6rem !important;
 }
 
-/* Ürün adı — uzun metin ellipsis, tam ad title attribute ile (checkout özeti gibi) */
+/* ÃœrÃ¼n adÄ± â€” uzun metin ellipsis, tam ad title attribute ile (checkout Ã¶zeti gibi) */
 .product-body,
 .home-product-widgets .product-body,
 .wishlist-page-grid .product-body,
@@ -75,7 +75,7 @@
     cursor: help;
 }
 
-/* Header kategori megamenü — API görselleri (<img>, demo-bg yerine) */
+/* Header kategori megamenÃ¼ â€” API gÃ¶rselleri (<img>, demo-bg yerine) */
 .megamenu.demo .demo-item .category-menu-media {
     position: relative;
     display: block;
@@ -102,7 +102,7 @@
     transition: transform 0.3s ease;
 }
 
-/* Ana sayfa marka slider — demo-2 .brands-border + owl-nav */
+/* Ana sayfa marka slider â€” demo-2 .brands-border + owl-nav */
 .brands-border.js-home-brands-carousel .owl-nav {
     margin: 0;
 }
@@ -142,7 +142,7 @@
     right: 0.5rem;
 }
 
-/* Main banner V2 (index-2) — demo-2.css fixed height/flex breaks slide-image + picture layout */
+/* Main banner V2 (index-2) â€” demo-2.css fixed height/flex breaks slide-image + picture layout */
 .intro-slider-container.slider-container-ratio.slider-container-1 {
     height: auto;
     background-color: transparent;
@@ -185,7 +185,7 @@
     transform: translateY(-50%);
 }
 
-/* Ana sayfa — araç kataloğu (demo-2 var(--store-brand)) */
+/* Ana sayfa â€” araÃ§ kataloÄŸu (demo-2 var(--store-brand)) */
 .home-vehicle-search-wrap {
     height: 100%;
 }
@@ -248,7 +248,7 @@
     }
 }
 
-/* Sonuç sayfası — kompakt araç arama + bağlam başlığı */
+/* SonuÃ§ sayfasÄ± â€” kompakt araÃ§ arama + baÄŸlam baÅŸlÄ±ÄŸÄ± */
 .product-result-hero {
     background-color: #fff;
     border-bottom: 1px solid #ebebeb;
@@ -393,7 +393,7 @@
     }
 }
 
-/* /arama — kategori / marka filtresi: ~10 satır görünür, fazlası kaydırılır */
+/* /arama â€” kategori / marka filtresi: ~10 satÄ±r gÃ¶rÃ¼nÃ¼r, fazlasÄ± kaydÄ±rÄ±lÄ±r */
 .sidebar-shop .product-result-filter-scroll,
 .sidebar-shop .product-result-category-scroll {
     max-height: calc(3.6rem * 10);
@@ -413,7 +413,7 @@
     color: var(--store-brand);
 }
 
-/* /arama sidebar — collapse başlığı sayfa kaydırmasın */
+/* /arama sidebar â€” collapse baÅŸlÄ±ÄŸÄ± sayfa kaydÄ±rmasÄ±n */
 .sidebar-shop .widget-collapse-btn {
     display: block;
     width: 100%;
@@ -435,7 +435,7 @@
     box-shadow: none;
 }
 
-/* /arama — kategori / marka checkbox filtre */
+/* /arama â€” kategori / marka checkbox filtre */
 .sidebar-shop .filter-item--toggle {
     cursor: pointer;
 }
@@ -457,13 +457,13 @@
     color: var(--store-brand);
 }
 
-/* /arama — kategori / marka checkbox seçili rengi */
+/* /arama â€” kategori / marka checkbox seÃ§ili rengi */
 .sidebar-shop .custom-checkbox .custom-control-input:checked ~ .custom-control-label::before {
     border-color: var(--store-brand);
     background-color: var(--store-brand);
 }
 
-/* /arama — fiyat aralığı slider */
+/* /arama â€” fiyat aralÄ±ÄŸÄ± slider */
 .sidebar-shop .filter-price {
     padding-bottom: 0.5rem;
 }
@@ -484,7 +484,7 @@
     border-color: var(--store-brand);
 }
 
-/* Ana sayfa ürün widget'ları — eşit görsel kutusu */
+/* Ana sayfa Ã¼rÃ¼n widget'larÄ± â€” eÅŸit gÃ¶rsel kutusu */
 .home-product-widgets .product.product-4 .product-media,
 .home-product-widgets .top-selling-container .product-media {
     position: relative;
@@ -524,7 +524,7 @@
     z-index: 3;
 }
 
-/* Ana sayfa — sepete ekle yeşil (demo-2 marka rengi) */
+/* Ana sayfa â€” sepete ekle yeÅŸil (demo-2 marka rengi) */
 .home-product-widgets .product.product-4 .btn-product.btn-cart {
     color: #fff;
     background-color: var(--store-brand);
@@ -553,7 +553,7 @@
     transform: translate(0, 0);
 }
 
-/* Dokunmatik / mobil — :hover olmadığı için aksiyonlar her zaman görünür (Molla tema hover ile açıyor) */
+/* Dokunmatik / mobil â€” :hover olmadÄ±ÄŸÄ± iÃ§in aksiyonlar her zaman gÃ¶rÃ¼nÃ¼r (Molla tema hover ile aÃ§Ä±yor) */
 @media (hover: none), (max-width: 767px) {
     .home-product-widgets .product.product-4 .product-action,
     .home-product-widgets .product.product-4 .product-action-vertical {
@@ -628,7 +628,7 @@
     color: inherit;
 }
 
-/* /arama — ürün görselleri aynı kutu boyutunda */
+/* /arama â€” Ã¼rÃ¼n gÃ¶rselleri aynÄ± kutu boyutunda */
 .product-result-grid .product-media {
     position: relative;
     display: block;
@@ -661,7 +661,7 @@
     z-index: 2;
 }
 
-/* Liste kartı — stok durumu (etiket) + miktar (fiyat altı) */
+/* Liste kartÄ± â€” stok durumu (etiket) + miktar (fiyat altÄ±) */
 .product-list-qty {
     margin: 0.4rem 0 0;
     font-size: 1.2rem;
@@ -702,7 +702,7 @@
     object-position: center;
 }
 
-/* Arama list (V1) — sepete ekle: grid (product-7) ile aynı marka rengi, kahverengi çerçeve yok */
+/* Arama list (V1) â€” sepete ekle: grid (product-7) ile aynÄ± marka rengi, kahverengi Ã§erÃ§eve yok */
 .product-result-list .product.product-list .btn-product.btn-cart {
     color: var(--store-brand);
     background-color: #fff;
@@ -740,7 +740,7 @@
     background-color: #fafafa;
 }
 
-/* Arama list (V1) — wishlist dolu kalp: marka yeşili (.product-body kuralı daha spesifik olduğu için) */
+/* Arama list (V1) â€” wishlist dolu kalp: marka yeÅŸili (.product-body kuralÄ± daha spesifik olduÄŸu iÃ§in) */
 .product-result-list .product-body .btn-wishlist.is-in-wishlist,
 .product-result-list .product-body .btn-wishlist.is-in-wishlist:hover,
 .product-result-list .product-body .btn-wishlist.is-in-wishlist:focus {
@@ -784,7 +784,7 @@
     color: #777;
 }
 
-/* Ürün kartı — alt marka adı (kategori + /arama) */
+/* ÃœrÃ¼n kartÄ± â€” alt marka adÄ± (kategori + /arama) */
 .product-card-brand {
     margin-top: 1rem;
     padding-top: 1rem;
@@ -801,7 +801,7 @@
     letter-spacing: 0.02em;
 }
 
-/* Sağ yan sepet paneli */
+/* SaÄŸ yan sepet paneli */
 body.store-cart-drawer-open {
     overflow: hidden;
 }
@@ -1001,7 +1001,7 @@ body.store-cart-drawer-open .store-cart-drawer {
     color: var(--store-brand);
 }
 
-/* Sepet çekmecesi — global 2rem fiyat kuralından ayrı, kompakt tipografi */
+/* Sepet Ã§ekmecesi â€” global 2rem fiyat kuralÄ±ndan ayrÄ±, kompakt tipografi */
 .store-cart-drawer .cartProductPrice,
 .store-cart-drawer .basket-product-price {
     font-size: 1.15rem !important;
@@ -1174,7 +1174,7 @@ body.store-cart-drawer-open .store-cart-drawer {
     }
 }
 
-/* Cart sayfası — mobil kompakt satır (sepet çekmecesi gibi; table-mobile ile aynı breakpoint) */
+/* Cart sayfasÄ± â€” mobil kompakt satÄ±r (sepet Ã§ekmecesi gibi; table-mobile ile aynÄ± breakpoint) */
 @media (max-width: 991px) {
     .store-cart-page .table-cart.table-mobile {
         border: none;
@@ -1321,7 +1321,7 @@ body.store-cart-drawer-open .store-cart-drawer {
     }
 }
 
-/* Checkout — sipariş özeti (uzun ürün adları + sabit fiyat sütunu) */
+/* Checkout â€” sipariÅŸ Ã¶zeti (uzun Ã¼rÃ¼n adlarÄ± + sabit fiyat sÃ¼tunu) */
 .checkout-order-summary {
     --checkout-summary-qty-width: 2.6rem;
     --checkout-summary-price-width: 10.5rem;
@@ -1415,7 +1415,7 @@ body.store-cart-drawer-open .store-cart-drawer {
     vertical-align: middle;
 }
 
-/* Molla .summary-total yeşil (#c96) — checkout / cart toplam satırı nötr renk */
+/* Molla .summary-total yeÅŸil (#c96) â€” checkout / cart toplam satÄ±rÄ± nÃ¶tr renk */
 .table-summary .summary-total td,
 .checkout-summary-totals .summary-total td {
     color: #333 !important;
@@ -1430,7 +1430,7 @@ body.store-cart-drawer-open .store-cart-drawer {
     color: #1b1c1e !important;
 }
 
-/* Ana sayfa widget — ürün adı koyu */
+/* Ana sayfa widget â€” Ã¼rÃ¼n adÄ± koyu */
 .home-product-widgets .product-title,
 .home-product-widgets .product-title a,
 .home-product-widgets .product-title a:hover,
@@ -1477,7 +1477,7 @@ body.store-cart-drawer-open .store-cart-drawer {
     border-color: var(--store-brand);
 }
 
-/* Checkout — Trendyol tarzı accordion */
+/* Checkout â€” Trendyol tarzÄ± accordion */
 .checkout-page .checkout-accordion .card {
     margin-bottom: 1rem;
     border: 0.1rem solid #ebebeb;
@@ -1599,7 +1599,7 @@ body.store-cart-drawer-open .store-cart-drawer {
     white-space: nowrap;
 }
 
-/* Adres modalları — tema .modal-body { padding: 0 } üzerine yaz */
+/* Adres modallarÄ± â€” tema .modal-body { padding: 0 } Ã¼zerine yaz */
 .checkout-modal .modal-content {
     border-radius: 0.6rem;
     border: 0;
@@ -1929,7 +1929,7 @@ body.store-cart-drawer-open .store-cart-drawer {
     border-top: 0.1rem dashed #ebebeb;
 }
 
-/* Ödeme yöntemi accordion */
+/* Ã–deme yÃ¶ntemi accordion */
 .checkout-pay-accordion {
     display: flex;
     flex-direction: column;
@@ -2190,7 +2190,7 @@ body.store-cart-drawer-open .store-cart-drawer {
     opacity: 0.9;
 }
 
-/* Checkout — alertify toast (IBAN kopyala vb.) */
+/* Checkout â€” alertify toast (IBAN kopyala vb.) */
 .alertify-notifier {
     z-index: 20000;
 }
@@ -2273,7 +2273,123 @@ body.store-cart-drawer-open .store-cart-drawer {
     }
 }
 
-/* Header — account / wishlist / cart (index-1 layout; login sonrası Molla override) */
+/* Dynamic main-nav fit + Browse Categories overflow (right) */
+.header-intro-clearance .header-bottom .store-header-nav-row {
+    display: flex;
+    align-items: stretch;
+    gap: 1rem;
+}
+
+.header-intro-clearance .header-bottom .store-header-main-nav {
+    flex: 1 1 auto;
+    min-width: 0;
+    overflow: hidden;
+}
+
+.header-intro-clearance .header-bottom .store-header-main-nav .main-nav {
+    display: block;
+    margin-left: 0;
+}
+
+.header-intro-clearance .header-bottom .store-header-main-nav .menu {
+    flex-wrap: nowrap;
+}
+
+.header-intro-clearance .header-bottom .store-header-main-nav .menu > li > a {
+    white-space: nowrap;
+}
+
+.header-intro-clearance .header-bottom .store-browse-categories {
+    flex: 0 0 auto;
+    margin-left: auto;
+    align-self: stretch;
+}
+
+.header-intro-clearance .header-bottom .store-browse-categories .category-dropdown {
+    width: auto;
+    max-width: none;
+    height: 100%;
+    background-color: transparent;
+}
+
+.header-intro-clearance .header-bottom .store-browse-categories .category-dropdown .dropdown-toggle {
+    position: relative;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    min-width: 4.4rem;
+    width: 4.4rem;
+    height: 100%;
+    padding: 0;
+    background-color: transparent;
+    color: #333 !important;
+    font-size: 0;
+    line-height: 0;
+    text-indent: -9999px;
+    overflow: hidden;
+}
+
+.header-intro-clearance .header-bottom .store-browse-categories .category-dropdown .dropdown-toggle::before {
+    display: none;
+}
+
+.header-intro-clearance .header-bottom .store-browse-categories .category-dropdown .dropdown-toggle::after {
+    content: '\f131';
+    font-family: 'molla';
+    border: none;
+    position: absolute;
+    left: 50%;
+    top: 50%;
+    transform: translate(-50%, -50%);
+    margin: 0;
+    font-size: 2.2rem;
+    line-height: 1;
+    font-weight: 400;
+    text-indent: 0;
+}
+
+.header-intro-clearance .header-bottom .store-browse-categories .category-dropdown:not(.is-on):hover .dropdown-toggle,
+.header-intro-clearance .header-bottom .store-browse-categories .category-dropdown.show .dropdown-toggle {
+    color: #fff !important;
+    background-color: var(--store-brand, #c96);
+}
+
+.header-intro-clearance .header-bottom .store-browse-categories .dropdown-menu {
+    left: auto;
+    right: 0;
+    width: 275px;
+    max-width: min(275px, 95vw);
+}
+
+/* Molla header-bottom container ayırıcı çizgisi (fixed right %) — dinamik navda kapalı */
+.header-intro-clearance .header-bottom .store-header-nav-row::before,
+.header-intro-clearance .header-bottom .store-header-nav-row::after {
+    content: none !important;
+    display: none !important;
+    visibility: hidden !important;
+    width: 0 !important;
+    height: 0 !important;
+    background: none !important;
+}
+
+/* Overflow dropdown yazıları = main-nav rengi + tema brand hover */
+.header-intro-clearance .header-bottom .store-browse-categories .menu-vertical > li > a {
+    color: #333;
+    font-weight: 500;
+    font-size: 1.4rem;
+    border-color: #ebebeb;
+}
+
+.header-intro-clearance .header-bottom .store-browse-categories .menu-vertical li:hover > a,
+.header-intro-clearance .header-bottom .store-browse-categories .menu-vertical li.show > a,
+.header-intro-clearance .header-bottom .store-browse-categories .menu-vertical li.active > a {
+    color: var(--store-brand, #c96);
+}
+
+.header-intro-clearance .header-bottom .store-browse-categories .menu-vertical .sf-with-ul::after {
+    color: inherit;
+}
+
 .header-intro-clearance .header-middle .header-right {
     display: flex;
     align-items: center;
@@ -2358,9 +2474,9 @@ body.store-cart-drawer-open .store-cart-drawer {
     line-height: 1 !important;
 }
 
-.header-intro-clearance .header-middle .header-right .account p,
-.header-intro-clearance .header-middle .header-right .wishlist p,
-.header-intro-clearance .header-middle .header-right .cart-dropdown p {
+.header-intro-clearance .header-middle .header-right .account > a > p,
+.header-intro-clearance .header-middle .header-right .wishlist > a > p,
+.header-intro-clearance .header-middle .header-right .cart-dropdown > a > p {
     margin: 0;
     font-size: 1.3rem;
     line-height: 1.2;
@@ -2439,15 +2555,15 @@ body.store-cart-drawer-open .store-cart-drawer {
         min-width: 4.4rem;
     }
 
-    .header-intro-clearance .header-middle .header-right .account p,
-    .header-intro-clearance .header-middle .header-right .wishlist p,
-    .header-intro-clearance .header-middle .header-right .cart-dropdown p {
+    .header-intro-clearance .header-middle .header-right .account > a > p,
+    .header-intro-clearance .header-middle .header-right .wishlist > a > p,
+    .header-intro-clearance .header-middle .header-right .cart-dropdown > a > p {
         font-size: 1.1rem;
         max-width: 6.5rem;
     }
 }
 
-/* Molla: 399px altında account/wishlist gizleniyor — giriş yapmış kullanıcıda göster */
+/* Molla: 399px alt─▒nda account/wishlist gizleniyor ÔÇö giri┼ş yapm─▒┼ş kullan─▒c─▒da g├Âster */
 @media (max-width: 399px) {
     .header-intro-clearance .header-middle .header-right > .account:not(.d-none),
     .header-intro-clearance .header-middle .header-right > .account.dropdown:not(.d-none),
@@ -2467,9 +2583,9 @@ body.store-cart-drawer-open .store-cart-drawer {
         min-width: 3.6rem;
     }
 
-    .header-intro-clearance .header-middle .header-right .account p,
-    .header-intro-clearance .header-middle .header-right .wishlist p,
-    .header-intro-clearance .header-middle .header-right .cart-dropdown p {
+    .header-intro-clearance .header-middle .header-right .account > a > p,
+    .header-intro-clearance .header-middle .header-right .wishlist > a > p,
+    .header-intro-clearance .header-middle .header-right .cart-dropdown > a > p {
         font-size: 1rem;
         max-width: 5.5rem;
     }
@@ -2492,7 +2608,7 @@ body.store-cart-drawer-open .store-cart-drawer {
     }
 }
 
-/* Footer — Information / Customer Service / My Account linkleri */
+/* Footer â€” Information / Customer Service / My Account linkleri */
 .footer .footer-middle .widget-list a {
     color: #333 !important;
 }
@@ -3094,7 +3210,7 @@ body.store-page-loading-active {
     border-color: #ececec;
 }
 
-/* Sipariş detay — Trendyol tarzı */
+/* SipariÅŸ detay â€” Trendyol tarzÄ± */
 .store-od {
     background: #fff;
 }
@@ -3461,7 +3577,7 @@ body.store-page-loading-active {
     }
 }
 
-/* Ürün detay — Porto product.html satırları + elements-tabs Left Align */
+/* ÃœrÃ¼n detay â€” Porto product.html satÄ±rlarÄ± + elements-tabs Left Align */
 .product-details-tab > .nav-tabs {
     justify-content: flex-start;
 }
@@ -3587,7 +3703,7 @@ body.store-page-loading-active {
     display: none !important;
 }
 
-/* elevateZoom — Molla product.html inner zoom: mouse ile tüm alan */
+/* elevateZoom â€” Molla product.html inner zoom: mouse ile tÃ¼m alan */
 .product-main-image {
     position: relative;
     overflow: visible;
@@ -3613,6 +3729,76 @@ body.store-page-loading-active {
         width: 100% !important;
         margin-bottom: 0.35rem;
     }
+}
+
+/* Header low-stock alert — Molla cart-dropdown hover */
+.cart-dropdown .dropdown-menu.stock-alert-menu:not(.has-items) {
+    visibility: hidden !important;
+    opacity: 0 !important;
+    pointer-events: none !important;
+}
+
+.cart-dropdown:hover .dropdown-menu.stock-alert-menu.has-items,
+.cart-dropdown.show .dropdown-menu.stock-alert-menu.has-items {
+    visibility: visible;
+    opacity: 1;
+}
+
+.header-intro-clearance .wishlist .stock-alert-menu a,
+.header-intro-clearance .cart-dropdown .stock-alert-menu a {
+    font-size: inherit !important;
+    line-height: inherit !important;
+    color: inherit;
+}
+
+.stock-alert-menu__intro {
+    display: block;
+    margin: 0 0 1rem !important;
+    padding: 0;
+    max-width: none !important;
+    overflow: visible !important;
+    text-overflow: unset !important;
+    white-space: normal !important;
+    word-wrap: break-word;
+    text-align: left !important;
+    font-size: 1.3rem !important;
+    line-height: 1.45 !important;
+    font-weight: 400;
+    color: #333 !important;
+}
+
+.stock-alert-menu .dropdown-cart-products {
+    max-height: 280px;
+    overflow-y: auto;
+}
+
+.stock-alert-menu .product-title,
+.stock-alert-menu .product-title a {
+    font-weight: 400 !important;
+    font-size: 1.3rem !important;
+    line-height: 1.3 !important;
+    color: #666 !important;
+    text-align: left;
+    margin-bottom: 0.4rem;
+}
+
+.stock-alert-menu .product-title a:hover,
+.stock-alert-menu .product-title a:focus {
+    color: var(--store-brand, #c96) !important;
+}
+
+.stock-alert-menu .product-cart-details {
+    font-weight: 400;
+    max-width: 150px;
+    font-size: 1.3rem;
+    color: #999;
+    text-align: left;
+}
+
+.stock-alert-menu .dropdown-cart-action .btn {
+    min-width: 0;
+    padding: 0.45rem 1rem;
+    font-size: 1.2rem;
 }
 
 

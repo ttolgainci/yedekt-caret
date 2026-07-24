@@ -58,7 +58,11 @@
     <link rel="stylesheet" href="~/css/store-molla-theme.css" asp-append-version="true">
     @await RenderSectionAsync("Styles", required: false)
 </head>
-<body class="@storeThemeClass">
+@{
+    var wishlistRequiresLoginAttr = ViewBag.WishlistRequiresLogin == true ? "true" : null;
+}
+<body class="@storeThemeClass" data-wishlist-requires-login="@wishlistRequiresLoginAttr">
+
     <div class="page-wrapper">
         @await Component.InvokeAsync("Header")
         <main class="main">
@@ -108,6 +112,8 @@
     <script src="~/PageJs/Master.js"></script>
     <script src="~/PageJs/PageLoading.js" asp-append-version="true"></script>
     <script src="~/PageJs/CartBasket.js" asp-append-version="true"></script>
+    <script src="~/PageJs/HeaderStockAlert.js" asp-append-version="true"></script>
+    <script src="~/PageJs/HeaderNavFit.js" asp-append-version="true"></script>
     <script src="~/PageJs/Wishlist.js" asp-append-version="true"></script>
     <script src="~/PageJs/CustomerAuth.js" asp-append-version="true"></script>
     <script src="~/PageJs/Function.js"></script>
