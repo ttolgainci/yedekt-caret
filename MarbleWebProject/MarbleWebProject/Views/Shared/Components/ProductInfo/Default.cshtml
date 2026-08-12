@@ -45,9 +45,8 @@
     string? brandUrl = null;
     if (p.BrandID is > 0)
     {
-        brandUrl = !string.IsNullOrWhiteSpace(p.BrandSlug)
-            ? "/" + p.BrandSlug.Trim().TrimStart('/')
-            : "/arama?brandId=" + p.BrandID.Value;
+        var brandSlug = !string.IsNullOrWhiteSpace(p.BrandSlug) ? p.BrandSlug : p.BrandName;
+        brandUrl = UrlSlugHelper.BuildBrandPath(brandSlug, p.BrandID.Value);
     }
 
     var brandPictureUrl = !string.IsNullOrWhiteSpace(p.BrandPicture)

@@ -9,9 +9,11 @@
     var addLabel = Html.Translate("#Add to Wishlist#");
     var removeLabel = Html.Translate("#Remove from Wishlist#");
     var wishlistStyle = (ViewData["WishlistButtonStyle"] as string ?? "icon").Trim().ToLowerInvariant();
-    var btnClass = wishlistStyle == "list"
+    var isList = wishlistStyle is "list" or "list-icon";
+    var isListIconOnly = wishlistStyle == "list-icon";
+    var btnClass = isList
         ? "btn-product btn-wishlist js-toggle-wishlist"
-        : "btn-product-icon btn-wishlist btn-expandable js-toggle-wishlist";
+        : "btn-product-icon btn-wishlist js-toggle-wishlist";
 }
 <a href="#"
    class="@btnClass"
@@ -19,7 +21,14 @@
    data-purl="@productUrl"
    data-add-label="@addLabel"
    data-remove-label="@removeLabel"
-   title="@addLabel"
+   aria-label="@addLabel"
    onclick="toggleWishlist(this); return false;">
-    <span>@addLabel</span>
+    @if (isList)
+    {
+        <span class="@(isListIconOnly ? "sr-only" : null)">@addLabel</span>
+    }
+    else
+    {
+        <span class="sr-only">@addLabel</span>
+    }
 </a>

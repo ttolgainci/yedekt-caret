@@ -18,9 +18,14 @@
         if (!$btn || !$btn.length) return;
         var addLabel = $btn.data('add-label') || $btn.attr('data-add-label') || 'Add to Wishlist';
         var removeLabel = $btn.data('remove-label') || $btn.attr('data-remove-label') || 'Remove from Wishlist';
+        var label = isActive ? removeLabel : addLabel;
         $btn.toggleClass('is-in-wishlist', !!isActive);
-        $btn.attr('title', isActive ? removeLabel : addLabel);
-        $btn.find('span').text(isActive ? removeLabel : addLabel);
+        $btn.removeAttr('title');
+        $btn.attr('aria-label', label);
+        var $label = $btn.find('span').first();
+        if ($label.length) {
+            $label.text(label);
+        }
     }
 
     function syncWishlistButtons() {
@@ -136,9 +141,12 @@
                     updateWishlistBadges(res.totalCount);
                     $row.remove();
                     syncWishlistButtons();
+                    if (window.StoreWishlistFilters && typeof window.StoreWishlistFilters.refresh === 'function') {
+                        window.StoreWishlistFilters.refresh();
+                    }
                     if (!res.totalCount) {
-                        $('#wishlist-empty-state').show();
-                        $('#wishlist-products').hide();
+                        $('#wishlist-page-content').hide();
+                        $('#wishlist-empty-state').prop('hidden', false).show();
                     }
                 }).fail(function (xhr) {
                     if (xhr && xhr.status === 401) openLoginModal();

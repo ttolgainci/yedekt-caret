@@ -87,13 +87,19 @@ else
 
                             }
 
-                            <div class="product-action">
+                            <div class="product-action product-result-list-wishlist-action">
 
-                                @{ ViewData["ProductUrl"] = productUrl; }
+                                @{
+                                    ViewData["ProductUrl"] = productUrl;
+                                    ViewData["WishlistButtonStyle"] = "list-icon";
+                                }
 
-                                @await Html.PartialAsync("_ProductListAddToCartPartial", item)
+                                @await Html.PartialAsync("_ProductListWishlistPartial", item)
 
                             </div>
+
+                            @{ ViewData["ProductUrl"] = productUrl; }
+                            @await Html.PartialAsync("_ProductListAddToCartPartial", item)
 
                         </div>
 
@@ -101,11 +107,7 @@ else
 
                     <div class="col-lg-6">
 
-                        <div class="product-body product-action-inner">
-
-                            @{ ViewData["ProductUrl"] = productUrl; ViewData["WishlistButtonStyle"] = "list"; }
-
-                            @await Html.PartialAsync("_ProductListWishlistPartial", item)
+                        <div class="product-body">
 
                             @if (!string.IsNullOrWhiteSpace(item.CategoryName))
 

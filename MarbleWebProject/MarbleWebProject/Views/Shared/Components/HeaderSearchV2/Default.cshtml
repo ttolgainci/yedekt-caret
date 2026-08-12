@@ -1,9 +1,19 @@
-<div class="header-search">
+<div class="header-search" data-header-search>
     <a href="#" class="search-toggle" role="button" title="Search"><i class="icon-search"></i></a>
-    <form action="#" method="get">
+    <form action="/arama" method="get" class="js-header-search-form" autocomplete="off">
         <div class="header-search-wrapper">
-            <label for="q" class="sr-only">Search</label>
-            <input type="search" class="form-control" name="q" id="q" placeholder="Search in..." required>
+            <label for="header-search-q-v2" class="sr-only">Search</label>
+            <input type="search"
+                   class="form-control js-header-search-input"
+                   name="q"
+                   id="header-search-q-v2"
+                   placeholder="Search in..."
+                   minlength="2"
+                   required
+                   autocomplete="off"
+                   aria-autocomplete="list"
+                   aria-expanded="false">
+            <div class="header-search-suggest" hidden></div>
         </div>
     </form>
 </div>

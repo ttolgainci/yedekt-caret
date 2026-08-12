@@ -187,3 +187,127 @@ body[class*="store-theme-"] .product.product-7 .btn-product.btn-cart:hover span,
 body[class*="store-theme-"] .product.product-7 .btn-product.btn-cart:focus span {
     color: #fff !important;
 }
+
+/* product-11 — sepete ekle / wishlist (anasayfa + wishlist sayfası) */
+body[class*="store-theme-"] .product.product-11 .btn-product.btn-cart:hover,
+body[class*="store-theme-"] .product.product-11 .btn-product.btn-cart:focus {
+    color: #fff !important;
+    background-color: var(--store-brand) !important;
+    border-color: var(--store-brand) !important;
+}
+
+body[class*="store-theme-"] .product.product-11 .btn-product.btn-cart:hover span,
+body[class*="store-theme-"] .product.product-11 .btn-product.btn-cart:focus span {
+    color: #fff !important;
+}
+
+body[class*="store-theme-"] .product.product-11 .btn-product-icon.btn-wishlist {
+    color: #ccc;
+    background-color: #fff;
+    border-color: #ebebeb;
+}
+
+body[class*="store-theme-"] .product.product-11 .btn-product-icon.btn-wishlist:hover,
+body[class*="store-theme-"] .product.product-11 .btn-product-icon.btn-wishlist:focus {
+    color: var(--store-brand) !important;
+    background-color: #fff !important;
+    border-color: #ebebeb !important;
+}
+
+body[class*="store-theme-"] .product.product-11 .btn-product-icon.btn-wishlist.is-in-wishlist,
+body[class*="store-theme-"] .product.product-11 .btn-product-icon.btn-wishlist.is-in-wishlist:hover,
+body[class*="store-theme-"] .product.product-11 .btn-product-icon.btn-wishlist.is-in-wishlist:focus {
+    color: var(--store-brand) !important;
+    background-color: #fff !important;
+    border-color: #ebebeb !important;
+}
+
+/* Product detail — skin-demo-2 #a6c76c yerine aktif store theme */
+body[class*="store-theme-"] .product-details-action .btn-cart {
+    color: var(--store-brand) !important;
+    border-color: var(--store-brand) !important;
+}
+
+body[class*="store-theme-"] .product-details-action .btn-cart:hover,
+body[class*="store-theme-"] .product-details-action .btn-cart:focus {
+    color: #fff !important;
+    background-color: var(--store-brand) !important;
+    border-color: var(--store-brand) !important;
+}
+
+body[class*="store-theme-"] .product-details-action .btn-cart:hover span,
+body[class*="store-theme-"] .product-details-action .btn-cart:focus span {
+    color: #fff !important;
+    box-shadow: none !important;
+}
+
+body[class*="store-theme-"] .details-action-wrapper .btn-product,
+body[class*="store-theme-"] .details-action-wrapper .btn-product:hover,
+body[class*="store-theme-"] .details-action-wrapper .btn-product:focus,
+body[class*="store-theme-"] .details-action-wrapper .btn-product.is-in-wishlist {
+    color: var(--store-brand) !important;
+}
+
+body[class*="store-theme-"] .details-action-wrapper .btn-product span,
+body[class*="store-theme-"] .details-action-wrapper .btn-product:hover span,
+body[class*="store-theme-"] .details-action-wrapper .btn-product:focus span,
+body[class*="store-theme-"] .details-action-wrapper .btn-product.is-in-wishlist span {
+    color: inherit !important;
+    box-shadow: none !important;
+}
+
+/* Tabs: markup nav-tabs (nav-pills değil) */
+body[class*="store-theme-"] .product-details-tab .nav.nav-tabs .nav-link:hover,
+body[class*="store-theme-"] .product-details-tab .nav.nav-tabs .nav-link:focus,
+body[class*="store-theme-"] .product-details-tab .nav.nav-tabs .nav-item.show .nav-link,
+body[class*="store-theme-"] .product-details-tab .nav.nav-tabs .nav-item .nav-link.active {
+    color: var(--store-brand) !important;
+}
+
+body[class*="store-theme-"] .nav.nav-tabs .nav-link:hover,
+body[class*="store-theme-"] .nav.nav-tabs .nav-link:focus,
+body[class*="store-theme-"] .nav.nav-tabs .nav-item.show .nav-link,
+body[class*="store-theme-"] .nav.nav-tabs .nav-item .nav-link.active {
+    color: var(--store-brand) !important;
+}
+
+body[class*="store-theme-"] .product-details-tab .nav.nav-pills .nav-link:hover,
+body[class*="store-theme-"] .product-details-tab .nav.nav-pills .nav-link:focus,
+body[class*="store-theme-"] .product-details-tab .nav.nav-pills .nav-item.show .nav-link,
+body[class*="store-theme-"] .product-details-tab .nav.nav-pills .nav-item .nav-link.active {
+    color: var(--store-brand) !important;
+    border-bottom-color: var(--store-brand) !important;
+}
+
+body[class*="store-theme-"] .product-details-extended .nav.nav-pills .nav-link.active,
+body[class*="store-theme-"] .product-details-extended .nav.nav-pills .nav-link:hover,
+body[class*="store-theme-"] .product-details-extended .nav.nav-pills .nav-link:focus {
+    border-color: var(--store-brand) !important;
+}
+
+body[class*="store-theme-"] .product-desc-content a:hover,
+body[class*="store-theme-"] .product-desc-content a:focus {
+    color: var(--store-brand) !important;
+    border-bottom-color: var(--store-brand) !important;
+}
+
+body[class*="store-theme-"] .btn-product-gallery:hover,
+body[class*="store-theme-"] .btn-product-gallery:focus {
+    color: #fff !important;
+    background-color: var(--store-brand) !important;
+}
+
+/* Ürün detay thumb galeri — çerçeve gereksiz */
+body[class*="store-theme-"] #product-zoom-gallery .product-gallery-item:before,
+body[class*="store-theme-"] #product-zoom-gallery .product-gallery-item.active:before,
+body[class*="store-theme-"] .product-gallery-item:before,
+body[class*="store-theme-"] .product-gallery-item.active:before {
+    border: none !important;
+}
+
+/* skin-demo-2 .btn-product:hover span alt çizgisi (#a6c76c) — ürün detayda kapalı */
+body[class*="store-theme-"] .product-details .btn-product:hover span,
+body[class*="store-theme-"] .product-details .btn-product:focus span {
+    box-shadow: none !important;
+}
+

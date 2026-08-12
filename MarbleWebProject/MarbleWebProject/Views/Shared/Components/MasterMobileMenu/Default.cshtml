@@ -6,10 +6,18 @@
     <div class="mobile-menu-wrapper">
         <span class="mobile-menu-close"><i class="icon-close"></i></span>
 
-        <form action="#" method="get" class="mobile-search">
+        <form action="/arama" method="get" class="mobile-search js-header-search-form" data-header-search autocomplete="off">
             <label for="mobile-search" class="sr-only">Search</label>
-            <input type="search" class="form-control" name="mobile-search" id="mobile-search" placeholder="@Html.Translate("#Search product ...#")" required>
+            <input type="search"
+                   class="form-control js-header-search-input"
+                   name="q"
+                   id="mobile-search"
+                   placeholder="@Html.Translate("#Search product ...#")"
+                   minlength="2"
+                   required
+                   autocomplete="off">
             <button class="btn btn-primary" type="submit"><i class="icon-search"></i></button>
+            <div class="header-search-suggest header-search-suggest--mobile" hidden></div>
         </form>
 
        @*  <form action="#" method="get" class="mobile-search">

@@ -5,6 +5,11 @@
     ViewData["Title"] = Html.Translate("#Wishlist#").ToString();
     var requiresLogin = ViewBag.WishlistRequiresLogin == true;
     var hasItems = !requiresLogin && Model.Items.Count > 0;
+    var categoryFilters = Model.CategoryFilters;
+}
+
+@section Styles {
+    <link rel="stylesheet" href="~/assets/css/demos/demo-11.css">
 }
 
 <nav aria-label="breadcrumb" class="breadcrumb-nav">
@@ -16,7 +21,7 @@
     </div>
 </nav>
 
-<div class="page-content pb-5">
+<div class="page-content pb-5 store-wishlist-page">
     <div class="container">
         <h2 class="title text-center mb-4">@Html.Translate("#Wishlist#")</h2>
 
@@ -47,54 +52,139 @@
         }
         else
         {
-            <div id="wishlist-products" class="row wishlist-page-grid">
-                @foreach (var item in Model.Items)
-                {
-                    var img = MediaUrlHelper.BuildProductImage(item.MainImage);
-                    var productUrl = "/" + (item.Url ?? "").TrimStart('/');
-                    <div class="col-6 col-md-4 col-lg-3 wishlist-product-item" data-pid="@item.ProductID">
-                        <div class="product product-7 text-center">
-                            <figure class="product-media">
-                                <a href="@productUrl">
-                                    <img src="@img" alt="@item.ProductName" class="product-image">
-                                </a>
-                                <div class="product-action-vertical">
-                                    <a href="#"
-                                       class="btn-product-icon btn-wishlist btn-expandable js-wishlist-remove is-in-wishlist"
-                                       data-pid="@item.ProductID"
-                                       title="@Html.Translate("#Remove from Wishlist#")">
-                                        <span>@Html.Translate("#Remove from Wishlist#")</span>
-                                    </a>
+            <div id="wishlist-page-content">
+                <div class="toolbox toolbox-filter store-wishlist-toolbox">
+                    <div class="toolbox-left">
+                        <a href="#" class="filter-toggler">@Html.Translate("#Filters#")</a>
+                    </div>
+                    <div class="toolbox-right">
+                        <ul class="nav-filter product-filter store-wishlist-status-filter" data-store-wishlist-status-filter>
+                            <li class="active" data-filter="all">
+                                <a href="#">@Html.Translate("#All#")</a>
+                            </li>
+                            <li data-filter="price-drop">
+                                <a href="#">@Html.Translate("#Price drops#")</a>
+                            </li>
+                            <li data-filter="low-stock">
+                                <a href="#">@Html.Translate("#Running out#")</a>
+                            </li>
+                            <li data-filter="in-stock">
+                                <a href="#">@Html.Translate("#In stock#")</a>
+                            </li>
+                        </ul>
+                    </div>
+                </div>
+
+                <div class="widget-filter-area store-wishlist-filter-area" id="wishlist-filter-area">
+                    <a href="#" class="widget-filter-clear" data-store-wishlist-clear>@Html.Translate("#Clear filters#")</a>
+                    <div class="filter-area-wrapper">
+                        <div class="row">
+                            <div class="col-sm-6 col-lg-4">
+                                <div class="widget">
+                                    <h3 class="widget-title">@Html.Translate("#Category#"):</h3>
+                                    <div class="filter-items filter-items-count" data-store-wishlist-category-filter>
+                                        @foreach (var category in categoryFilters)
+                                        {
+                                            var inputId = $"wishlist-cat-{category.CategoryID}";
+                                            <div class="filter-item">
+                                                <div class="custom-control custom-checkbox">
+                                                    <input type="checkbox"
+                                                           class="custom-control-input js-wishlist-category-filter"
+                                                           id="@inputId"
+                                                           value="@category.CategoryID">
+                                                    <label class="custom-control-label" for="@inputId">@category.CategoryName</label>
+                                                </div>
+                                                <span class="item-count">@category.Count</span>
+                                            </div>
+                                        }
+                                    </div>
                                 </div>
-                                <div class="product-action">
-                                    @{ ViewData["ProductUrl"] = productUrl; }
-                                    @await Html.PartialAsync("_ProductListAddToCartPartial", new ProductList
-                                    {
-                                        ProductID = item.ProductID,
-                                        ProductName = item.ProductName,
-                                        Url = item.Url,
-                                        Price = item.Price,
-                                        CurrencyName = item.CurrencyName
-                                    })
-                                </div>
-                            </figure>
-                            <div class="product-body">
-                                @{ ViewData["ProductUrl"] = productUrl; }
-                                @await Html.PartialAsync("_ProductListTitlePartial", new ProductList
-                                {
-                                    ProductID = item.ProductID,
-                                    ProductName = item.ProductName,
-                                    Url = item.Url
-                                })
-                                @if (item.Price.HasValue)
-                                {
-                                    <div class="product-price">@CurrencyDisplayHelper.FormatAmount(item.Price, item.CurrencyName)</div>
-                                }
                             </div>
                         </div>
                     </div>
-                }
+                </div>
+
+                <div id="wishlist-filter-empty" class="product-result-empty text-center store-wishlist-filter-empty" hidden>
+                    <div class="product-result-empty__icon" aria-hidden="true">
+                        <i class="icon-search"></i>
+                    </div>
+                    <h3 class="product-result-empty__title">@Html.Translate("#No products match your filters.#")</h3>
+                    <p class="text-muted mb-3">@Html.Translate("#You can clear your filters to see all wishlist items.#")</p>
+                    <button type="button" class="btn btn-outline-primary-2 btn-minwidth-sm" data-store-wishlist-clear>
+                        <span>@Html.Translate("#Clear filters#")</span>
+                    </button>
+                </div>
+
+                <div id="wishlist-products" class="products-container store-wishlist-products" data-layout="fitRows">
+                    @foreach (var item in Model.Items)
+                    {
+                        var productUrl = "/" + (item.Url ?? "").TrimStart('/');
+                        var productList = new ProductList
+                        {
+                            ProductID = item.ProductID,
+                            ProductName = item.ProductName,
+                            Url = item.Url,
+                            Price = item.Price,
+                            CurrencyName = item.CurrencyName,
+                            CategoryID = item.CategoryID,
+                            CategoryName = item.CategoryName,
+                            OriginalPrice = item.OriginalPrice,
+                            DiscountPercent = item.DiscountPercent,
+                            Quantity = item.StockQuantity,
+                            MainImage = item.MainImage
+                        };
+                        var categoryClass = item.CategoryID > 0 ? $"cat-{item.CategoryID}" : string.Empty;
+                        if (item.IsOutOfStock)
+                        {
+                            ViewData["ProductLabel"] = Html.Translate("#Out of stock#").ToString();
+                            ViewData["ProductLabelClass"] = "product-label";
+                        }
+                        else if (item.IsLowStock)
+                        {
+                            ViewData["ProductLabel"] = Html.Translate("#Running out#").ToString();
+                            ViewData["ProductLabelClass"] = "product-label label-primary";
+                        }
+                        else if (item.HasDiscount)
+                        {
+                            ViewData["ProductLabel"] = Html.Translate("#Sale#").ToString();
+                            ViewData["ProductLabelClass"] = "product-label label-primary";
+                        }
+                        else
+                        {
+                            ViewData.Remove("ProductLabel");
+                            ViewData.Remove("ProductLabelClass");
+                        }
+                        ViewData["ProductUrl"] = productUrl;
+                        ViewData["WishlistAction"] = "remove";
+                        <div class="product-item wishlist-product-item col-6 col-md-4 col-lg-3 @categoryClass"
+                             data-pid="@item.ProductID"
+                             data-category-id="@item.CategoryID"
+                             data-has-discount="@(item.HasDiscount ? "true" : "false")"
+                             data-low-stock="@(item.IsLowStock ? "true" : "false")"
+                             data-in-stock="@(item.IsInStock ? "true" : "false")">
+                            @await Html.PartialAsync("_ProductListCardPartial", productList)
+                        </div>
+                        ViewData.Remove("ProductLabel");
+                        ViewData.Remove("ProductLabelClass");
+                        ViewData.Remove("WishlistAction");
+                    }
+                </div>
+            </div>
+
+            <div id="wishlist-empty-state" class="product-result-empty text-center" hidden>
+                <div class="product-result-empty__icon" aria-hidden="true">
+                    <i class="icon-heart-o"></i>
+                </div>
+                <h3 class="product-result-empty__title">@Html.Translate("#Your wishlist is empty.#")</h3>
+                <a href="/" class="btn btn-outline-primary-2 btn-minwidth-sm mt-2">
+                    <span>@Html.Translate("#Home#")</span>
+                    <i class="icon-long-arrow-right"></i>
+                </a>
             </div>
         }
     </div>
 </div>
+
+@section Scripts {
+    <script src="~/PageJs/WishlistFilters.js" asp-append-version="true"></script>
+}

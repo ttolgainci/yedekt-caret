@@ -9,7 +9,7 @@
     <div class="container">
         <ol class="breadcrumb">
             <li class="breadcrumb-item"><a href="/">@Html.Translate("#Home#")</a></li>
-            @if (Model.Mode == ProductSearchMode.Category)
+            @if (Model.Mode == ProductSearchMode.Category || Model.Mode == ProductSearchMode.Brand)
             {
                 <li class="breadcrumb-item active" aria-current="page">@Model.Title</li>
             }

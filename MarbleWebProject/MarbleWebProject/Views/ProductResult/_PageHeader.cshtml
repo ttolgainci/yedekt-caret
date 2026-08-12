@@ -51,6 +51,23 @@ else if (Model.Mode == ProductSearchMode.Category)
         </div>
     </div>
 }
+else if (Model.Mode == ProductSearchMode.Brand)
+{
+    var brandImage = MediaUrlHelper.Build(Model.BrandPicture);
+    <div class="product-result-hero product-result-hero--category">
+        <div class="container">
+            <div class="category-result-context">
+                @if (!string.IsNullOrWhiteSpace(brandImage))
+                {
+                    <div class="category-result-context__media">
+                        <img src="@brandImage" alt="@Model.Title" loading="lazy" />
+                    </div>
+                }
+                <h1 class="category-result-context__title">@Model.Title</h1>
+            </div>
+        </div>
+    </div>
+}
 else
 {
     <div class="page-header text-center" style="background-image: url('/assets/images/page-header-bg.jpg')">

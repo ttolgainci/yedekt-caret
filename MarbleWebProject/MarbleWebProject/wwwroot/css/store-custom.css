@@ -573,6 +573,82 @@
     content: '\f233';
 }
 
+/* product-11 kart — sabit görsel kutusu + wishlist/cart hover */
+.product.product-11 .product-media {
+    position: relative;
+    width: 218px;
+    height: 218px;
+    max-width: 100%;
+    margin-left: auto;
+    margin-right: auto;
+    overflow: hidden;
+    background-color: #f4f4f4;
+}
+
+.product.product-11 .product-media > a {
+    position: relative;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 100%;
+    height: 100%;
+}
+
+.product.product-11 .product-media .product-image,
+.product.product-11 .product-media .product-image-hover {
+    width: 100%;
+    height: 100%;
+    max-width: 100%;
+    max-height: 100%;
+    object-fit: contain;
+    object-position: center;
+}
+
+.product.product-11 .product-media .product-image-hover {
+    position: absolute;
+    left: 0;
+    top: 0;
+    padding: 0;
+}
+
+.product.product-11 .btn-product-icon.btn-wishlist span:not(.sr-only),
+.product.product-11 .btn-product-icon.btn-wishlist.btn-expandable span {
+    display: none !important;
+    visibility: hidden !important;
+    opacity: 0 !important;
+}
+
+.product.product-11 .btn-product-icon.btn-wishlist,
+.product.product-11 .btn-product-icon.btn-wishlist:hover,
+.product.product-11 .btn-product-icon.btn-wishlist:focus {
+    border-radius: 50%;
+    background-color: #fff !important;
+    border-color: #ebebeb !important;
+}
+
+.product.product-11 .btn-product-icon.btn-wishlist:not(.is-in-wishlist) {
+    color: #ccc;
+}
+
+.product.product-11 .btn-product-icon.btn-wishlist:not(.is-in-wishlist):hover,
+.product.product-11 .btn-product-icon.btn-wishlist:not(.is-in-wishlist):focus {
+    color: var(--store-brand, #333) !important;
+    background-color: #fff !important;
+    border-color: #ebebeb !important;
+}
+
+.product.product-11 .btn-product.btn-cart:hover,
+.product.product-11 .btn-product.btn-cart:focus {
+    color: #fff !important;
+    background-color: var(--store-brand) !important;
+    border-color: var(--store-brand) !important;
+}
+
+.product.product-11 .btn-product.btn-cart:hover span,
+.product.product-11 .btn-product.btn-cart:focus span {
+    color: #fff !important;
+}
+
 .wishlist-page-grid .product-media {
     position: relative;
     display: block;
@@ -740,15 +816,27 @@
     background-color: #fafafa;
 }
 
-/* Arama list (V1) â€” wishlist dolu kalp: marka yeÅŸili (.product-body kuralÄ± daha spesifik olduÄŸu iÃ§in) */
-.product-result-list .product-body .btn-wishlist.is-in-wishlist,
-.product-result-list .product-body .btn-wishlist.is-in-wishlist:hover,
-.product-result-list .product-body .btn-wishlist.is-in-wishlist:focus {
+/* Arama list (V1) — wishlist, referans category-list'teki compare aksiyonunun yerinde. */
+.product-result-list .product-list-action .product-result-list-wishlist-action {
+    width: 100%;
+    justify-content: center;
+}
+
+.product-result-list .product-list-action .product-result-list-wishlist-action .btn-wishlist {
+    flex: 1 1 100%;
+    max-width: 100%;
+    margin: 0;
+    text-align: center;
+}
+
+.product-result-list .product-list-action .btn-wishlist.is-in-wishlist,
+.product-result-list .product-list-action .btn-wishlist.is-in-wishlist:hover,
+.product-result-list .product-list-action .btn-wishlist.is-in-wishlist:focus {
     color: var(--store-brand);
     background: none;
 }
 
-.product-result-list .product-body .btn-wishlist.is-in-wishlist:before {
+.product-result-list .product-list-action .btn-wishlist.is-in-wishlist:before {
     content: '\f233';
 }
 
@@ -3799,6 +3887,177 @@ body.store-page-loading-active {
     min-width: 0;
     padding: 0.45rem 1rem;
     font-size: 1.2rem;
+    color: #fff !important;
+}
+
+/* Wishlist page — index-11 filter toolbox + product grid */
+.store-wishlist-page .store-wishlist-toolbox {
+    margin-bottom: 2rem;
+}
+
+.store-wishlist-page .store-wishlist-toolbox .filter-toggler,
+.store-wishlist-page .store-wishlist-toolbox .filter-toggler:hover,
+.store-wishlist-page .store-wishlist-toolbox .filter-toggler:focus,
+.store-wishlist-page .store-wishlist-toolbox .filter-toggler.active {
+    color: #333 !important;
+}
+
+.store-wishlist-page .store-wishlist-status-filter {
+    flex-wrap: wrap;
+    justify-content: flex-end;
+    gap: 0.5rem 1.5rem;
+}
+
+.store-wishlist-page .store-wishlist-status-filter li a,
+.store-wishlist-page .store-wishlist-status-filter li a:hover,
+.store-wishlist-page .store-wishlist-status-filter li a:focus {
+    white-space: nowrap;
+    color: #333 !important;
+    border-bottom-color: transparent !important;
+}
+
+.store-wishlist-page .store-wishlist-status-filter li.active a,
+.store-wishlist-page .store-wishlist-status-filter li.active a:hover,
+.store-wishlist-page .store-wishlist-status-filter li.active a:focus {
+    color: #333 !important;
+    border-bottom-color: #333 !important;
+}
+
+.store-wishlist-page .widget-filter-clear,
+.store-wishlist-page .widget-filter-clear:hover,
+.store-wishlist-page .widget-filter-clear:focus,
+.store-wishlist-page [data-store-wishlist-clear],
+.store-wishlist-page [data-store-wishlist-clear]:hover,
+.store-wishlist-page [data-store-wishlist-clear]:focus {
+    color: #333 !important;
+}
+
+.store-wishlist-page .store-wishlist-filter-area {
+    display: none;
+    margin-bottom: 2.5rem;
+}
+
+.store-wishlist-page .store-wishlist-products {
+    display: flex;
+    flex-wrap: wrap;
+    margin-left: -1rem;
+    margin-right: -1rem;
+}
+
+.store-wishlist-page .store-wishlist-products .wishlist-product-item {
+    padding-left: 1rem;
+    padding-right: 1rem;
+    margin-bottom: 2rem;
+}
+
+.store-wishlist-page .store-wishlist-products .product-11 {
+    height: 100%;
+}
+
+.store-wishlist-page .store-wishlist-filter-empty[hidden] {
+    display: none !important;
+}
+
+.store-wishlist-page .product-price .old-price {
+    color: #999;
+    text-decoration: line-through;
+    margin-left: 0.6rem;
+    font-size: 1.3rem;
+    font-weight: 400;
+}
+
+@media (max-width: 767px) {
+    .store-wishlist-page .store-wishlist-status-filter {
+        justify-content: flex-start;
+    }
+}
+
+/* Header search autocomplete */
+.header-search-wrapper {
+    position: relative;
+}
+
+.header-search-suggest {
+    position: absolute;
+    left: 0;
+    right: 0;
+    top: calc(100% + 0.4rem);
+    z-index: 1200;
+    background: #fff;
+    border: 1px solid #e5e5e5;
+    box-shadow: 0 8px 24px rgba(0, 0, 0, 0.08);
+    max-height: 28rem;
+    overflow-y: auto;
+    text-align: left;
+}
+
+.header-search-suggest[hidden] {
+    display: none !important;
+}
+
+.header-search-suggest__group + .header-search-suggest__group {
+    border-top: 1px solid #eee;
+}
+
+.header-search-suggest__title {
+    padding: 0.75rem 1rem 0.35rem;
+    font-size: 1.1rem;
+    font-weight: 600;
+    color: #777;
+    text-transform: uppercase;
+    letter-spacing: 0.03em;
+}
+
+.header-search-suggest__item {
+    display: flex;
+    flex-direction: column;
+    gap: 0.15rem;
+    padding: 0.65rem 1rem;
+    color: #333;
+    text-decoration: none;
+}
+
+.header-search-suggest__item:hover,
+.header-search-suggest__item:focus {
+    background: #f7f7f7;
+    color: #333;
+    text-decoration: none;
+}
+
+.header-search-suggest__label {
+    font-size: 1.35rem;
+    line-height: 1.3;
+}
+
+.header-search-suggest__sub {
+    font-size: 1.15rem;
+    color: #888;
+}
+
+.header-search-suggest__all,
+.header-search-suggest__empty {
+    display: block;
+    padding: 0.85rem 1rem;
+    font-size: 1.25rem;
+    border-top: 1px solid #eee;
+}
+
+.header-search-suggest__all {
+    color: #333;
+    font-weight: 600;
+}
+
+.header-search-suggest__empty {
+    color: #777;
+}
+
+.mobile-search {
+    position: relative;
+}
+
+.header-search-suggest--mobile {
+    left: 0;
+    right: 0;
 }
 
 

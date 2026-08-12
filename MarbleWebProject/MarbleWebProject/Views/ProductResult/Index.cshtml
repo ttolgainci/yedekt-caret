@@ -4,7 +4,7 @@
     Layout = "~/Views/Shared/_Layout.cshtml";
     var showing = Model.Products.Count;
     var total = Model.TotalCount;
-    var showFilters = Model.Mode is ProductSearchMode.Vehicle or ProductSearchMode.Category;
+    var showFilters = Model.Mode is ProductSearchMode.Vehicle or ProductSearchMode.Category or ProductSearchMode.Brand or ProductSearchMode.Text;
     var searchLayout = StorefrontSearchLayoutKeys.Normalize(Model.SearchResultLayout);
 }
 
@@ -14,7 +14,7 @@
     <div class="container">
         <ol class="breadcrumb">
             <li class="breadcrumb-item"><a href="/">@Html.Translate("#Home#")</a></li>
-            @if (Model.Mode == ProductSearchMode.Category)
+            @if (Model.Mode == ProductSearchMode.Category || Model.Mode == ProductSearchMode.Brand)
             {
                 <li class="breadcrumb-item active" aria-current="page">@Model.Title</li>
             }
@@ -51,7 +51,7 @@
                                     <div class="filter-items filter-items-count product-result-filter-scroll">
                                         @foreach (var cat in Model.FilterCategories)
                                         {
-                                            var isActive = Model.CategoryId == cat.CategoryId;
+                                            var isActive = Model.IsCategorySelected(cat.CategoryId);
                                             var filterUrl = Model.Mode == ProductSearchMode.Category
                                                 ? cat.Url
                                                 : Model.BuildCategoryToggleUrl(cat.CategoryId);
@@ -87,8 +87,10 @@
                                     <div class="filter-items filter-items-count product-result-filter-scroll">
                                         @foreach (var brand in Model.FilterBrands)
                                         {
-                                            var isActive = Model.BrandId == brand.BrandId;
-                                            var filterUrl = Model.BuildBrandToggleUrl(brand.BrandId);
+                                            var isActive = Model.IsBrandSelected(brand.BrandId);
+                                            var filterUrl = Model.Mode == ProductSearchMode.Brand
+                                                ? Model.BuildBrandSwitchUrl(brand.Url)
+                                                : Model.BuildBrandToggleUrl(brand.BrandId);
                                             var inputId = $"filter-brand-{brand.BrandId}";
                                             <div class="filter-item filter-item--toggle@(isActive ? " is-active" : "")" data-filter-url="@filterUrl">
                                                 <div class="custom-control custom-checkbox">

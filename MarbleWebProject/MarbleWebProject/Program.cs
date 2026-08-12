@@ -224,6 +224,11 @@ app.MapControllerRoute(
     defaults: new { controller = "ProductResult", action = "Category" });
 
 app.MapControllerRoute(
+    name: "product-result-brand",
+    pattern: "brand/{brandSlug}",
+    defaults: new { controller = "ProductResult", action = "Brand" });
+
+app.MapControllerRoute(
     name: "product-result-vehicle",
     pattern: "arac/{vehiclePath}",
     defaults: new { controller = "ProductResult", action = "Vehicle" });

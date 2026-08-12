@@ -29,19 +29,25 @@ public static class WishlistHelper
         if (items == null)
             return model;
 
-        model.Items = items.Select(x => new WishlistItemModel
-        {
-            ProductID = x.ProductID,
-            ProductName = x.Name ?? string.Empty,
-            MainImage = x.Image ?? string.Empty,
-            Url = string.IsNullOrWhiteSpace(x.Url) ? "#" : x.Url,
-            Price = x.Price,
-            CurrencyName = x.Currency ?? string.Empty,
-            StockQuantity = x.StockQuantity
-        }).ToList();
-
+        model.Items = items.Select(MapApiItem).ToList();
         return model;
     }
+
+    private static WishlistItemModel MapApiItem(WishlistApiItem x) => new()
+    {
+        ProductID = x.ProductID,
+        ProductName = x.Name ?? string.Empty,
+        MainImage = x.Image ?? string.Empty,
+        Url = string.IsNullOrWhiteSpace(x.Url) ? "#" : x.Url,
+        Price = x.Price,
+        CurrencyName = x.Currency ?? string.Empty,
+        StockQuantity = x.StockQuantity,
+        CategoryID = x.CategoryID,
+        CategoryName = x.CategoryName ?? string.Empty,
+        OriginalPrice = x.OriginalPrice,
+        DiscountPercent = x.DiscountPercent,
+        HasDiscount = x.HasDiscount
+    };
 }
 
 public class WishlistApiItem
@@ -55,4 +61,9 @@ public class WishlistApiItem
     public string Url { get; set; } = string.Empty;
     public string Currency { get; set; } = string.Empty;
     public int? StockQuantity { get; set; }
+    public int CategoryID { get; set; }
+    public string CategoryName { get; set; } = string.Empty;
+    public decimal? OriginalPrice { get; set; }
+    public decimal? DiscountPercent { get; set; }
+    public bool HasDiscount { get; set; }
 }

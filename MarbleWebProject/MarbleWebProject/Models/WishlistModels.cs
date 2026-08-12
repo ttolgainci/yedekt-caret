@@ -1,5 +1,7 @@
 namespace MarbleWebProject.Models;
 
+using MarbleWebProject.Helpers;
+
 public class WishlistItemModel
 {
     public int ProductID { get; set; }
@@ -9,12 +11,41 @@ public class WishlistItemModel
     public decimal? Price { get; set; }
     public string CurrencyName { get; set; } = string.Empty;
     public int? StockQuantity { get; set; }
+    public int CategoryID { get; set; }
+    public string CategoryName { get; set; } = string.Empty;
+    public decimal? OriginalPrice { get; set; }
+    public decimal? DiscountPercent { get; set; }
+    public bool HasDiscount { get; set; }
+
+    public bool IsLowStock => StoreLowStockAlert.IsLowStock(StockQuantity);
+    public bool IsInStock => StockQuantity is > 0;
+    public bool IsOutOfStock => StockQuantity is null or <= 0;
 }
 
 public class WishlistSetModel
 {
     public List<WishlistItemModel> Items { get; set; } = new();
     public int TotalCount => Items.Count;
+
+    public IReadOnlyList<WishlistCategoryFilterModel> CategoryFilters =>
+        Items
+            .Where(x => x.CategoryID > 0 && !string.IsNullOrWhiteSpace(x.CategoryName))
+            .GroupBy(x => x.CategoryID)
+            .Select(g => new WishlistCategoryFilterModel
+            {
+                CategoryID = g.Key,
+                CategoryName = g.First().CategoryName,
+                Count = g.Count()
+            })
+            .OrderBy(x => x.CategoryName)
+            .ToList();
+}
+
+public sealed class WishlistCategoryFilterModel
+{
+    public int CategoryID { get; set; }
+    public string CategoryName { get; set; } = string.Empty;
+    public int Count { get; set; }
 }
 
 public class WishlistAllRequest

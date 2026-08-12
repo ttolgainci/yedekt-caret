@@ -8,6 +8,7 @@ public static class UrlSlugHelper
 {
     private static readonly Regex NonAlphaNumeric = new(@"[^a-z0-9]+", RegexOptions.Compiled);
     private static readonly Regex CategoryIdSuffix = new(@"-c(\d+)$", RegexOptions.Compiled | RegexOptions.IgnoreCase);
+    private static readonly Regex BrandIdSuffix = new(@"-b-(\d+)$", RegexOptions.Compiled | RegexOptions.IgnoreCase);
     private static readonly Regex VehicleEngineIdSuffix = new(@"-v(\d+)$", RegexOptions.Compiled | RegexOptions.IgnoreCase);
     private static readonly Regex ProductIdSuffix = new(@"-p-(\d+)$", RegexOptions.Compiled | RegexOptions.IgnoreCase);
 
@@ -69,6 +70,31 @@ public static class UrlSlugHelper
         var normalized = NormalizeSlug(path.Trim('/').Split('/').LastOrDefault());
         var match = CategoryIdSuffix.Match(normalized);
         if (!match.Success || !int.TryParse(match.Groups[1].Value, out categoryId) || categoryId <= 0)
+            return false;
+
+        slugPart = normalized[..match.Index].TrimEnd('-');
+        return true;
+    }
+
+    public static string BuildBrandPath(string? brandSlug, int brandId)
+    {
+        var slug = NormalizeSlug(brandSlug);
+        if (string.IsNullOrEmpty(slug) || brandId <= 0)
+            return "/brand";
+
+        return $"/brand/{slug}-b-{brandId}";
+    }
+
+    public static bool TryParseBrandPath(string? path, out int brandId, out string slugPart)
+    {
+        brandId = 0;
+        slugPart = string.Empty;
+        if (string.IsNullOrWhiteSpace(path))
+            return false;
+
+        var normalized = NormalizeSlug(path.Trim('/').Split('/').LastOrDefault());
+        var match = BrandIdSuffix.Match(normalized);
+        if (!match.Success || !int.TryParse(match.Groups[1].Value, out brandId) || brandId <= 0)
             return false;
 
         slugPart = normalized[..match.Index].TrimEnd('-');

@@ -28,26 +28,48 @@ public class ProductResultController : Controller
 
     public Task<IActionResult> Category(
         string categorySlug,
-        int? brandId,
+        string? b,
+        string? brandId,
         decimal? minPrice,
         decimal? maxPrice,
         int pageNumber = 1,
         int pageSize = 12,
         CancellationToken cancellationToken = default) =>
         RenderCategoryResultsAsync(
-            categorySlug, brandId, minPrice, maxPrice, pageNumber, pageSize, cancellationToken);
+            categorySlug,
+            FilterIdListHelper.ParsePrefer(b, brandId),
+            minPrice, maxPrice, pageNumber, pageSize, cancellationToken);
+
+    public Task<IActionResult> Brand(
+        string brandSlug,
+        string? c,
+        string? categoryId,
+        decimal? minPrice,
+        decimal? maxPrice,
+        int pageNumber = 1,
+        int pageSize = 12,
+        CancellationToken cancellationToken = default) =>
+        RenderBrandResultsAsync(
+            brandSlug,
+            FilterIdListHelper.ParsePrefer(c, categoryId),
+            minPrice, maxPrice, pageNumber, pageSize, cancellationToken);
 
     public Task<IActionResult> Vehicle(
         string vehiclePath,
-        int? categoryId,
-        int? brandId,
+        string? c,
+        string? b,
+        string? categoryId,
+        string? brandId,
         decimal? minPrice,
         decimal? maxPrice,
         int pageNumber = 1,
         int pageSize = 12,
         CancellationToken cancellationToken = default) =>
         RenderVehicleResultsByPathAsync(
-            vehiclePath, categoryId, brandId, minPrice, maxPrice,
+            vehiclePath,
+            FilterIdListHelper.ParsePrefer(c, categoryId),
+            FilterIdListHelper.ParsePrefer(b, brandId),
+            minPrice, maxPrice,
             pageNumber, pageSize, cancellationToken);
 
     public Task<IActionResult> VehicleLegacy(
@@ -55,17 +77,24 @@ public class ProductResultController : Controller
         string modelSlug,
         string generationSlug,
         string engineSlug,
-        int? categoryId,
-        int? brandId,
+        string? c,
+        string? b,
+        string? categoryId,
+        string? brandId,
         decimal? minPrice,
         decimal? maxPrice,
         int pageNumber = 1,
         CancellationToken cancellationToken = default) =>
         RenderVehicleLegacyRedirectAsync(
             makeSlug, modelSlug, generationSlug, engineSlug,
-            categoryId, brandId, minPrice, maxPrice, pageNumber, cancellationToken);
+            FilterIdListHelper.ParsePrefer(c, categoryId),
+            FilterIdListHelper.ParsePrefer(b, brandId),
+            minPrice, maxPrice, pageNumber, cancellationToken);
 
     public async Task<IActionResult> Index(
+        string? q,
+        string? c,
+        string? b,
         int? vehicleEngineId,
         int? vehicleMakeId,
         int? vehicleModelId,
@@ -78,6 +107,19 @@ public class ProductResultController : Controller
         int pageSize = 12,
         CancellationToken cancellationToken = default)
     {
+        var query = (q ?? string.Empty).Trim();
+        if (query.Length >= 2
+            && vehicleEngineId is not > 0
+            && categoryId is not > 0
+            && brandId is not > 0)
+        {
+            return await RenderTextSearchResultsAsync(
+                query,
+                FilterIdListHelper.Parse(c),
+                FilterIdListHelper.Parse(b),
+                minPrice, maxPrice, pageNumber, pageSize, cancellationToken);
+        }
+
         if (vehicleEngineId is > 0
             && vehicleMakeId is > 0
             && vehicleModelId is > 0
@@ -92,7 +134,11 @@ public class ProductResultController : Controller
 
             if (path != null)
             {
-                var redirectUrl = BuildVehicleRedirectUrl(path, categoryId, brandId, minPrice, maxPrice, pageNumber);
+                var redirectUrl = BuildVehicleRedirectUrl(
+                    path,
+                    categoryId is > 0 ? new[] { categoryId.Value } : Array.Empty<int>(),
+                    brandId is > 0 ? new[] { brandId.Value } : Array.Empty<int>(),
+                    minPrice, maxPrice, pageNumber);
                 return RedirectPermanent(redirectUrl);
             }
         }
@@ -109,6 +155,23 @@ public class ProductResultController : Controller
             }
         }
 
+        if (brandId is > 0 && vehicleEngineId is not > 0 && categoryId is not > 0)
+        {
+            var brand = await _catalog.GetBrandAsync(brandId.Value, (await _auth.GetSessionAsync(cancellationToken)).LanguageCode, cancellationToken);
+            if (brand.Status && brand.Data != null)
+            {
+                var slug = !string.IsNullOrWhiteSpace(brand.Data.Slug)
+                    ? brand.Data.Slug
+                    : brand.Data.Name;
+                var redirectUrl = AppendFilterQuery(
+                    UrlSlugHelper.BuildBrandPath(slug, brandId.Value),
+                    categoryIds: null,
+                    brandIds: null,
+                    minPrice, maxPrice, pageNumber);
+                return RedirectPermanent(redirectUrl);
+            }
+        }
+
         pageNumber = pageNumber < 1 ? 1 : pageNumber;
         pageSize = pageSize is < 1 or > 48 ? 12 : pageSize;
 
@@ -116,9 +179,10 @@ public class ProductResultController : Controller
         {
             Mode = ProductSearchMode.None,
             Title = "Arama Sonuçları",
-            Summary = "Araç seçerek uyumlu ürünleri listeleyin veya kategorilerden ürünlere göz atın.",
+            Summary = "Araç seçerek uyumlu ürünleri listeleyin, kategorilerden ürünlere göz atın veya üst aramayı kullanın.",
             PageNumber = pageNumber,
             PageSize = pageSize,
+            Query = string.IsNullOrWhiteSpace(query) ? null : query,
         };
 
         await ApplySearchResultLayoutAsync(model, cancellationToken);
@@ -128,9 +192,10 @@ public class ProductResultController : Controller
         return View(model);
     }
 
-    private async Task<IActionResult> RenderCategoryResultsAsync(
-        string categorySlug,
-        int? brandId,
+    private async Task<IActionResult> RenderTextSearchResultsAsync(
+        string query,
+        IReadOnlyList<int> categoryIds,
+        IReadOnlyList<int> brandIds,
         decimal? minPrice,
         decimal? maxPrice,
         int pageNumber,
@@ -139,6 +204,91 @@ public class ProductResultController : Controller
     {
         pageNumber = pageNumber < 1 ? 1 : pageNumber;
         pageSize = pageSize is < 1 or > 48 ? 12 : pageSize;
+        categoryIds = FilterIdListHelper.Normalize(categoryIds);
+        brandIds = FilterIdListHelper.Normalize(brandIds);
+
+        var session = await _auth.GetSessionAsync(cancellationToken);
+        var products = new List<ProductList>();
+        var filterCategories = new List<VehicleSearchCategoryListItem>();
+        var filterBrands = new List<VehicleSearchBrandListItem>();
+        VehicleSearchPriceRangeModel? priceRange = null;
+        var totalCount = 0;
+        var totalPages = 0;
+        var currencySymbol = "₺";
+
+        var catFilterResponse = await _catalog.GetCategoriesByTextSearchAsync(
+            query, session.LanguageCode, brandIds, cancellationToken);
+        if (catFilterResponse.Status && catFilterResponse.Data != null)
+            filterCategories = catFilterResponse.Data;
+
+        var brandFilterResponse = await _catalog.GetBrandsByTextSearchAsync(
+            query, session.LanguageCode, categoryIds, cancellationToken);
+        if (brandFilterResponse.Status && brandFilterResponse.Data != null)
+            filterBrands = brandFilterResponse.Data;
+
+        var productResponse = await _catalog.GetProductsByTextSearchAsync(
+            query, session.LanguageCode, categoryIds, brandIds, minPrice, maxPrice, pageNumber, pageSize, cancellationToken);
+        if (productResponse.Status && productResponse.Data != null)
+        {
+            products = productResponse.Data.Products ?? new List<ProductList>();
+            totalCount = productResponse.Data.TotalCount;
+            totalPages = productResponse.Data.TotalPages;
+            pageNumber = productResponse.Data.PageNumber;
+            if (!string.IsNullOrWhiteSpace(productResponse.Data.CurrencySymbol))
+                currencySymbol = productResponse.Data.CurrencySymbol.Trim();
+        }
+
+        var priceRangeResponse = await _catalog.GetPriceRangeByTextSearchAsync(
+            query, session.LanguageCode, categoryIds, brandIds, minPrice, maxPrice, cancellationToken);
+        if (priceRangeResponse.Status && priceRangeResponse.Data != null && priceRangeResponse.Data.HasRange)
+        {
+            priceRange = priceRangeResponse.Data;
+            if (!string.IsNullOrWhiteSpace(priceRange.CurrencySymbol))
+                currencySymbol = priceRange.CurrencySymbol.Trim();
+        }
+
+        var model = new ProductResultSearchViewModel
+        {
+            Mode = ProductSearchMode.Text,
+            Title = $"\"{query}\" arama sonuçları",
+            Summary = totalCount > 0
+                ? $"{totalCount} ürün bulundu."
+                : "Aramanızla eşleşen ürün bulunamadı.",
+            Query = query,
+            PageNumber = pageNumber,
+            PageSize = pageSize,
+            TotalCount = totalCount,
+            TotalPages = totalPages,
+            SelectedCategoryIds = categoryIds,
+            SelectedBrandIds = brandIds,
+            MinPrice = minPrice,
+            MaxPrice = maxPrice,
+            CurrencySymbol = currencySymbol,
+            PriceRange = priceRange,
+            Products = products,
+            FilterCategories = filterCategories,
+            FilterBrands = filterBrands,
+        };
+
+        await ApplySearchResultLayoutAsync(model, cancellationToken);
+
+        TempData["Title"] = model.Title;
+        TempData["Description"] = model.Summary;
+        return View("Index", model);
+    }
+
+    private async Task<IActionResult> RenderCategoryResultsAsync(
+        string categorySlug,
+        IReadOnlyList<int> brandIds,
+        decimal? minPrice,
+        decimal? maxPrice,
+        int pageNumber,
+        int pageSize,
+        CancellationToken cancellationToken)
+    {
+        pageNumber = pageNumber < 1 ? 1 : pageNumber;
+        pageSize = pageSize is < 1 or > 48 ? 12 : pageSize;
+        brandIds = FilterIdListHelper.Normalize(brandIds);
 
         int categoryId;
         if (UrlSlugHelper.TryParseCategoryPath(categorySlug, out var parsedId, out _))
@@ -153,7 +303,7 @@ public class ProductResultController : Controller
 
             var slug = UrlSlugHelper.NormalizeSlug(categorySlug);
             var canonical = UrlSlugHelper.BuildCategoryPath(slug, resolvedId.Value);
-            return RedirectPermanent(AppendFilterQuery(canonical, null, brandId, minPrice, maxPrice, pageNumber));
+            return RedirectPermanent(AppendFilterQuery(canonical, null, brandIds, minPrice, maxPrice, pageNumber));
         }
 
         var session = await _auth.GetSessionAsync(cancellationToken);
@@ -178,7 +328,7 @@ public class ProductResultController : Controller
         var productResponse = await _catalog.GetProductsByCategorySearchAsync(
             categoryId,
             session.LanguageCode,
-            brandId,
+            brandIds,
             minPrice,
             maxPrice,
             pageNumber,
@@ -238,7 +388,7 @@ public class ProductResultController : Controller
         var canonicalPath = UrlSlugHelper.BuildCategoryPath(categorySlugPart, categoryId);
         if (!string.Equals(Request.Path.Value, canonicalPath, StringComparison.OrdinalIgnoreCase))
         {
-            return RedirectPermanent(AppendFilterQuery(canonicalPath, null, brandId, minPrice, maxPrice, pageNumber));
+            return RedirectPermanent(AppendFilterQuery(canonicalPath, null, brandIds, minPrice, maxPrice, pageNumber));
         }
 
         var categoryPicture = await ResolveCategoryPictureAsync(categoryId, session.LanguageCode, cancellationToken);
@@ -251,7 +401,8 @@ public class ProductResultController : Controller
             CategorySlug = categorySlugPart,
             CategoryId = categoryId,
             CategoryPicture = categoryPicture,
-            BrandId = brandId,
+            SelectedBrandIds = brandIds,
+            BrandId = brandIds.Count == 1 ? brandIds[0] : null,
             MinPrice = minPrice,
             MaxPrice = maxPrice,
             CurrencySymbol = currencySymbol,
@@ -274,10 +425,137 @@ public class ProductResultController : Controller
         return View("Index", model);
     }
 
+    private async Task<IActionResult> RenderBrandResultsAsync(
+        string brandSlug,
+        IReadOnlyList<int> categoryIds,
+        decimal? minPrice,
+        decimal? maxPrice,
+        int pageNumber,
+        int pageSize,
+        CancellationToken cancellationToken)
+    {
+        pageNumber = pageNumber < 1 ? 1 : pageNumber;
+        pageSize = pageSize is < 1 or > 48 ? 12 : pageSize;
+        categoryIds = FilterIdListHelper.Normalize(categoryIds);
+
+        if (!UrlSlugHelper.TryParseBrandPath(brandSlug, out var brandId, out _))
+            return RedirectToAction("PageNotFound", "Error");
+
+        var session = await _auth.GetSessionAsync(cancellationToken);
+        var brandResponse = await _catalog.GetBrandAsync(brandId, session.LanguageCode, cancellationToken);
+        if (!brandResponse.Status || brandResponse.Data == null)
+            return RedirectToAction("PageNotFound", "Error");
+
+        var brand = brandResponse.Data;
+        var brandSlugPart = UrlSlugHelper.NormalizeSlug(
+            !string.IsNullOrWhiteSpace(brand.Slug) ? brand.Slug : brand.Name);
+        if (string.IsNullOrEmpty(brandSlugPart))
+            brandSlugPart = UrlSlugHelper.NormalizeSlug(brandSlug);
+
+        var canonicalPath = UrlSlugHelper.BuildBrandPath(brandSlugPart, brandId);
+        if (!string.Equals(Request.Path.Value, canonicalPath, StringComparison.OrdinalIgnoreCase))
+        {
+            return RedirectPermanent(AppendFilterQuery(canonicalPath, categoryIds, null, minPrice, maxPrice, pageNumber));
+        }
+
+        var filterCategories = new List<VehicleSearchCategoryListItem>();
+        var filterBrands = new List<VehicleSearchBrandListItem>();
+        var products = new List<ProductList>();
+        var totalCount = 0;
+        var totalPages = 0;
+        var currencySymbol = "₺";
+        VehicleSearchPriceRangeModel? priceRange = null;
+
+        var catFilterResponse = await _catalog.GetCategoriesByBrandAsync(
+            brandId, session.LanguageCode, categoryId: null, cancellationToken);
+        if (catFilterResponse.Status && catFilterResponse.Data != null)
+            filterCategories = catFilterResponse.Data;
+
+        var productResponse = await _catalog.GetProductsByBrandAsync(
+            brandId,
+            session.LanguageCode,
+            categoryIds,
+            minPrice,
+            maxPrice,
+            pageNumber,
+            pageSize,
+            cancellationToken);
+
+        if (productResponse.Status && productResponse.Data != null)
+        {
+            products = productResponse.Data.Products ?? new List<ProductList>();
+            totalCount = productResponse.Data.TotalCount;
+            totalPages = productResponse.Data.TotalPages;
+            pageNumber = productResponse.Data.PageNumber;
+            if (!string.IsNullOrWhiteSpace(productResponse.Data.CurrencySymbol))
+                currencySymbol = productResponse.Data.CurrencySymbol.Trim();
+        }
+
+        var priceRangeResponse = await _catalog.GetPriceRangeByBrandAsync(
+            brandId, session.LanguageCode, categoryId: null, minPrice, maxPrice, cancellationToken);
+        if (priceRangeResponse.Status && priceRangeResponse.Data != null && priceRangeResponse.Data.HasRange)
+        {
+            priceRange = priceRangeResponse.Data;
+            if (!string.IsNullOrWhiteSpace(priceRange.CurrencySymbol))
+                currencySymbol = priceRange.CurrencySymbol.Trim();
+        }
+
+        var brandFacetCount = totalCount;
+        if (categoryIds.Count > 0 || minPrice.HasValue || maxPrice.HasValue)
+        {
+            var brandTotalResponse = await _catalog.GetProductsByBrandAsync(
+                brandId, session.LanguageCode, null, null, null, 1, 1, cancellationToken);
+            if (brandTotalResponse.Status && brandTotalResponse.Data != null)
+                brandFacetCount = brandTotalResponse.Data.TotalCount;
+        }
+
+        filterBrands =
+        [
+            new VehicleSearchBrandListItem
+            {
+                BrandId = brandId,
+                Name = brand.Name,
+                Url = canonicalPath,
+                ProductCount = brandFacetCount
+            }
+        ];
+
+        var model = new ProductResultSearchViewModel
+        {
+            Mode = ProductSearchMode.Brand,
+            Title = brand.Name,
+            Summary = BuildBrandSummary(totalCount),
+            BrandSlug = brandSlugPart,
+            BrandName = brand.Name,
+            BrandPicture = brand.Picture,
+            BrandId = brandId,
+            SelectedCategoryIds = categoryIds,
+            CategoryId = categoryIds.Count == 1 ? categoryIds[0] : null,
+            MinPrice = minPrice,
+            MaxPrice = maxPrice,
+            CurrencySymbol = currencySymbol,
+            PriceRange = priceRange,
+            PageNumber = pageNumber,
+            PageSize = pageSize,
+            TotalCount = totalCount,
+            TotalPages = totalPages > 0 ? totalPages : (pageSize > 0 ? (int)Math.Ceiling((double)totalCount / pageSize) : 0),
+            Products = products,
+            FilterCategories = filterCategories,
+            FilterBrands = filterBrands,
+        };
+
+        await ApplySearchResultLayoutAsync(model, cancellationToken);
+
+        TempData["Title"] = model.Title;
+        TempData["Description"] = model.Summary ?? model.Title;
+
+        return View("Index", model);
+    }
+
     private async Task<IActionResult> RenderVehicleResultsByPathAsync(
         string vehiclePath,
-        int? categoryId,
-        int? brandId,
+        IReadOnlyList<int> categoryIds,
+        IReadOnlyList<int> brandIds,
         decimal? minPrice,
         decimal? maxPrice,
         int pageNumber,
@@ -300,12 +578,12 @@ public class ProductResultController : Controller
 
         if (!string.Equals(Request.Path.Value, canonicalPath, StringComparison.OrdinalIgnoreCase))
         {
-            var redirect = AppendFilterQuery(canonicalPath, categoryId, brandId, minPrice, maxPrice, pageNumber);
+            var redirect = AppendFilterQuery(canonicalPath, categoryIds, brandIds, minPrice, maxPrice, pageNumber);
             return RedirectPermanent(redirect);
         }
 
         return await RenderVehicleResultsCoreAsync(
-            vehicle, categoryId, brandId, minPrice, maxPrice, pageNumber, pageSize, cancellationToken);
+            vehicle, categoryIds, brandIds, minPrice, maxPrice, pageNumber, pageSize, cancellationToken);
     }
 
     private async Task<IActionResult> RenderVehicleLegacyRedirectAsync(
@@ -313,8 +591,8 @@ public class ProductResultController : Controller
         string modelSlug,
         string generationSlug,
         string engineSlug,
-        int? categoryId,
-        int? brandId,
+        IReadOnlyList<int> categoryIds,
+        IReadOnlyList<int> brandIds,
         decimal? minPrice,
         decimal? maxPrice,
         int pageNumber,
@@ -325,14 +603,14 @@ public class ProductResultController : Controller
         if (vehicle == null)
             return RedirectToAction("PageNotFound", "Error");
 
-        var redirectUrl = BuildVehicleRedirectUrl(vehicle, categoryId, brandId, minPrice, maxPrice, pageNumber);
+        var redirectUrl = BuildVehicleRedirectUrl(vehicle, categoryIds, brandIds, minPrice, maxPrice, pageNumber);
         return RedirectPermanent(redirectUrl);
     }
 
     private async Task<IActionResult> RenderVehicleResultsCoreAsync(
         VehicleSearchPath vehicle,
-        int? categoryId,
-        int? brandId,
+        IReadOnlyList<int> categoryIds,
+        IReadOnlyList<int> brandIds,
         decimal? minPrice,
         decimal? maxPrice,
         int pageNumber,
@@ -341,6 +619,8 @@ public class ProductResultController : Controller
     {
         pageNumber = pageNumber < 1 ? 1 : pageNumber;
         pageSize = pageSize is < 1 or > 48 ? 12 : pageSize;
+        categoryIds = FilterIdListHelper.Normalize(categoryIds);
+        brandIds = FilterIdListHelper.Normalize(brandIds);
 
         var session = await _auth.GetSessionAsync(cancellationToken);
         var filterCategories = new List<VehicleSearchCategoryListItem>();
@@ -352,20 +632,20 @@ public class ProductResultController : Controller
         VehicleSearchPriceRangeModel? priceRange = null;
 
         var catResponse = await _catalog.GetCategoriesByVehicleEngineAsync(
-            vehicle.EngineId, session.LanguageCode, brandId: null, cancellationToken);
+            vehicle.EngineId, session.LanguageCode, brandIds, cancellationToken);
         if (catResponse.Status && catResponse.Data != null)
             filterCategories = catResponse.Data;
 
         var brandResponse = await _catalog.GetBrandsByVehicleEngineAsync(
-            vehicle.EngineId, session.LanguageCode, categoryId: null, cancellationToken);
+            vehicle.EngineId, session.LanguageCode, categoryIds, cancellationToken);
         if (brandResponse.Status && brandResponse.Data != null)
             filterBrands = brandResponse.Data;
 
         var productResponse = await _catalog.GetProductsByVehicleEngineAsync(
             vehicle.EngineId,
             session.LanguageCode,
-            categoryId,
-            brandId,
+            categoryIds,
+            brandIds,
             minPrice,
             maxPrice,
             pageNumber,
@@ -385,8 +665,8 @@ public class ProductResultController : Controller
         var priceRangeResponse = await _catalog.GetPriceRangeByVehicleEngineAsync(
             vehicle.EngineId,
             session.LanguageCode,
-            categoryId: null,
-            brandId: null,
+            categoryIds: null,
+            brandIds: null,
             minPrice,
             maxPrice,
             cancellationToken);
@@ -426,8 +706,10 @@ public class ProductResultController : Controller
             VehicleFuelType = vehicle.FuelType,
             VehiclePicture = vehicle.MakePicture,
             VehicleMakes = vehicleMakes,
-            CategoryId = categoryId,
-            BrandId = brandId,
+            SelectedCategoryIds = categoryIds,
+            SelectedBrandIds = brandIds,
+            CategoryId = categoryIds.Count == 1 ? categoryIds[0] : null,
+            BrandId = brandIds.Count == 1 ? brandIds[0] : null,
             MinPrice = minPrice,
             MaxPrice = maxPrice,
             CurrencySymbol = currencySymbol,
@@ -457,8 +739,8 @@ public class ProductResultController : Controller
 
     private static string BuildVehicleRedirectUrl(
         VehicleSearchPath path,
-        int? categoryId,
-        int? brandId,
+        IReadOnlyList<int>? categoryIds,
+        IReadOnlyList<int>? brandIds,
         decimal? minPrice,
         decimal? maxPrice,
         int pageNumber)
@@ -470,7 +752,29 @@ public class ProductResultController : Controller
             path.EngineSlug,
             path.EngineId);
 
-        return AppendFilterQuery(url, categoryId, brandId, minPrice, maxPrice, pageNumber);
+        return AppendFilterQuery(url, categoryIds, brandIds, minPrice, maxPrice, pageNumber);
+    }
+
+    private static string AppendFilterQuery(
+        string url,
+        IReadOnlyList<int>? categoryIds,
+        IReadOnlyList<int>? brandIds,
+        decimal? minPrice,
+        decimal? maxPrice,
+        int pageNumber)
+    {
+        var parts = new List<string>();
+        var catQ = FilterIdListHelper.ToQueryValue(categoryIds);
+        var brandQ = FilterIdListHelper.ToQueryValue(brandIds);
+        if (catQ != null) parts.Add($"{FilterIdListHelper.CategoryQueryKey}={catQ}");
+        if (brandQ != null) parts.Add($"{FilterIdListHelper.BrandQueryKey}={brandQ}");
+        if (minPrice.HasValue)
+            parts.Add($"minPrice={minPrice.Value.ToString(System.Globalization.CultureInfo.InvariantCulture)}");
+        if (maxPrice.HasValue)
+            parts.Add($"maxPrice={maxPrice.Value.ToString(System.Globalization.CultureInfo.InvariantCulture)}");
+        if (pageNumber > 1) parts.Add($"pageNumber={pageNumber}");
+
+        return parts.Count == 0 ? url : url + "?" + string.Join("&", parts);
     }
 
     private static string AppendFilterQuery(
@@ -481,16 +785,9 @@ public class ProductResultController : Controller
         decimal? maxPrice,
         int pageNumber)
     {
-        var parts = new List<string>();
-        if (categoryId is > 0) parts.Add($"categoryId={categoryId}");
-        if (brandId is > 0) parts.Add($"brandId={brandId}");
-        if (minPrice.HasValue)
-            parts.Add($"minPrice={minPrice.Value.ToString(System.Globalization.CultureInfo.InvariantCulture)}");
-        if (maxPrice.HasValue)
-            parts.Add($"maxPrice={maxPrice.Value.ToString(System.Globalization.CultureInfo.InvariantCulture)}");
-        if (pageNumber > 1) parts.Add($"pageNumber={pageNumber}");
-
-        return parts.Count == 0 ? url : url + "?" + string.Join("&", parts);
+        var categoryIds = categoryId is > 0 ? new[] { categoryId.Value } : Array.Empty<int>();
+        var brandIds = brandId is > 0 ? new[] { brandId.Value } : Array.Empty<int>();
+        return AppendFilterQuery(url, categoryIds, brandIds, minPrice, maxPrice, pageNumber);
     }
 
     private async Task<string?> ResolveCategoryPictureAsync(
@@ -530,6 +827,13 @@ public class ProductResultController : Controller
     {
         if (total <= 0)
             return "Bu kategoride ürün bulunamadı.";
+        return $"{total} ürün";
+    }
+
+    private static string BuildBrandSummary(int total)
+    {
+        if (total <= 0)
+            return "Bu markada ürün bulunamadı.";
         return $"{total} ürün";
     }
 

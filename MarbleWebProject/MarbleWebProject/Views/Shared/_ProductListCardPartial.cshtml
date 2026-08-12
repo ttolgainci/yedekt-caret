@@ -1,0 +1,76 @@
+@using MarbleWebProject.Helper
+@model ProductList
+@{
+    var productUrl = (ViewData["ProductUrl"] as string ?? Model.Url ?? "#").Trim();
+    if (!productUrl.StartsWith('/'))
+        productUrl = "/" + productUrl.TrimStart('/');
+
+    var img = MediaUrlHelper.BuildProductImage(Model.MainImage);
+    var hoverImg = Model.Images != null && Model.Images.Count > 1
+        ? MediaUrlHelper.Build(Model.Images[1].Image)
+        : img;
+    var showHover = !string.Equals(img, hoverImg, StringComparison.OrdinalIgnoreCase);
+    var showCategory = ViewData["ShowCategory"] as bool? ?? true;
+    var wishlistAction = (ViewData["WishlistAction"] as string ?? "toggle").Trim().ToLowerInvariant();
+    var labelText = (ViewData["ProductLabel"] as string ?? string.Empty).Trim();
+    var labelClass = (ViewData["ProductLabelClass"] as string ?? "product-label").Trim();
+    var hasDiscount = Model.OriginalPrice is > 0
+        && Model.Price.HasValue
+        && Model.OriginalPrice > Model.Price;
+}
+<div class="product product-11 text-center">
+    <figure class="product-media">
+        @if (!string.IsNullOrEmpty(labelText))
+        {
+            <span class="@labelClass">@labelText</span>
+        }
+        <a href="@productUrl">
+            <img src="@img" alt="@Model.ProductName" class="product-image">
+            @if (showHover)
+            {
+                <img src="@hoverImg" alt="@Model.ProductName" class="product-image-hover">
+            }
+        </a>
+        <div class="product-action-vertical">
+            @if (wishlistAction == "remove")
+            {
+                <a href="#"
+                   class="btn-product-icon btn-wishlist js-wishlist-remove is-in-wishlist"
+                   data-pid="@Model.ProductID"
+                   aria-label="@Html.Translate("#Remove from Wishlist#")">
+                    <span class="sr-only">@Html.Translate("#Remove from Wishlist#")</span>
+                </a>
+            }
+            else
+            {
+                ViewData["ProductUrl"] = productUrl;
+                @await Html.PartialAsync("_ProductListWishlistPartial", Model)
+            }
+        </div>
+    </figure>
+    <div class="product-body">
+        @if (showCategory && !string.IsNullOrWhiteSpace(Model.CategoryName))
+        {
+            <div class="product-cat">
+                <span>@Model.CategoryName</span>
+            </div>
+        }
+        @{ ViewData["ProductUrl"] = productUrl; }
+        @await Html.PartialAsync("_ProductListTitlePartial", Model)
+        @if (hasDiscount)
+        {
+            <div class="product-price">
+                <span class="new-price">@CurrencyDisplayHelper.FormatAmount(Model.Price, Model.CurrencyName, Model.CurrencyID)</span>
+                <span class="old-price">@CurrencyDisplayHelper.FormatAmount(Model.OriginalPrice, Model.CurrencyName, Model.CurrencyID)</span>
+            </div>
+        }
+        else if (Model.Price.HasValue)
+        {
+            <div class="product-price">@CurrencyDisplayHelper.FormatAmount(Model.Price, Model.CurrencyName, Model.CurrencyID)</div>
+        }
+    </div>
+    <div class="product-action">
+        @{ ViewData["ProductUrl"] = productUrl; }
+        @await Html.PartialAsync("_ProductListAddToCartPartial", Model)
+    </div>
+</div>

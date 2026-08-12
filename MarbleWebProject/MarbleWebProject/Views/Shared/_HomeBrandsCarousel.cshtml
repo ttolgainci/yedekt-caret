@@ -1,4 +1,5 @@
 @model List<HomeBrandModel>
+@using MarbleWebProject.Helpers
 @{
     var brands = Model?
         .Where(x => !string.IsNullOrWhiteSpace(x.Picture))
@@ -38,7 +39,8 @@
      data-owl-options="@owlOptionsJson">
     @foreach (var item in brands)
     {
-        var href = string.IsNullOrWhiteSpace(item.Slug) ? "#" : "/" + item.Slug.TrimStart('/');
+        var slug = !string.IsNullOrWhiteSpace(item.Slug) ? item.Slug : item.Name;
+        var href = item.Id > 0 ? UrlSlugHelper.BuildBrandPath(slug, item.Id) : "#";
         <a href="@href" class="brand" title="@item.Name">
             <img src="@MediaUrlHelper.Build(item.Picture)" alt="@item.Name" loading="lazy">
         </a>

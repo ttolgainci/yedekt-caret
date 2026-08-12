@@ -1,29 +1,14 @@
+@using MarbleWebProject.Helper
 @model List<MarbleWebProject.Models.ProductList>
 @if (Model.Count > 0)
 {
 <div class="container top-selling-container mb-5">
     <h2 class="title text-center mb-3">@Html.Translate("#Top Selling Products#")</h2>
     <div class="owl-carousel owl-simple carousel-equal-height carousel-with-shadow" data-toggle="owl"
-         data-owl-options='{"nav": false, "dots": true, "margin": 20, "loop": false, "responsive": {"0":{"items":1},"480":{"items":1},"768":{"items":3},"992":{"items":4}}}'>
+         data-owl-options='{"nav": false, "dots": true, "margin": 20, "loop": false, "responsive": {"0":{"items":2},"480":{"items":2},"768":{"items":3},"992":{"items":4},"1200":{"items":5,"nav":true}}}'>
         @foreach (var item in Model)
         {
-            var img = MediaUrlHelper.BuildProductImage(item.MainImage);
-            var productUrl = "/" + (item.Url ?? "").TrimStart('/');
-            <div class="product text-center">
-                <figure class="product-media">
-                    <a href="@productUrl">
-                        <img src="@img" alt="@item.ProductName" class="product-image">
-                    </a>
-                </figure>
-                <div class="product-body">
-                    @{ ViewData["ProductUrl"] = productUrl; }
-                    @await Html.PartialAsync("_ProductListTitlePartial", item)
-                    @if (item.Price.HasValue)
-                    {
-                        <div class="product-price">@CurrencyDisplayHelper.FormatAmount(item.Price, item.CurrencyName, item.CurrencyID)</div>
-                    }
-                </div>
-            </div>
+            @await Html.PartialAsync("_ProductListCardPartial", item)
         }
     </div>
 </div>
