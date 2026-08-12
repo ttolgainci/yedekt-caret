@@ -1,15 +1,14 @@
-/docs
+# Local notes / helper assets (keep on disk, don't commit)
+/docs/
 /KALDIĞIMIZ_YER.md
-/scripts
-/_api_b3
-/_api_b4
-/_api_build_check
-/_api_build_check2
-/_api_ef_build
-/_api_out
-/_api_seed_build
-/_api_seed_build2
-/_cms_b3
-/_cms_build
-/_cms_build2
-/_cms_out
+/scripts/
+
+# Agent / local alternate build outputs (dotnet -o ...)
+/_*/
+/ubl-out/
+
+# Common local junk
+*.user
+*.suo
+.DS_Store
+Thumbs.db
